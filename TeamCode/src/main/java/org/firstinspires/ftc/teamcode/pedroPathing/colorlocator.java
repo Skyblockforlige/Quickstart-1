@@ -13,7 +13,7 @@ import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
 import org.firstinspires.ftc.vision.opencv.ColorRange;
 import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import java.util.List;
-@TeleOp(name = "Concept: Vision Color-Locator (Green & Purple)", group = "Concept")
+@TeleOp(name = "Artifact Locator green+purple")
 public class colorlocator extends LinearOpMode {
     @Override
     public void runOpMode() {
@@ -21,7 +21,7 @@ public class colorlocator extends LinearOpMode {
         ColorBlobLocatorProcessor purpleLocator = new ColorBlobLocatorProcessor.Builder()
                 .setTargetColorRange(ColorRange.ARTIFACT_PURPLE)
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
-                .setRoi(ImageRegion.asUnityCenterCoordinates(-0.75, 0.75, 0.75, -0.75))
+                .setRoi(ImageRegion.asUnityCenterCoordinates(-1, 1, 1, -1))
                 .setDrawContours(true)
                 .setBoxFitColor(0)
                 .setCircleFitColor(Color.rgb(255, 0, 255)) // magenta outline for purple blobs
@@ -35,7 +35,7 @@ public class colorlocator extends LinearOpMode {
         ColorBlobLocatorProcessor greenLocator = new ColorBlobLocatorProcessor.Builder()
                 .setTargetColorRange(ColorRange.ARTIFACT_GREEN)
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
-                .setRoi(ImageRegion.asUnityCenterCoordinates(-0.75, 0.75, 0.75, -0.75))
+                .setRoi(ImageRegion.asUnityCenterCoordinates(-1, 1, 1, -1))
                 .setDrawContours(true)
                 .setBoxFitColor(0)
                 .setCircleFitColor(Color.rgb(0, 255, 0)) // green outline for green blobs
@@ -75,23 +75,27 @@ public class colorlocator extends LinearOpMode {
             ColorBlobLocatorProcessor.Util.filterByCriteria(
                     ColorBlobLocatorProcessor.BlobCriteria.BY_CIRCULARITY, 0.6, 1, greenBlobs);
 
-            // Display both
-            telemetry.addLine("\nPURPLE BLOBS:");
-            for (ColorBlobLocatorProcessor.Blob b : purpleBlobs) {
-                Circle c = b.getCircle();
-                telemetry.addLine(String.format("Purple - Circ: %.2f  Radius: %3d  Center: (%3d, %3d)",
-                        b.getCircularity(), (int)c.getRadius(), (int)c.getX(), (int)c.getY()));
-            }
+            List<ColorBlobLocatorProcessor.Blob> allBlobs = new java.util.ArrayList<>();
+            allBlobs.addAll(purpleBlobs);
+            allBlobs.addAll(greenBlobs);
 
-            telemetry.addLine("\nGREEN BLOBS:");
-            for (ColorBlobLocatorProcessor.Blob b : greenBlobs) {
-                Circle c = b.getCircle();
-                telemetry.addLine(String.format("Green - Circ: %.2f  Radius: %3d  Center: (%3d, %3d)",
-                        b.getCircularity(), (int)c.getRadius(), (int)c.getX(), (int)c.getY()));
+            // Sort by X coordinate (left → right)
+            allBlobs.sort((a, b) -> Double.compare(a.getCircle().getX(), b.getCircle().getX()));
+
+            // --- Display sorted results ---
+            telemetry.addLine("Color   X      Y     Radius   Circularity");
+            for (ColorBlobLocatorProcessor.Blob blob : allBlobs) {
+                Circle c = blob.getCircle();
+                boolean isPurple = purpleBlobs.contains(blob);
+
+                telemetry.addLine(String.format("%s   %3d   %3d     %3d       %.2f",
+                        (isPurple ? "Purple" : "Green"),
+                        (int) c.getX(), (int) c.getY(), (int) c.getRadius(), blob.getCircularity()));
             }
 
             telemetry.update();
             sleep(100);
+
         }
     }
 }
