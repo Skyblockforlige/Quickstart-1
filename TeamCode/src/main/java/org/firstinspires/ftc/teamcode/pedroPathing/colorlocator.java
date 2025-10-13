@@ -105,7 +105,7 @@ public class colorlocator extends LinearOpMode {
             for(int i =0; i<classifier.length;i++){
                 telemetry.addData("Classifier",classifier[i]);
             }
-
+            telemetry.addData("Detected Blobs", allBlobs.size());
             telemetry.update();
             sleep(100);
 
