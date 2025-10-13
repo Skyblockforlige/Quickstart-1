@@ -12,9 +12,13 @@ import org.firstinspires.ftc.vision.opencv.Circle;
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
 import org.firstinspires.ftc.vision.opencv.ColorRange;
 import org.firstinspires.ftc.vision.opencv.ImageRegion;
+
+import java.util.ArrayList;
 import java.util.List;
 @TeleOp(name = "Artifact Locator green+purple")
 public class colorlocator extends LinearOpMode {
+    private int[] classifier = new int[9];
+
     @Override
     public void runOpMode() {
         // Create the PURPLE color locator
@@ -79,18 +83,27 @@ public class colorlocator extends LinearOpMode {
             allBlobs.addAll(purpleBlobs);
             allBlobs.addAll(greenBlobs);
 
+
             // Sort by X coordinate (left → right)
             allBlobs.sort((a, b) -> Double.compare(a.getCircle().getX(), b.getCircle().getX()));
 
             // --- Display sorted results ---
-            telemetry.addLine("Color   X      Y     Radius   Circularity");
-            for (ColorBlobLocatorProcessor.Blob blob : allBlobs) {
-                Circle c = blob.getCircle();
-                boolean isPurple = purpleBlobs.contains(blob);
 
-                telemetry.addLine(String.format("%s   %3d   %3d     %3d       %.2f",
+            telemetry.addLine("Color   X      Y     Radius   Circularity");
+            for (int i=0;i< allBlobs.size();i++){
+                Circle c = allBlobs.get(i).getCircle();
+                boolean isPurple = purpleBlobs.contains(allBlobs.get(i));
+                if(isPurple){
+                    classifier[i]=1;
+                } else{
+                    classifier[i]=2;
+                }
+                telemetry.addLine(String.format("%s   %d   %3d     %3d       %.2f",
                         (isPurple ? "Purple" : "Green"),
-                        (int) c.getX(), (int) c.getY(), (int) c.getRadius(), blob.getCircularity()));
+                        (int) c.getX(), (int) c.getY(), (int) c.getRadius(), allBlobs.get(i).getCircularity()));
+            }
+            for(int i =0; i<classifier.length;i++){
+                telemetry.addData("Classifier",classifier[i]);
             }
 
             telemetry.update();
