@@ -110,7 +110,7 @@ public class llautoalign extends OpMode {
                     s.setPosition(0.994);
                     turretOscillationDirection = 0; // now go left
                 }
-            } else if ((turretOscillationDirection == 0) && (s.getPosition() > 0.0040)) {
+            } else if ((turretOscillationDirection == 0) && (s.getPosition() > 0.01)) {
                 s.setPosition(s.getPosition() - 0.01);
                 if (s.getPosition() <= 0.0040) {
                     s.setPosition(0.0045);
