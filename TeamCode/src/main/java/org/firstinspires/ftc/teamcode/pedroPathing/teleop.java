@@ -120,6 +120,7 @@ public class teleop extends LinearOpMode {
                 RevHubOrientationOnRobot.UsbFacingDirection.UP);
         imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
         waitForStart();
         while(opModeIsActive()){
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
@@ -139,7 +140,8 @@ public class teleop extends LinearOpMode {
             lb.setPower(backLeftPower);
             rf.setPower(frontRightPower);
             rb.setPower(backRightPower);
-            intake.setPower(gamepad1.right_trigger);
+            //intake code
+            intake.setPower(gamepad1.right_trigger-gamepad1.left_trigger);
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
             limelight.updateRobotOrientation(orientation.getYaw());
             LLResult llResult = limelight.getLatestResult();
@@ -154,10 +156,10 @@ public class teleop extends LinearOpMode {
             if (llResult != null) {
                 targetx = llResult.getTx();
                 telemetry.addData("targetx", llResult.getTx());
-                if ((targetx <= -5.5) && (turret.getPosition() > 0.0025)) {
+                if ((targetx <= -5.5) && (turret.getPosition() > 0.01)) {
                     turret.setPosition(turret.getPosition() - 0.01);
                     turretOscillationDirection=0;
-                } else if ((targetx >= 5.5) && (turret.getPosition() < 0.9975)) {
+                } else if ((targetx >= 5.5) && (turret.getPosition() < 0.99)) {
                     turret.setPosition(turret.getPosition() + 0.01);
                     turretOscillationDirection=1;
                 }

@@ -94,17 +94,17 @@ public class llautoalign extends OpMode {
         if (llResult != null) {
             targetx = llResult.getTx();
             telemetry.addData("targetx", llResult.getTx());
-            if ((targetx <= -5.5) && (s.getPosition() > 0.0025)) {
+            if ((targetx <= -5.5) && (s.getPosition() > 0.01)) {
                 s.setPosition(s.getPosition() - 0.01);
                 turretOscillationDirection=0;
-            } else if ((targetx >= 5.5) && (s.getPosition() < 0.9975)) {
+            } else if ((targetx >= 5.5) && (s.getPosition() < 0.99)) {
                 s.setPosition(s.getPosition() + 0.01);
                 turretOscillationDirection=1;
             }
         }
 
         if ((llResult.getTx() == 0.0) && (llResult.getTy() == 0.0)) {
-            if ((turretOscillationDirection == 1) && (s.getPosition() < 0.996)) {
+            if ((turretOscillationDirection == 1) && (s.getPosition() < 0.99)) {
                 s.setPosition(s.getPosition() + 0.01);
                 if (s.getPosition() >= 0.996) {
                     s.setPosition(0.994);

@@ -48,7 +48,6 @@ public class colorlocator extends LinearOpMode {
                 .setErodeSize(15)
                 .setMorphOperationType(ColorBlobLocatorProcessor.MorphOperationType.CLOSING)
                 .build();
-
         // Add both processors to the same VisionPortal
         VisionPortal portal = new VisionPortal.Builder()
                 .addProcessor(purpleLocator)
@@ -102,10 +101,10 @@ public class colorlocator extends LinearOpMode {
                         (isPurple ? "Purple" : "Green"),
                         (int) c.getX(), (int) c.getY(), (int) c.getRadius(), allBlobs.get(i).getCircularity()));
             }
-            for(int i =0; i<classifier.length;i++){
+            for (int i =0; i<classifier.length;i++){
                 telemetry.addData("Classifier",classifier[i]);
             }
-            telemetry.addData("Detected Blobs", allBlobs.size());
+            telemetry.addData("Detected Blobs: ", allBlobs.size());
             telemetry.update();
             sleep(100);
 
