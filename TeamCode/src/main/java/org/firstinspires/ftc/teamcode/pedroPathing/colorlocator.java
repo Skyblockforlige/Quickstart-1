@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import android.graphics.Color;
 import android.util.Size;
+
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -21,6 +24,7 @@ public class colorlocator extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        telemetry= new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         // Create the PURPLE color locator
         ColorBlobLocatorProcessor purpleLocator = new ColorBlobLocatorProcessor.Builder()
                 .setTargetColorRange(ColorRange.ARTIFACT_PURPLE)

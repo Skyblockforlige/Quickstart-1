@@ -37,6 +37,7 @@ public class teleop extends LinearOpMode {
     private ControlSystem cs;
     private DcMotorEx flywheel;
     private ServoImplEx turret;
+    private ServoImplEx turret2;
     private DcMotorEx spindexer;
     private double targetx;
     private IMU imu;
@@ -109,6 +110,7 @@ public class teleop extends LinearOpMode {
         spindexer.setDirection(DcMotorSimple.Direction.REVERSE);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turret = hardwareMap.get(ServoImplEx.class, "turret");
+        turret2 = hardwareMap.get(ServoImplEx.class,"turret2");
         cs =  ControlSystem.builder()
                 .velPid(p, i, d)
                 .basicFF(v,a,s)
@@ -120,6 +122,8 @@ public class teleop extends LinearOpMode {
                 RevHubOrientationOnRobot.UsbFacingDirection.UP);
         imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        turret2.setPosition(0.5);
+        turret.setPosition(0.5);
 
         waitForStart();
         while(opModeIsActive()){
@@ -158,9 +162,12 @@ public class teleop extends LinearOpMode {
                 telemetry.addData("targetx", llResult.getTx());
                 if ((targetx <= -5.5) && (turret.getPosition() > 0.01)) {
                     turret.setPosition(turret.getPosition() - 0.01);
+                    turret2.setPosition(turret.getPosition() - 0.01);
                     turretOscillationDirection=0;
                 } else if ((targetx >= 5.5) && (turret.getPosition() < 0.99)) {
                     turret.setPosition(turret.getPosition() + 0.01);
+                    turret2.setPosition(turret.getPosition() + 0.01);
+
                     turretOscillationDirection=1;
                 }
             }
@@ -168,14 +175,20 @@ public class teleop extends LinearOpMode {
             if ((llResult.getTx() == 0.0) && (llResult.getTy() == 0.0)) {
                 if ((turretOscillationDirection == 1) && (turret.getPosition() < 0.996)) {
                     turret.setPosition(turret.getPosition() + 0.01);
+                    turret2.setPosition(turret2.getPosition() + 0.01);
+
                     if (turret.getPosition() >= 0.996) {
                         turret.setPosition(0.994);
+                        turret2.setPosition(0.994);
                         turretOscillationDirection = 0; // now go left
                     }
                 } else if ((turretOscillationDirection == 0) && (turret.getPosition() > 0.0040)) {
                     turret.setPosition(turret.getPosition() - 0.01);
+                    turret2.setPosition(turret2.getPosition() - 0.01);
+
                     if (turret.getPosition() <= 0.0040) {
                         turret.setPosition(0.0045);
+                        turret2.setPosition(0.0045);
                         turretOscillationDirection = 1; // now go right
                     }
                 }
