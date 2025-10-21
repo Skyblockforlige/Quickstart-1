@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 public class transfertest extends LinearOpMode {
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
-
     @Override
     public void runOpMode(){
         spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
