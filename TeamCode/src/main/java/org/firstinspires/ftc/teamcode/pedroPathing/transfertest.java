@@ -10,8 +10,12 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 public class transfertest extends LinearOpMode {
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
+    private DcMotorEx flywheel;
+
     @Override
     public void runOpMode(){
+        flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
+        flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
         transfer=hardwareMap.get(CRServoImplEx.class, "transfer");
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -20,6 +24,7 @@ public class transfertest extends LinearOpMode {
         while (opModeIsActive()){
             transfer.setPower(gamepad2.right_trigger-gamepad2.left_trigger);
             spindexer.setPower(-gamepad2.left_stick_y);
+            flywheel.setPower(-gamepad2.right_stick_y);
         }
     }
 }

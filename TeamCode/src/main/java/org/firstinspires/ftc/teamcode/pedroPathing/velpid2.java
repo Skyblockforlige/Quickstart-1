@@ -36,7 +36,7 @@ public class velpid2 extends LinearOpMode {
 
     @Override
     public void runOpMode(){
-        flywheel = hardwareMap.get(DcMotorEx.class,"m");
+        flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
         flywheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flywheel.setDirection(DcMotor.Direction.REVERSE);
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
