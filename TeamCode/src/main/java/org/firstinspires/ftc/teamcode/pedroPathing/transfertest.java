@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
@@ -11,6 +12,7 @@ public class transfertest extends LinearOpMode {
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
     private DcMotorEx flywheel;
+
 
     @Override
     public void runOpMode(){
