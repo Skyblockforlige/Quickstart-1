@@ -41,7 +41,11 @@ public class transfertest extends LinearOpMode {
             KineticState current = new KineticState(rb.getCurrentPosition(),rb.getVelocity());
             double output = cs.calculate(current);
             transfer.setPower(gamepad2.right_trigger-gamepad2.left_trigger);
-            spindexer.setPower(output);
+            if(gamepad2.left_stick_y!=0){
+                spindexer.setPower(-gamepad2.left_stick_y);
+            } else{
+                spindexer.setPower(output);
+            }
             flywheel.setPower(-gamepad2.right_stick_y);
             telemetry.addData("motor current pos",rb.getCurrentPosition());
             telemetry.addData("target",targetpos);
