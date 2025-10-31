@@ -50,13 +50,11 @@ public class velpid2 extends LinearOpMode {
                     .build();
             cs.setGoal(new KineticState(0,targetTicksPerSecond));
             KineticState current = new KineticState(flywheel.getCurrentPosition(), Math.abs(flywheel.getVelocity()));
-            double output = cs.calculate(current);
-            double output2= cs.calculate();
-            flywheel.setPower(output);
+            double output2 = cs.calculate(current);
+            flywheel.setPower(output2);
             telemetry.addData("motor current speed",Math.abs(flywheel.getVelocity()));
             telemetry.addData("target",targetTicksPerSecond);
-            telemetry.addData("output",output);
-            telemetry.addData("output2",output2);
+            telemetry.addData("output",output2);
             telemetry.update();
         }
 
