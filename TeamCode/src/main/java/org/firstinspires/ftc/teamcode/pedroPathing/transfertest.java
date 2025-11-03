@@ -1,69 +1,134 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import java.util.Timer;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
-
+@Configurable
+@Config
 @TeleOp
 public class transfertest extends LinearOpMode {
-    public static double p1=0.019,i1=0,d1=3;
-    public static double v1=0.4,a1=0.1,s1=0.3;
+    private DcMotor lf;
+    private DcMotor lb;
+    private DcMotor rf;
+    public ServoImplEx transfermover;
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
     private DcMotorEx flywheel;
+    private DcMotorEx intake;
     private DcMotorEx rb;
-    private ControlSystem cs1;
     private ControlSystem cs;
-    public static double p=0.019,i=0,d=3;
-    public static double v=0.4,a=0.1,s=0.3;
-    private int targetpos;
-    public static double targetTicksPerSecond=2200;
-
-
+    public static double transfermoveridle = 0.6;
+    public static double transfermoverscore = 0.73;
+    public static double transfermoverfull = 1;
+    public static double p=0.0039,i=0,d=0.0000005;
+    public static double v=0.000372,a=0.7,s=0.0000005;
+    private static int targetpos;
+    private CRServo turretL;
+    private CRServo turretR;
+    private Servo hood;
+    public static double targetTicksPerSecond=1500;
+    public static double hoodtop = 0;
+    public static double hoodbottom = 0.1;
+    public ElapsedTime x;
     @Override
     public void runOpMode(){
-
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        x= new ElapsedTime();
+        x.reset();
+        turretL = hardwareMap.crservo.get("turretL");
+        turretR = hardwareMap.crservo.get("turretR");
+        lf = hardwareMap.dcMotor.get("lf");
+        lb = hardwareMap.dcMotor.get("lb");
+        rf = hardwareMap.dcMotor.get("rf");
+        hood=hardwareMap.servo.get("hood");
         rb = hardwareMap.get(DcMotorEx.class,"rb");
+        lf.setDirection(DcMotorSimple.Direction.REVERSE);
+        lb.setDirection(DcMotorSimple.Direction.REVERSE);
         rb.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rb.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
         transfer=hardwareMap.get(CRServoImplEx.class, "transfer");
+        intake = hardwareMap.get(DcMotorEx.class,"intake");
+        transfermover=hardwareMap.get(ServoImplEx.class,"transfermover");
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        transfermover.setPosition(transfermoveridle);
+        hood.setPosition(hoodbottom);
         waitForStart();
         while (opModeIsActive()){
+            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
+            double rx = gamepad1.right_stick_x;
+
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio,
+            // but only if at least one is out of the range [-1, 1]
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double frontLeftPower = (y + x + rx) / denominator;
+            double backLeftPower = (y - x + rx) / denominator;
+            double frontRightPower = (y - x - rx) / denominator;
+            double backRightPower = (y + x - rx) / denominator;
+            lf.setPower(frontLeftPower);
+            lb.setPower(backLeftPower);
+            rf.setPower(frontRightPower);
+            rb.setPower(backRightPower);
+
+            turretL.setPower(gamepad2.right_stick_x);
+            turretR.setPower(gamepad2.right_stick_x);
+            if(gamepad2.dpad_down&&hood.getPosition()<=(hoodbottom-0.1)){
+                hood.setPosition(hood.getPosition()+0.1);
+                sleep(100);
+            }
+            if(gamepad2.dpad_up&&hood.getPosition()>=(hoodtop+0.1)){
+                hood.setPosition(hood.getPosition()-0.1);
+                sleep(100);
+            }
+
+
+            if(gamepad2.right_trigger>0 && !gamepad2.right_bumper){
+                transfermover.setPosition(transfermoverscore);
+                transfer.setPower(gamepad2.right_trigger);
+            }
+            if(gamepad2.right_trigger>0 && gamepad2.right_bumper){
+                transfermover.setPosition(transfermoverfull);
+                transfer.setPower(gamepad2.right_trigger);
+            }
+            if(gamepad2.right_trigger==0){
+                transfermover.setPosition(transfermoveridle);
+                transfer.setPower(0);
+            }
+
             cs =  ControlSystem.builder()
                     .velPid(p, i, d)
                     .basicFF(v,a,s)
                     .build();
             cs.setGoal(new KineticState(0,targetTicksPerSecond));
-            cs1 =  ControlSystem.builder()
-                    .posPid(p1, i1, d1)
-                    .basicFF(v1,a1,s1)
-                    .build();
-            cs1.setGoal(new KineticState(targetpos));
-            KineticState current = new KineticState(rb.getCurrentPosition(),rb.getVelocity());
-            double output = cs1.calculate(current);
-            transfer.setPower(gamepad2.right_trigger-gamepad2.left_trigger);
             spindexer.setPower(-gamepad2.left_stick_y);
-
-            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), Math.abs(flywheel.getVelocity()));
-            double output2 = cs.calculate(current1);
-            //flywheel.setPower(output2);
-            flywheel.setPower(-gamepad2.right_stick_y);
-            telemetry.addData("motor current pos",rb.getCurrentPosition());
-            telemetry.addData("target",targetpos);
+            intake.setPower(gamepad1.right_trigger-gamepad1.left_trigger);
+            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
+            flywheel.setPower(cs.calculate(current1));
+            //flywheel.setPower(-gamepad2.right_stick_y);
             telemetry.addData("motor current speed",Math.abs(flywheel.getVelocity()));
             telemetry.addData("target",targetTicksPerSecond);
-            telemetry.addData("output",output2);
-            telemetry.addData("output",output);
+            telemetry.addData("output of shooter",cs.calculate(current1));
             telemetry.update();
         }
     }
