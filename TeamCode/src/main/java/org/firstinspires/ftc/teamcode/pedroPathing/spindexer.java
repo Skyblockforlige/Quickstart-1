@@ -74,8 +74,8 @@ public class spindexer extends LinearOpMode {
             boolean idle = true;
 
             for (int i = 0; i < classifier.length; i++) {
-                if (classifier[i] == 0){ break;}
-
+                if (classifier[i] == 0)
+                {break;}
                 int next = (i + 1 < classifier.length) ? classifier[i + 1] : 0;
                 int next2 = (i + 2 < classifier.length) ? classifier[i + 2] : 0;
 
