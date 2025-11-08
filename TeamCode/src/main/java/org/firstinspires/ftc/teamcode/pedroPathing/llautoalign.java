@@ -23,12 +23,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp
 public class llautoalign extends OpMode {
-
+    private double deg=0;
+    private double tardeg=0;
     private Limelight3A limelight;
     double gear_rotio=200.0/38.0;
     private RTPAxon axon1;
     private RTPAxon axon2;
-    private Servo s;
     private double targetx;
     private IMU imu;
     private int turretOscillationDirection;
@@ -41,9 +41,8 @@ public class llautoalign extends OpMode {
 
     @Override
     public void init() {
-        s = hardwareMap.servo.get("s");
+
         turretOscillationDirection = 0; // 0=left, 1=righ
-        s.setPosition(0.5);
          lf = hardwareMap.dcMotor.get("m");
          lb = hardwareMap.dcMotor.get("lb");
          rf = hardwareMap.dcMotor.get("rf");
@@ -77,6 +76,8 @@ public class llautoalign extends OpMode {
 
     @Override
     public void loop() {
+         deg = axon1.getTotalRotation() / (200.0/38.0);
+         tardeg = axon1.getTargetRotation() / (200.0/38.0);
         axon1.update();
         axon2.update();
         double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
