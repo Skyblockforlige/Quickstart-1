@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+
 import android.graphics.Color;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -18,15 +20,20 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 @Autonomous(name = "auton left blue", group = "Examples")
 public class autonpathing extends OpMode {
+    private Follower follower;
+    private Timer pathTimer, actionTimer, opmodeTimer;
+    private int pathState;
+    private boolean beg_ball_shot=false;
 
-    private final Pose startPose = new Pose(56, 8, Math.toRadians(90));
-    private final Pose p_r1 = new Pose(41.690140845070424, 35.605633802816904, Math.toRadians(180));
-    private final Pose f_r1 = new Pose(12.619718309859156, 35.605633802816904, Math.toRadians(180));
+
+    private final Pose startPose = new Pose(58, 10, Math.toRadians(90));
+    private final Pose p_r1 = new Pose(41.690140845070424, 36.281690140845065, Math.toRadians(180));
+    private final Pose f_r1 = new Pose(29.597014925373129, 36.281690140845065, Math.toRadians(180));
     private final Pose deposit = new Pose(56.11267605633803, 8.563380281690137, Math.toRadians(90));
-    private final Pose p_r2 = new Pose(43.267605633802816, 59.492957746478865, Math.toRadians(180));
-    private final Pose f_r2 = new Pose(13.746478873239438, 59.492957746478865, Math.toRadians(180));
-    private final Pose p_r3 = new Pose(41.690140845070424, 84.28169014084507, Math.toRadians(180));
-    private final Pose f_r3 = new Pose(15.774647887323944, 83.83098591549296, Math.toRadians(180));
+    private final Pose p_r2 = new Pose(41.690140845070424, 59.492957746478865, Math.toRadians(180));
+    private final Pose f_r2 = new Pose(29.597014925373129, 59.492957746478865, Math.toRadians(180));
+    private final Pose p_r3 = new Pose(41.690140845070424, 83.83098591549296, Math.toRadians(180));
+    private final Pose f_r3 = new Pose(29.597014925373129, 83.83098591549296, Math.toRadians(180));
 
     public Path move_r1;
     public Path pickup_r1;
@@ -37,18 +44,18 @@ public class autonpathing extends OpMode {
     public Path move_r3;
     public Path pickup_r3;
 
-    private DcMotorEx spindexer;
-    private NormalizedColorSensor colorSensor1;
-    private NormalizedColorSensor colorSensor2;
-    private NormalizedColorSensor colorSensor3;
+    //private DcMotorEx spindexer;
+    //private NormalizedColorSensor colorSensor1;
+    //private NormalizedColorSensor colorSensor2;
+    //private NormalizedColorSensor colorSensor3;
     private float[] hsvValues1 = new float[3];
     private float[] hsvValues2 = new float[3];
     private float[] hsvValues3 = new float[3];
     private boolean targetPurple = true;
     private boolean idle = false;
     private int[] classifier = new int[9];
-    private CRServoImplEx transfer;
-    private ServoImplEx transfermover;
+    //private CRServoImplEx transfer;
+    //private ServoImplEx transfermover;
     private String motif;
     private double transfermoverpos = 0.5;
 
@@ -73,25 +80,104 @@ public class autonpathing extends OpMode {
 
     @Override
     public void init() {
-        spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
-        colorSensor1 = hardwareMap.get(NormalizedColorSensor.class, "cs1");
-        colorSensor2 = hardwareMap.get(NormalizedColorSensor.class, "cs2");
-        colorSensor3 = hardwareMap.get(NormalizedColorSensor.class, "cs3");
-        transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
-        transfermover = hardwareMap.get(ServoImplEx.class, "transfermover");
-        spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
+        //colorSensor1 = hardwareMap.get(NormalizedColorSensor.class, "cs1");
+        //colorSensor2 = hardwareMap.get(NormalizedColorSensor.class, "cs2");
+        //colorSensor3 = hardwareMap.get(NormalizedColorSensor.class, "cs3");
+        //transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
+        //transfermover = hardwareMap.get(ServoImplEx.class, "transfermover");
+        //spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motif = "PGP";
+        pathTimer = new Timer();
+        opmodeTimer = new Timer();
+        opmodeTimer.resetTimer();
+        follower = Constants.createFollower(hardwareMap);
+        buildPaths();
+        follower.setStartingPose(startPose);
+    }
+    public void autonomousPathUpdate() {
+        switch (pathState) {
+            case 0:
+                follower.followPath(move_r1);
+                //turn on shooter to max speed wait till shooter is max speed
+                //shoot the balls
+                //put if statement that all 3 balls have been shot
+                setPathState(1);
+                break;
+            case 1:
+
+                    follower.followPath(move_r1);
+                    //turn on intake
+                    setPathState(2);
+
+                break;
+            case 2:
+                if(!follower.isBusy()) {
+                    /* Score Preload */
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    follower.followPath(pickup_r1);
+
+                    setPathState(3);
+                }
+                break;
+            case 3:
+                if(!follower.isBusy()) {
+                    //turn off intake
+                    follower.followPath(score_r1);
+                    setPathState(4);
+                }
+                break;
+            case 4:
+                if(!follower.isBusy()) {
+                    //turn on intake
+                    follower.followPath(move_r2);
+                    setPathState(5);
+                }
+                break;
+            case 5:
+                if(!follower.isBusy()) {
+                    follower.followPath(pickup_r2);
+                    setPathState(6);
+                }
+                break;
+            case 6:
+                if(!follower.isBusy()) {
+                    //turn of intake
+                    follower.followPath(score_r2);
+                    setPathState(7);
+                }
+                break;
+            case 7:
+                if(!follower.isBusy()) {
+                    follower.followPath(move_r3);
+                    setPathState(8);
+                }
+                break;
+            case 8:
+                if(!follower.isBusy()) {
+                    follower.followPath(pickup_r3);
+                    setPathState(-1);
+                }
+                break;
+        }
+    }
+    /** These change the states of the paths and actions. It will also reset the timers of the individual switches **/
+    public void setPathState(int pState) {
+        pathState = pState;
+        pathTimer.resetTimer();
     }
 
     @Override
     public void loop() {
-        NormalizedRGBA cs1 = colorSensor1.getNormalizedColors();
-        Color.colorToHSV(cs1.toColor(), hsvValues1);
-        NormalizedRGBA cs2 = colorSensor2.getNormalizedColors();
-        Color.colorToHSV(cs2.toColor(), hsvValues2);
-        NormalizedRGBA cs3 = colorSensor3.getNormalizedColors();
-        Color.colorToHSV(cs3.toColor(), hsvValues3);
+        //NormalizedRGBA cs1 = colorSensor1.getNormalizedColors();
+        //Color.colorToHSV(cs1.toColor(), hsvValues1);
+        //NormalizedRGBA cs2 = colorSensor2.getNormalizedColors();
+        //Color.colorToHSV(cs2.toColor(), hsvValues2);
+        //NormalizedRGBA cs3 = colorSensor3.getNormalizedColors();
+        //Color.colorToHSV(cs3.toColor(), hsvValues3);
+        follower.update();
+        autonomousPathUpdate();
 
         boolean idle = true;
         for (int i = 0; i < classifier.length; i++) {
@@ -135,7 +221,7 @@ public class autonpathing extends OpMode {
             }
             if (!idle) break;
         }
-
+        /*
         if (targetPurple && !idle) {
             if (hsvValues1[0] <= 290 && hsvValues1[0] >= 270) {
                 spindexer.setPower(0);
@@ -181,5 +267,7 @@ public class autonpathing extends OpMode {
             transfer.setPower(0);
             transfermover.setPosition(0);
         }
+        */
+
     }
 }
