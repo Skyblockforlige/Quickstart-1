@@ -37,13 +37,17 @@ public class transfertest extends LinearOpMode {
     public static double transfermoveridle = 0.6;
     public static double transfermoverscore = 0.73;
     public static double transfermoverfull = 1;
+    public static int movespindexer = 900;
     public static double p=0.0039,i=0,d=0.0000005;
     public static double v=0.000372,a=0.7,s=0.0000005;
     private static int targetpos;
     private CRServo turretL;
     private CRServo turretR;
     private Servo hood;
-    public static double targetTicksPerSecond=1500;
+    public static double targetTicksPerSecond=200;
+    public static double shootclose = 1250;
+    public static double shootfar=1600;
+    public static double shooteridle = 200;
     public static double hoodtop = 0;
     public static double hoodbottom = 0.1;
     public ElapsedTime x;
@@ -61,15 +65,14 @@ public class transfertest extends LinearOpMode {
         rb = hardwareMap.get(DcMotorEx.class,"rb");
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        rb.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rb.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
         transfer=hardwareMap.get(CRServoImplEx.class, "transfer");
         intake = hardwareMap.get(DcMotorEx.class,"intake");
         transfermover=hardwareMap.get(ServoImplEx.class,"transfermover");
-        spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        spindexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         transfermover.setPosition(transfermoveridle);
         hood.setPosition(hoodbottom);
         waitForStart();
@@ -101,7 +104,15 @@ public class transfertest extends LinearOpMode {
                 hood.setPosition(hood.getPosition()-0.1);
                 sleep(100);
             }
-
+            if(gamepad2.left_bumper){
+                moveSpindexer(movespindexer,1);
+                sleep(300);
+            } else if(gamepad2.left_stick_y!=0){
+                spindexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                spindexer.setPower(-gamepad2.left_stick_y);
+            } else{
+                spindexer.setPower(0);
+            }
 
             if(gamepad2.right_trigger>0 && !gamepad2.right_bumper){
                 transfermover.setPosition(transfermoverscore);
@@ -116,12 +127,22 @@ public class transfertest extends LinearOpMode {
                 transfer.setPower(0);
             }
 
+            if(gamepad2.y){
+                targetTicksPerSecond=shootfar;
+            }
+            if(gamepad2.b){
+                targetTicksPerSecond=shootclose;
+            }
+            if(gamepad2.a){
+                targetTicksPerSecond=shooteridle;
+            }
+
+
             cs =  ControlSystem.builder()
                     .velPid(p, i, d)
                     .basicFF(v,a,s)
                     .build();
             cs.setGoal(new KineticState(0,targetTicksPerSecond));
-            spindexer.setPower(-gamepad2.left_stick_y);
             intake.setPower(gamepad1.right_trigger-gamepad1.left_trigger);
             KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
             flywheel.setPower(cs.calculate(current1));
@@ -131,5 +152,10 @@ public class transfertest extends LinearOpMode {
             telemetry.addData("output of shooter",cs.calculate(current1));
             telemetry.update();
         }
+    }
+    public void moveSpindexer(int pos, double speed){
+        spindexer.setTargetPosition((spindexer.getCurrentPosition()+pos));
+        spindexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        spindexer.setPower(speed);
     }
 }
