@@ -4,6 +4,8 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
 
 import android.graphics.Color;
 
+import com.acmerobotics.dashboard.config.Config;
+import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -24,7 +26,8 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
-
+@Configurable
+@Config
 @Autonomous(name = "auton_blue_big_triiangel", group = "Examples")
 public class closebyauton extends OpMode {
     private Follower follower;
@@ -36,7 +39,7 @@ public class closebyauton extends OpMode {
     private DcMotorEx rb;
     private ControlSystem cs;
     public static double transfermoveridle = 0.6;
-    public static double transfermoverscore = 0.73;
+    public static double transfermoverscore = 0.71;
     public static double transfermoverfull = 1;
     public static double p=0.0039,i=0,d=0.0000005;
     public static double v=0.000372,a=0.7,s=0.0000005;
@@ -47,19 +50,19 @@ public class closebyauton extends OpMode {
     public static double targetTicksPerSecond=0;
     public static double hoodtop = 0;
     public static double hoodbottom = 0.1;
-    public static int ball1_pos=0;
-    public static int ball2_pos=900;
-    public static int ball3_pos=1800;
-
-    public static int spindexer_target_pos=ball1_pos;
+    public static int ball1_pos=950;
+    public static int ball2_pos=950;
+    public static int ball3_pos=950;
 
 
 
 
-    private Timer pathTimer, actionTimer, opmodeTimer;
-    private int pathState;
-    private final Pose startPose = new Pose(72, 8, Math.toRadians(140));
 
+    private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
+    private int pathState=0;
+    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(145));
+
+    public PathChain firstpath;
     public PathChain Path1;
     public PathChain Path2;
     public PathChain Path3;
@@ -68,7 +71,7 @@ public class closebyauton extends OpMode {
     public PathChain Path6;
     public PathChain Path7;
     public PathChain Path8;
-
+/*
     private NormalizedColorSensor colorSensor1;
     private NormalizedColorSensor colorSensor2;
     private NormalizedColorSensor colorSensor3;
@@ -79,15 +82,25 @@ public class closebyauton extends OpMode {
     private boolean idle = false;
     private int[] classifier = new int[9];
     private String motif;
+    */
     private double transfermoverpos = 0.5;
 
     public void buildPaths() {
+        firstpath = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(new Pose(27.463, 131.821), new Pose(57,86))
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(130))
+                .build();
+
+
         Path1 = follower
             .pathBuilder()
             .addPath(
-                    new BezierLine(new Pose(27.463, 131.821), new Pose(44.657, 86.000))
+                    new BezierLine(new Pose(57, 86), new Pose(44.657, 86.000))
             )
-            .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(180))
+            .setLinearHeadingInterpolation(Math.toRadians(130), Math.toRadians(180))
             .build();
 
         Path2 = follower
@@ -150,9 +163,16 @@ public class closebyauton extends OpMode {
 
     @Override
     public void init() {
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startPose);
+        buildPaths();
         //colorSensor1 = hardwareMap.get(NormalizedColorSensor.class, "cs1");
         //colorSensor2 = hardwareMap.get(NormalizedColorSensor.class, "cs2");
         //colorSensor3 = hardwareMap.get(NormalizedColorSensor.class, "cs3");
+        pathTimer = new Timer();
+        opmodeTimer = new Timer();
+        goonTimer=new Timer();
+        opmodeTimer.resetTimer();
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -160,10 +180,8 @@ public class closebyauton extends OpMode {
         intake = hardwareMap.get(DcMotorEx.class,"intake");
         transfermover=hardwareMap.get(ServoImplEx.class,"transfermover");
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        spindexer.setTargetPosition(0);
-        spindexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        motif = "PGP";
+        //motif = "PGP";
         transfermover.setPosition(transfermoveridle);
         cs =  ControlSystem.builder()
                 .velPid(p, i, d)
@@ -173,42 +191,50 @@ public class closebyauton extends OpMode {
 
     }
     private void indexgoto(int target) {
-        if (spindexer.getMode() != DcMotor.RunMode.RUN_TO_POSITION) {
-            spindexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            spindexer.setPower(0.8);
-        }
-        spindexer.setTargetPosition(target);
+        spindexer.setTargetPosition(target+spindexer.getCurrentPosition());
+        spindexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        spindexer.setPower(1);
     }
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
+                transfermover.setPosition(transfermoverscore);
                 targetTicksPerSecond=1250;
-                indexgoto(ball1_pos);
-                if (pathTimer.getElapsedTimeSeconds() > 5) {
-                    transfermover.setPosition(transfermoverscore);
-                    transfer.setPower(1);
-                    indexgoto(ball2_pos);
-                    //shoot 2 balls
+                follower.followPath(firstpath);
+                if(flywheel.getVelocity()>1150){
                     setPathState(1);
+
                 }
+
+                //shoot 2 balls
+
+
                 break;
             case 1:
-                if(pathTimer.getElapsedTimeSeconds()>2)
-                {
-                    transfermover.setPosition(transfermoverfull);
-                    indexgoto(ball3_pos);
-                    setPathState(2);
-                    //shoot third ball
+                transfer.setPower(1);
+                if(pathTimer.getElapsedTimeSeconds()>2 && pathTimer.getElapsedTimeSeconds()<2.5) {
+                    indexgoto(ball2_pos);
                 }
-            case 2:
-                if(pathTimer.getElapsedTimeSeconds()>5)
-                    //move to begening of 1,2,3
-                     follower.followPath(Path1);
-                transfermover.setPosition(transfermoveridle);
-                transfer.setPower(0);
-                intake.setPower(1);
-                setPathState(3);
+                if(pathTimer.getElapsedTimeSeconds()>2.5 && pathTimer.getElapsedTimeSeconds()<3){
+                    transfermover.setPosition(transfermoveridle);
+                    indexgoto(ball3_pos);
+                }
+                if(pathTimer.getElapsedTimeSeconds()>4) {
+                    transfermover.setPosition(transfermoverfull);
+                    setPathState(2);
+                }
 
+                    //shoot third ball
+
+            case 2:
+                if(pathTimer.getElapsedTimeSeconds()>5) {
+                    //move to begening of 1,2,3
+                    follower.followPath(Path1);
+                    transfermover.setPosition(transfermoveridle);
+                    transfer.setPower(0);
+                    intake.setPower(1);
+                    setPathState(3);
+                }
                 break;
             case 3:
                 if(!follower.isBusy()) {
@@ -248,7 +274,7 @@ public class closebyauton extends OpMode {
             case 8:
                 if(pathTimer.getElapsedTimeSeconds()>1)
                     //shoot ball 3
-                    transfermover.setPosition(transfermoverfull);
+                    transfermover.setPosition(transfermoverscore);
                     indexgoto(ball3_pos);
                     setPathState(9);
                 break;
@@ -305,7 +331,7 @@ public class closebyauton extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds()>1)
                 {
                     //shoot ball 6
-                    transfermover.setPosition(transfermoverfull);
+                    transfermover.setPosition(transfermoverscore);
                     indexgoto(ball3_pos);
                     setPathState(16);
                 }
@@ -350,16 +376,16 @@ public class closebyauton extends OpMode {
 
     @Override
     public void loop() {
-
+        follower.update();
+        autonomousPathUpdate();
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
-        spindexer.setTargetPosition(spindexer_target_pos);
 
 
 
 
-
+/*
 
         NormalizedRGBA cs1 = colorSensor1.getNormalizedColors();
         Color.colorToHSV(cs1.toColor(), hsvValues1);
@@ -456,5 +482,8 @@ public class closebyauton extends OpMode {
             transfer.setPower(0);
             transfermover.setPosition(0);
         }
+
+
+ */
     }
 }
