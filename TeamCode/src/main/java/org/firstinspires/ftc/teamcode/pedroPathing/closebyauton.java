@@ -106,7 +106,7 @@ public class closebyauton extends OpMode {
         Path2 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(44.657, 86.000), new Pose(21.700, 86.000))
+                        new BezierLine(new Pose(44.657, 86.000), new Pose(24.700, 86.000))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
@@ -114,7 +114,7 @@ public class closebyauton extends OpMode {
         Path3 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(21.700, 86.000), new Pose(57.600, 86.000))
+                        new BezierLine(new Pose(24.700, 86.000), new Pose(57.600, 86.000))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(130))
                 .build();
@@ -199,35 +199,34 @@ public class closebyauton extends OpMode {
         switch (pathState) {
             case 0:
                 transfermover.setPosition(transfermoverscore);
-                targetTicksPerSecond=1250;
                 follower.followPath(firstpath);
-                if(flywheel.getVelocity()>1150){
+                targetTicksPerSecond=1250;
+
+                if(flywheel.getVelocity()>1050){
                     setPathState(1);
 
                 }
 
                 //shoot 2 balls
-
-
                 break;
             case 1:
                 transfer.setPower(1);
-                if(pathTimer.getElapsedTimeSeconds()>2 && pathTimer.getElapsedTimeSeconds()<2.5) {
-                    indexgoto(950);
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4  ) {
+                    indexgoto(-950);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>2.5 && pathTimer.getElapsedTimeSeconds()<3){
+                if(pathTimer.getElapsedTimeSeconds()>4 && pathTimer.getElapsedTimeSeconds()<4.5){
                     transfermover.setPosition(transfermoveridle);
-                    indexgoto(950*2);
+                    indexgoto(-950*2);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4) {
+                if(pathTimer.getElapsedTimeSeconds()>5&&pathTimer.getElapsedTimeSeconds()<5.5) {
                     transfermover.setPosition(transfermoverfull);
                     setPathState(2);
                 }
 
                     //shoot third ball
-
+                break;
             case 2:
-                if(pathTimer.getElapsedTimeSeconds()>5) {
+                if(pathTimer.getElapsedTimeSeconds()>1) {
                     //move to begening of 1,2,3
                     follower.followPath(Path1);
                     transfermover.setPosition(transfermoveridle);
@@ -244,10 +243,10 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 4:
-                if(pathTimer.getElapsedTimeSeconds()>1)
-                    indexgoto(950*3);
+                if(pathTimer.getElapsedTimeSeconds()>1&& pathTimer.getElapsedTimeSeconds()<2)
+                    indexgoto(-950*3);
                 if(pathTimer.getElapsedTimeSeconds()>2)
-                    indexgoto(950*4);
+                    indexgoto(-950*4);
                 setPathState(5);
             case 5:
                 if(!follower.isBusy()) {
@@ -267,16 +266,17 @@ public class closebyauton extends OpMode {
                 break;
             case 7:
                 if(pathTimer.getElapsedTimeSeconds()>0.5) {
-                    indexgoto(950*5);
+                    indexgoto(-950*5);
                     setPathState(8);
                 }
                 break;
             case 8:
-                if(pathTimer.getElapsedTimeSeconds()>1)
+                if(pathTimer.getElapsedTimeSeconds()>1) {
                     //shoot ball 3
                     transfermover.setPosition(transfermoverscore);
-                    indexgoto(950*6);
+                    indexgoto(-950 * 6);
                     setPathState(9);
+                }
                 break;
             case 9:
                 if(pathTimer.getElapsedTimeSeconds()>2) {
@@ -298,10 +298,10 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 11:
-                if(pathTimer.getElapsedTimeSeconds()>1)
-                    indexgoto(950*7);
+                if(pathTimer.getElapsedTimeSeconds()>1&&pathTimer.getElapsedTimeSeconds()<2)
+                    indexgoto(-950*7);
                 if(pathTimer.getElapsedTimeSeconds()>2)
-                    indexgoto(950*8);
+                    indexgoto(-950*8);
                 setPathState(12);
                 break;
             case 12:
@@ -324,7 +324,7 @@ public class closebyauton extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds()>0.5)
                 {
                     //shoot ball 5
-                    indexgoto(950*9);
+                    indexgoto(-950*9);
                     setPathState(15);
                 }
                 break;
@@ -333,12 +333,12 @@ public class closebyauton extends OpMode {
                 {
                     //shoot ball 6
                     transfermover.setPosition(transfermoverscore);
-                    indexgoto(950*10);
+                    indexgoto(-950*10);
                     setPathState(16);
                 }
                 break;
             case 16:
-                if(pathTimer.getElapsedTimeSeconds()>5) {
+                if(pathTimer.getElapsedTimeSeconds()>2) {
                     //go to beggining of balls 7,8,9
                     follower.followPath(Path7);
                     transfermover.setPosition(transfermoveridle);
@@ -355,17 +355,16 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 18:
-                if(pathTimer.getElapsedTimeSeconds()>4)
-                {
-                    if(pathTimer.getElapsedTimeSeconds()>1)
-                        indexgoto(950*11);
-                    if(pathTimer.getElapsedTimeSeconds()>2)
-                        indexgoto(950*12);
+
+                    if(pathTimer.getElapsedTimeSeconds()>4&&pathTimer.getElapsedTimeSeconds()<5)
+                        indexgoto(-950*11);
+                    if(pathTimer.getElapsedTimeSeconds()>5)
+                        indexgoto(-950*12);
                     if(!follower.isBusy())
                     {
                         setPathState(-1);
                     }
-                }
+
 
         }
     }
