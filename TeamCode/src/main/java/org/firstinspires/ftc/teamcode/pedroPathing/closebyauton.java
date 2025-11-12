@@ -191,7 +191,7 @@ public class closebyauton extends OpMode {
 
     }
     private void indexgoto(int target) {
-        spindexer.setTargetPosition(target+spindexer.getCurrentPosition());
+        spindexer.setTargetPosition(target);
         spindexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         spindexer.setPower(1);
     }
@@ -213,11 +213,11 @@ public class closebyauton extends OpMode {
             case 1:
                 transfer.setPower(1);
                 if(pathTimer.getElapsedTimeSeconds()>2 && pathTimer.getElapsedTimeSeconds()<2.5) {
-                    indexgoto(ball2_pos);
+                    indexgoto(950);
                 }
                 if(pathTimer.getElapsedTimeSeconds()>2.5 && pathTimer.getElapsedTimeSeconds()<3){
                     transfermover.setPosition(transfermoveridle);
-                    indexgoto(ball3_pos);
+                    indexgoto(950*2);
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4) {
                     transfermover.setPosition(transfermoverfull);
@@ -245,9 +245,9 @@ public class closebyauton extends OpMode {
                 break;
             case 4:
                 if(pathTimer.getElapsedTimeSeconds()>1)
-                    indexgoto(ball2_pos);
+                    indexgoto(950*3);
                 if(pathTimer.getElapsedTimeSeconds()>2)
-                    indexgoto(ball1_pos);
+                    indexgoto(950*4);
                 setPathState(5);
             case 5:
                 if(!follower.isBusy()) {
@@ -267,7 +267,7 @@ public class closebyauton extends OpMode {
                 break;
             case 7:
                 if(pathTimer.getElapsedTimeSeconds()>0.5) {
-                    indexgoto(ball2_pos);
+                    indexgoto(950*5);
                     setPathState(8);
                 }
                 break;
@@ -275,7 +275,7 @@ public class closebyauton extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds()>1)
                     //shoot ball 3
                     transfermover.setPosition(transfermoverscore);
-                    indexgoto(ball3_pos);
+                    indexgoto(950*6);
                     setPathState(9);
                 break;
             case 9:
@@ -284,6 +284,7 @@ public class closebyauton extends OpMode {
                     follower.followPath(Path4);
 
                     transfermover.setPosition(transfermoveridle);
+                    intake.setPower(1);
                     transfer.setPower(0);
 
                     setPathState(10);
@@ -298,9 +299,9 @@ public class closebyauton extends OpMode {
                 break;
             case 11:
                 if(pathTimer.getElapsedTimeSeconds()>1)
-                    indexgoto(ball2_pos);
+                    indexgoto(950*7);
                 if(pathTimer.getElapsedTimeSeconds()>2)
-                    indexgoto(ball1_pos);
+                    indexgoto(950*8);
                 setPathState(12);
                 break;
             case 12:
@@ -323,7 +324,7 @@ public class closebyauton extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds()>0.5)
                 {
                     //shoot ball 5
-                    indexgoto(2);
+                    indexgoto(950*9);
                     setPathState(15);
                 }
                 break;
@@ -332,7 +333,7 @@ public class closebyauton extends OpMode {
                 {
                     //shoot ball 6
                     transfermover.setPosition(transfermoverscore);
-                    indexgoto(ball3_pos);
+                    indexgoto(950*10);
                     setPathState(16);
                 }
                 break;
@@ -357,9 +358,9 @@ public class closebyauton extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds()>4)
                 {
                     if(pathTimer.getElapsedTimeSeconds()>1)
-                        indexgoto(ball2_pos);
+                        indexgoto(950*11);
                     if(pathTimer.getElapsedTimeSeconds()>2)
-                        indexgoto(ball1_pos);
+                        indexgoto(950*12);
                     if(!follower.isBusy())
                     {
                         setPathState(-1);
