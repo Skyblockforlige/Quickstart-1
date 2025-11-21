@@ -61,22 +61,21 @@ public class transfertest extends LinearOpMode {
         rconstants.initHardware(hardwareMap);
         turretL=rconstants.turretL;
         turretR = rconstants.turretR;;
-        lf = hardwareMap.dcMotor.get("lf");
-        lb = hardwareMap.dcMotor.get("lb");
-        rf = hardwareMap.dcMotor.get("rf");
-        hood=hardwareMap.servo.get("hood");
-        rb = hardwareMap.get(DcMotorEx.class,"rb");
+        lf=rconstants.lf;
+        lb=rconstants.lb;
+        rf=rconstants.rf;
+        rb=rconstants.rb;
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
+        flywheel=rconstants.flywheel;
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
-        transfer=hardwareMap.get(CRServoImplEx.class, "transfer");
-        intake = hardwareMap.get(DcMotorEx.class,"intake");
-        transfermover=hardwareMap.get(ServoImplEx.class,"transfermover");
+        spindexer=rconstants.spindexer;
+        transfer=rconstants.transfer;
+        intake=rconstants.intake;
+        transfermover=rconstants.transfermover;
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        transfermover.setPosition(transfermoveridle);
+        transfermover.setPosition(rconstants.transfermoveridle);
         waitForStart();
         while (opModeIsActive()){
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
@@ -100,7 +99,7 @@ public class transfertest extends LinearOpMode {
             turretR.setPower(gamepad2.right_stick_x);
 
             if(gamepad2.left_bumper){
-                moveSpindexer(movespindexer,1);
+                moveSpindexer(rconstants.movespindexer,1);
                 sleep(300);
             } else if(gamepad2.left_stick_y!=0){
                 spindexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -110,15 +109,15 @@ public class transfertest extends LinearOpMode {
             }
 
             if(gamepad2.right_trigger>0 && !gamepad2.right_bumper){
-                transfermover.setPosition(transfermoverscore);
+                transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(gamepad2.right_trigger);
             }
             if(gamepad2.right_trigger>0 && gamepad2.right_bumper){
-                transfermover.setPosition(transfermoverfull);
+                transfermover.setPosition(rconstants.transfermoverfull);
                 transfer.setPower(gamepad2.right_trigger);
             }
             if(gamepad2.right_trigger==0){
-                transfermover.setPosition(transfermoveridle);
+                transfermover.setPosition(rconstants.transfermoveridle);
                 transfer.setPower(0);
             }
 

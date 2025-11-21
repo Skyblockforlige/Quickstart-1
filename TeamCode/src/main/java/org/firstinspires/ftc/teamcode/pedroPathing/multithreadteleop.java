@@ -58,25 +58,27 @@ public class multithreadteleop extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         x= new ElapsedTime();
         x.reset();
-        turretL = hardwareMap.crservo.get("turretL");
-        turretR = hardwareMap.crservo.get("turretR");
-        lf = hardwareMap.dcMotor.get("lf");
-        lb = hardwareMap.dcMotor.get("lb");
-        rf = hardwareMap.dcMotor.get("rf");
-        rb = hardwareMap.get(DcMotorEx.class,"rb");
+        rconstants.initHardware(hardwareMap);
+        turretL=rconstants.turretL;
+        turretR=rconstants.turretR;
+        lf=rconstants.lf;
+        lb=rconstants.lb;
+        rf=rconstants.rf;
+        rb=rconstants.rb;
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
+        flywheel=rconstants.flywheel;
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
-        transfer=hardwareMap.get(CRServoImplEx.class, "transfer");
-        intake = hardwareMap.get(DcMotorEx.class,"intake");
-        transfermover=hardwareMap.get(ServoImplEx.class,"transfermover");
+        spindexer=rconstants.spindexer;
+        transfer=rconstants.transfer;
+        intake=rconstants.intake;
+        transfermover=rconstants.transfermover;
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         transfermover.setPosition(transfermoveridle);
         int target = 0;
         Thread g1 = new Thread(() ->{
+            while(opModeIsActive()){
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
             double rx = gamepad1.right_stick_x;
@@ -97,59 +99,51 @@ public class multithreadteleop extends LinearOpMode {
             turretL.setPower(gamepad2.right_stick_x);
             turretR.setPower(gamepad2.right_stick_x);
             if(gamepad2.right_trigger>0 && !gamepad2.right_bumper){
-                transfermover.setPosition(transfermoverscore);
+                transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(gamepad2.right_trigger);
             }
             if(gamepad2.right_trigger>0 && gamepad2.right_bumper){
-                transfermover.setPosition(transfermoverfull);
+                transfermover.setPosition(rconstants.transfermoverfull);
                 transfer.setPower(gamepad2.right_trigger);
             }
             if(gamepad2.right_trigger==0){
-                transfermover.setPosition(transfermoveridle);
+                transfermover.setPosition(rconstants.transfermoveridle);
                 transfer.setPower(0);
             }
 
-            if(gamepad2.y){
-                targetTicksPerSecond=shootfar;
-            }
-            if(gamepad2.b){
-                targetTicksPerSecond=shootclose;
-            }
-            if(gamepad2.a){
-                targetTicksPerSecond=shooteridle;
-            }
+
+        }
         });
-        Thread g2 = new Thread(()->{
-            if(gamepad2.left_bumper){
-                moveSpindexer(movespindexer,1);
-                sleep(300);
-            } else if(gamepad2.left_stick_y!=0){
-                spindexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                spindexer.setPower(-gamepad2.left_stick_y);
-            } else{
-                spindexer.setPower(0);
-            }
-        });
+
         waitForStart();
         g1.start();
-        g2.start();
         while (opModeIsActive()){
-
-
+            if(gamepad2.y){
+                targetTicksPerSecond=rconstants.shootfar;
+            }
+            if(gamepad2.b){
+                targetTicksPerSecond=rconstants.shootclose;
+            }
+            if(gamepad2.a){
+                targetTicksPerSecond=rconstants.shooteridle;
+            }
 
             KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
             cs1 = ControlSystem.builder()
                     .posPid(p1,i1,d1)
                     .build();
             cs1.setGoal(new KineticState(target));
-            if(gamepad2.a){
-                target+=movespindexer;
+            if(gamepad2.left_bumper){
+                int moveamount = rconstants.movespindexer-(target%rconstants.movespindexer);
+                target+=moveamount;
                 sleep(300);
             }
             if(Math.abs(gamepad2.left_stick_y)==0) {
                 spindexer.setPower(cs1.calculate(current2));
             } else{
                 spindexer.setPower(-gamepad2.left_stick_y);
+                target=spindexer.getCurrentPosition();
+
             }
 
             cs =  ControlSystem.builder()
@@ -166,19 +160,12 @@ public class multithreadteleop extends LinearOpMode {
             telemetry.addData("output of shooter",cs.calculate(current1));
             telemetry.update();
         }
-
         try {
             g1.join();
-            g2.join();
         } catch (InterruptedException e) {
             telemetry.addData("Error", "Thread Interrupted");
         }
         telemetry.addData("Status", "Stopped");
         telemetry.update();
-    }
-    public void moveSpindexer(int pos, double speed){
-        spindexer.setTargetPosition((spindexer.getCurrentPosition()+pos));
-        spindexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        spindexer.setPower(speed);
     }
 }

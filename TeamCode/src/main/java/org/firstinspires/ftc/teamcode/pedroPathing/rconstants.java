@@ -24,6 +24,7 @@ public class rconstants {
     public static double transfermoveridle = 0.6;
     public static double transfermoverscore = 0.73;
     public static double transfermoverfull = 1;
+    public static int movespindexer = 2731;
 
     public static Servo hood;
 
