@@ -75,7 +75,7 @@ public class multithreadteleop extends LinearOpMode {
         transfermover=rconstants.transfermover;
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        transfermover.setPosition(transfermoveridle);
+        transfermover.setPosition(rconstants.transfermoveridle);
         int target = 0;
         Thread g1 = new Thread(() ->{
             while(opModeIsActive()){
