@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.LinearHeadingPath;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -22,20 +23,19 @@ import org.firstinspires.ftc.teamcode.pedroPathing.RTPAxon;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-
+import java.util.List;
 
 
 @Configurable
 @Config
 @TeleOp
-public class llautoalign extends LinearOpMode {
+public class llautoalignblue extends LinearOpMode {
     private double deg=0;
     private double tardeg=0;
     private Limelight3A limelight;
     double gear_rotio=200.0/38.0;
     private CRServo turretL;
     private CRServo turretR;
-    private CRServo ll;
     private double targetx;
     private IMU imu;
     private int turretOscillationDirection;
@@ -66,7 +66,6 @@ public class llautoalign extends LinearOpMode {
         imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        ll= hardwareMap.crservo.get("ll");
         //ll.setDirection(CRServo.Direction.REVERSE);
         //5 on control hub
          turretL = hardwareMap.get(CRServo.class, "turretL");
@@ -103,6 +102,11 @@ public class llautoalign extends LinearOpMode {
                 telemetry.addData("Ty", llResult.getTy());
                 telemetry.addData("Ta", llResult.getTa());
             }
+            List<LLResultTypes.FiducialResult> fiducialResults = llResult.getFiducialResults();
+
+            for (LLResultTypes.FiducialResult fr : fiducialResults) {
+                telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
+            }
 
             // Turret code - detects AprilTag and goes to its location
 
@@ -113,32 +117,27 @@ public class llautoalign extends LinearOpMode {
 
                 if (targetx >= 5.5) {
                     // not necesary but makes it move exactly one degree
-                    turretL.setPower(gear_rotio*0.1*multiplier);
-                    turretR.setPower(gear_rotio*0.1*multiplier);
-                    ll.setPower(0.1);
+                    turretL.setPower(0.5);
+                    turretR.setPower(0.5);
                     turretOscillationDirection = 0;
                     //switch to negative and make other postive if goes wrong direction
                 } else if (targetx <= -5.5) {
-                    ll.setPower(-0.1);
-                    turretL.setPower(-gear_rotio*0.1*multiplier);
-                    turretR.setPower(-gear_rotio*0.1*multiplier);
+                    turretL.setPower(-0.5);
+                    turretR.setPower(-0.5);
                     turretOscillationDirection = 1;
                 } else if(targetx>=-5.5&& targetx<=5.5){
                     turretR.setPower(0);
                     turretL.setPower(0);
-                    ll.setPower(0);
                 }
             } else{
                 if(turretOscillationDirection == 0){
-                    turretL.setPower(-gear_rotio*0.1*multiplier);
-                    turretR.setPower(-gear_rotio*0.1*multiplier);
-                    ll.setPower(-0.1);
+                    turretL.setPower(-0.1);
+                    turretR.setPower(-0.1);
                     sleep(500);
                     turretOscillationDirection=1;
                 } else{
-                    turretL.setPower(gear_rotio*0.1*multiplier);
-                    turretR.setPower(gear_rotio*0.1*multiplier);
-                    ll.setPower(0.1);
+                    turretL.setPower(0.1);
+                    turretR.setPower(0.1);
                     sleep(500);
                     turretOscillationDirection=0;
                 }
