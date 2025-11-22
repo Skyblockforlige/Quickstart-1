@@ -5,6 +5,10 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -12,9 +16,12 @@ import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import java.util.Timer;
 
@@ -27,9 +34,15 @@ public class multithreadteleop extends LinearOpMode {
     private DcMotor lf;
     private DcMotor lb;
     private DcMotor rf;
+
+    private double targetx;
+
+    private IMU imu;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
+    private Limelight3A limelight;
+    private int turretOscillationDirection;
     private DcMotorEx flywheel;
     private DcMotorEx intake;
     private DcMotorEx rb;
@@ -48,6 +61,8 @@ public class multithreadteleop extends LinearOpMode {
     private Servo hood;
     public static double targetTicksPerSecond=200;
     public static double shootclose = 1250;
+
+    public static boolean autoalign = false;
     public static double shootfar=1600;
     public static double shooteridle = 200;
     public static double hoodtop = 0;
@@ -58,7 +73,9 @@ public class multithreadteleop extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         x= new ElapsedTime();
         x.reset();
+        turretOscillationDirection = 0;
         rconstants.initHardware(hardwareMap);
+        limelight=rconstants.limelight;
         turretL=rconstants.turretL;
         turretR=rconstants.turretR;
         lf=rconstants.lf;
@@ -76,6 +93,12 @@ public class multithreadteleop extends LinearOpMode {
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         transfermover.setPosition(rconstants.transfermoveridle);
+        limelight.pipelineSwitch(1);
+
+
+        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP);
+        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
         int target = 0;
         Thread g1 = new Thread(() ->{
             while(opModeIsActive()){
@@ -95,6 +118,12 @@ public class multithreadteleop extends LinearOpMode {
             lb.setPower(backLeftPower);
             rf.setPower(frontRightPower);
             rb.setPower(backRightPower);
+
+
+
+                YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+                limelight.updateRobotOrientation(orientation.getYaw());
+                LLResult llResult = limelight.getLatestResult();
 
             turretL.setPower(gamepad2.right_stick_x);
             turretR.setPower(gamepad2.right_stick_x);
@@ -145,6 +174,47 @@ public class multithreadteleop extends LinearOpMode {
                 target=spindexer.getCurrentPosition();
 
             }
+            if(gamepad2.ps){
+                autoalign=!autoalign;
+                sleep(300);
+            }
+
+            if(autoalign && Math.abs(gamepad1.left_stick_x)==0) {
+                    LLResult llResult = limelight.getLatestResult();
+
+
+                    if (llResult != null) {
+                        targetx = llResult.getTx();
+                        telemetry.addData("targetx", llResult.getTx());
+
+                        if (targetx >= 5.5) {
+                            // not necesary but makes it move exactly one degree
+                            turretL.setPower(0.5);
+                            turretR.setPower(0.5);
+                            turretOscillationDirection = 0;
+                            //switch to negative and make other postive if goes wrong direction
+                        } else if (targetx <= -5.5) {
+                            turretL.setPower(-0.5);
+                            turretR.setPower(-0.5);
+                            turretOscillationDirection = 1;
+                        } else if (targetx >= -5.5 && targetx <= 5.5) {
+                            turretR.setPower(0);
+                            turretL.setPower(0);
+                        }
+                    } else {
+                        if (turretOscillationDirection == 0) {
+                            turretL.setPower(-0.1);
+                            turretR.setPower(-0.1);
+                            sleep(500);
+                            turretOscillationDirection = 1;
+                        } else {
+                            turretL.setPower(0.1);
+                            turretR.setPower(0.1);
+                            sleep(500);
+                            turretOscillationDirection = 0;
+                        }
+                    }
+                }
 
             cs =  ControlSystem.builder()
                     .velPid(p, i, d)

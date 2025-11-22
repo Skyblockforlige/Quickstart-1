@@ -7,6 +7,9 @@ import android.graphics.Color;
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.follower.Follower;
@@ -19,10 +22,13 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
@@ -34,10 +40,18 @@ public class closebyauton extends OpMode {
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
+
+    private IMU imu;
     private DcMotorEx flywheel;
     private DcMotorEx intake;
+
+    private Limelight3A limelight;
     private DcMotorEx rb;
     private ControlSystem cs;
+
+    public double targetx;
+
+    public int turretOscillationDirection;
     public static double transfermoveridle = 0.6;
     public static double transfermoverscore = 0.73;
     public static double transfermoverfull = 1;
@@ -48,6 +62,8 @@ public class closebyauton extends OpMode {
     private CRServo turretR;
     private Servo hood;
     public static double targetTicksPerSecond=0;
+
+    public static double p1=0.0009,i1=0,d1=0;
     public static double hoodtop = 0;
     public static double hoodbottom = 0.1;
     public static int ball1_pos=950;
@@ -56,6 +72,7 @@ public class closebyauton extends OpMode {
 
 
 
+    ControlSystem cs1;
 
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
@@ -71,20 +88,9 @@ public class closebyauton extends OpMode {
     public PathChain Path6;
     public PathChain Path7;
     public PathChain Path8;
-    public static int moveincrement = 2786/3;
+    public static int moveincrement = 2731;
     public static double constraint =1;
-/*
-    private NormalizedColorSensor colorSensor1;
-    private NormalizedColorSensor colorSensor2;
-    private NormalizedColorSensor colorSensor3;
-    private float[] hsvValues1 = new float[3];
-    private float[] hsvValues2 = new float[3];
-    private float[] hsvValues3 = new float[3];
-    private boolean targetPurple = true;
-    private boolean idle = false;
-    private int[] classifier = new int[9];
-    private String motif;
-    */
+    int target = 0;
     private double transfermoverpos = 0.5;
 
     public void buildPaths() {
@@ -178,6 +184,12 @@ public class closebyauton extends OpMode {
         opmodeTimer = new Timer();
         goonTimer=new Timer();
         opmodeTimer.resetTimer();
+        imu = hardwareMap.get(IMU.class, "imu");
+        turretOscillationDirection = 0;
+
+        turretL = hardwareMap.crservo.get("turretL");
+        turretR = hardwareMap.crservo.get("turretR");
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -185,6 +197,12 @@ public class closebyauton extends OpMode {
         intake = hardwareMap.get(DcMotorEx.class,"intake");
         transfermover=hardwareMap.get(ServoImplEx.class,"transfermover");
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        limelight.pipelineSwitch(1);
+
+
+        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP);
+        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
 
         //motif = "PGP";
         transfermover.setPosition(transfermoveridle);
@@ -195,11 +213,7 @@ public class closebyauton extends OpMode {
 
 
     }
-    private void indexgoto(int target) {
-        spindexer.setTargetPosition(target);
-        spindexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        spindexer.setPower(0.5);
-    }
+
     public void autonomousPathUpdate() {
         int pos = spindexer.getCurrentPosition();
         switch (pathState) {
@@ -218,10 +232,10 @@ public class closebyauton extends OpMode {
                 transfer.setPower(1);
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
-                    indexgoto(moveincrement*2 + pos);
+                    target= rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
-                    indexgoto(moveincrement +pos);
+                    target= 2*rconstants.movespindexer;
                     transfermover.setPosition(transfermoveridle);
                 }
                 if(pathTimer.getElapsedTimeSeconds()>5.5&&pathTimer.getElapsedTimeSeconds()<5.8){
@@ -250,10 +264,34 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 4:
-                spindexer.setPower(0.5);
-                if(pathTimer.getElapsedTimeSeconds()>3) {
-                    setPathState(5);
+                if (pathTimer.getElapsedTimeSeconds() > 1.5 && pathTimer.getElapsedTimeSeconds() < 2) {
+                    target= 3*rconstants.movespindexer;
+
                 }
+                if (pathTimer.getElapsedTimeSeconds() > 2.1 && pathTimer.getElapsedTimeSeconds() < 2.5) {
+                    target= 4*rconstants.movespindexer;
+
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 2.6 && pathTimer.getElapsedTimeSeconds() < 3) {
+                    target=5*rconstants.movespindexer;
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 3.5 && pathTimer.getElapsedTimeSeconds() < 4) {
+                    target=6*rconstants.movespindexer;
+
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 4.5 && pathTimer.getElapsedTimeSeconds() < 5) {
+                    target=7*rconstants.movespindexer;
+
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 5.5 && pathTimer.getElapsedTimeSeconds() < 6) {
+                    target=8*rconstants.movespindexer;
+
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 6.5) {
+                    setPathState(5);
+
+                }
+
             case 5:
                 if(!follower.isBusy()) {
                     follower.followPath(Path3);
@@ -266,10 +304,10 @@ public class closebyauton extends OpMode {
                 transfer.setPower(1);
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
-                    indexgoto(moveincrement*2 +pos);
+                    target=9*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
-                    indexgoto(moveincrement +pos);
+                    target=10*rconstants.movespindexer;
                     transfermover.setPosition(transfermoveridle);
                 }
                 if(pathTimer.getElapsedTimeSeconds()>5.5&&pathTimer.getElapsedTimeSeconds()<5.8){
@@ -308,9 +346,32 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 11:
-                spindexer.setPower(0.5);
-                if(!follower.isBusy()) {
+                if (pathTimer.getElapsedTimeSeconds() > 1.5 && pathTimer.getElapsedTimeSeconds() < 2) {
+                    target=11*rconstants.movespindexer;
+
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 2.1 && pathTimer.getElapsedTimeSeconds() < 2.5) {
+                    target=12*rconstants.movespindexer;
+
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 2.6 && pathTimer.getElapsedTimeSeconds() < 3) {
+                    target=13*rconstants.movespindexer;
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 3.5 && pathTimer.getElapsedTimeSeconds() < 4) {
+                    target=14*rconstants.movespindexer;
+
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 4.5 && pathTimer.getElapsedTimeSeconds() < 5) {
+                    target=15*rconstants.movespindexer;
+
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 5.5 && pathTimer.getElapsedTimeSeconds() < 6) {
+                    target=16*rconstants.movespindexer;
+
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 6.5) {
                     setPathState(12);
+
                 }
                 break;
             case 12:
@@ -333,10 +394,10 @@ public class closebyauton extends OpMode {
                 transfer.setPower(1);
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
-                    indexgoto(moveincrement*2 +pos);
+                    target=17*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
-                    indexgoto(moveincrement +pos);
+                    target=18*rconstants.movespindexer;
                     transfermover.setPosition(transfermoveridle);
                 }
                 if(pathTimer.getElapsedTimeSeconds()>5.5&&pathTimer.getElapsedTimeSeconds()<5.8){
@@ -384,14 +445,45 @@ public class closebyauton extends OpMode {
         pathTimer.resetTimer();
     }
 
+    public void turretauto() {
+        while (targetx >= -5.5 && targetx <= 5.5) {
+            if (targetx >= 5.5) {
+                // not necesary but makes it move exactly one degree
+                turretL.setPower(0.5);
+                turretR.setPower(0.5);
+                turretOscillationDirection = 0;
+                //switch to negative and make other postive if goes wrong direction
+            } else if (targetx <= -5.5) {
+                turretL.setPower(-0.5);
+                turretR.setPower(-0.5);
+                turretOscillationDirection = 1;
+            } else if (targetx >= -5.5 && targetx <= 5.5) {
+                turretR.setPower(0);
+                turretL.setPower(0);
+            }
+        }
+    }
+
 
     @Override
     public void loop() {
         follower.update();
         autonomousPathUpdate();
+        KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
+        cs1 = ControlSystem.builder()
+                .posPid(p1,i1,d1)
+                .build();
+        cs1.setGoal(new KineticState(target));
+        spindexer.setPower(cs1.calculate(current2));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
+
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+        LLResult llResult = limelight.getLatestResult();
+
+        telemetry.addData("sped", flywheel.getVelocity());
 
 
 

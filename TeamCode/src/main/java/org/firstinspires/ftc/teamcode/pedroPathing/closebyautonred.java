@@ -190,7 +190,6 @@ public class closebyautonred extends OpMode {
         transfermover.setPosition(transfermoveridle);
         cs = ControlSystem.builder()
                 .velPid(p1, i1, d1)
-                .basicFF(v, a, s)
                 .build();
 
 
