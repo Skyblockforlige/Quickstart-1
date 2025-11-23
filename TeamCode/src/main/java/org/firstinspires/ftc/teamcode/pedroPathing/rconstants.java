@@ -15,18 +15,20 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import dev.nextftc.control.ControlSystem;
-
+@Configurable
+@Config
 public class rconstants {
 
     public static double transfermoveridle = 0.6;
-
     public static Limelight3A limelight;
-    public static double transfermoverscore = 0.73;
+    public static NormalizedColorSensor colorSensor;
+    public static double transfermoverscore = 0.74;
     public static double transfermoverfull = 1;
     public static int movespindexer = 2731;
 
@@ -52,7 +54,7 @@ public class rconstants {
 
 
     public static void initHardware(HardwareMap hardwareMap){
-
+        colorSensor=hardwareMap.get(NormalizedColorSensor.class,"cs1");
         turretL = hardwareMap.crservo.get("turretL");
         turretR = hardwareMap.crservo.get("turretR");
         lf = hardwareMap.dcMotor.get("lf");

@@ -96,9 +96,9 @@ public class multithreadteleop extends LinearOpMode {
         limelight.pipelineSwitch(1);
 
 
-        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP);
-        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
+       // RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+            //    RevHubOrientationOnRobot.UsbFacingDirection.UP);
+        //imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
         int target = 0;
         Thread g1 = new Thread(() ->{
             while(opModeIsActive()){
@@ -121,9 +121,7 @@ public class multithreadteleop extends LinearOpMode {
 
 
 
-                YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-                limelight.updateRobotOrientation(orientation.getYaw());
-                LLResult llResult = limelight.getLatestResult();
+
 
             turretL.setPower(gamepad2.right_stick_x);
             turretR.setPower(gamepad2.right_stick_x);
@@ -174,48 +172,6 @@ public class multithreadteleop extends LinearOpMode {
                 target=spindexer.getCurrentPosition();
 
             }
-            if(gamepad2.ps){
-                autoalign=!autoalign;
-                sleep(300);
-            }
-
-            if(autoalign && Math.abs(gamepad1.left_stick_x)==0) {
-                    LLResult llResult = limelight.getLatestResult();
-
-
-                    if (llResult != null) {
-                        targetx = llResult.getTx();
-                        telemetry.addData("targetx", llResult.getTx());
-
-                        if (targetx >= 5.5) {
-                            // not necesary but makes it move exactly one degree
-                            turretL.setPower(0.5);
-                            turretR.setPower(0.5);
-                            turretOscillationDirection = 0;
-                            //switch to negative and make other postive if goes wrong direction
-                        } else if (targetx <= -5.5) {
-                            turretL.setPower(-0.5);
-                            turretR.setPower(-0.5);
-                            turretOscillationDirection = 1;
-                        } else if (targetx >= -5.5 && targetx <= 5.5) {
-                            turretR.setPower(0);
-                            turretL.setPower(0);
-                        }
-                    } else {
-                        if (turretOscillationDirection == 0) {
-                            turretL.setPower(-0.1);
-                            turretR.setPower(-0.1);
-                            sleep(500);
-                            turretOscillationDirection = 1;
-                        } else {
-                            turretL.setPower(0.1);
-                            turretR.setPower(0.1);
-                            sleep(500);
-                            turretOscillationDirection = 0;
-                        }
-                    }
-                }
-
             cs =  ControlSystem.builder()
                     .velPid(p, i, d)
                     .basicFF(v,a,s)
