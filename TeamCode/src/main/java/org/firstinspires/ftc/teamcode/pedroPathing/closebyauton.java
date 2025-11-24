@@ -44,7 +44,8 @@ public class closebyauton extends OpMode {
     private IMU imu;
     private DcMotorEx flywheel;
     private DcMotorEx intake;
-
+    int ballCount = 0;
+    boolean colorPreviouslyDetected = false;
     private Limelight3A limelight;
     private DcMotorEx rb;
     private ControlSystem cs;
@@ -69,15 +70,18 @@ public class closebyauton extends OpMode {
     public static int ball1_pos=950;
     public static int ball2_pos=950;
     public static int ball3_pos=950;
-
-
-
+    int[] ballSlots = new int[]{0,0,0}; // 0 empty, 1 purple, 2 green
+    boolean sorting = false;
+    int[] sortTarget = new int[]{0,0,0};
+    public static NormalizedColorSensor colorSensor;
     ControlSystem cs1;
+    int intakeBaseTarget = 0;
+    boolean intakeBaseSet = false;
 
+    boolean pendingMove = false;
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    public NormalizedColorSensor colorSensor;
     private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(145));
 
     public PathChain firstpath;
@@ -92,9 +96,9 @@ public class closebyauton extends OpMode {
     public static int moveincrement = 2731;
     public static double constraint =1;
     public static int target = 0;
-    public static boolean spindexermoved1=true,spindexermoved2=true,spindexermoved3=true;
     private double transfermoverpos = 0.5;
     float[] hsv = new float[3];
+    public static boolean spindexermoved=false;
 
 
     public void buildPaths() {
@@ -186,6 +190,7 @@ public class closebyauton extends OpMode {
         //colorSensor3 = hardwareMap.get(NormalizedColorSensor.class, "cs3");
         pathTimer = new Timer();
         opmodeTimer = new Timer();
+        actionTimer = new Timer();
         goonTimer=new Timer();
         opmodeTimer.resetTimer();
         imu = hardwareMap.get(IMU.class, "imu");
@@ -238,15 +243,13 @@ public class closebyauton extends OpMode {
             case 1:
                 transfer.setPower(1);
 
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4&&spindexermoved1) {
-                    target+=rconstants.movespindexer;
-                    spindexermoved1=false;
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) {
+                    target=rconstants.movespindexer;
 
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5&&spindexermoved2) {
-                    target+=rconstants.movespindexer;
+                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
+                    target=2*rconstants.movespindexer;
                     transfermover.setPosition(rconstants.transfermoveridle);
-                    spindexermoved2=false;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>5.5&&pathTimer.getElapsedTimeSeconds()<5.8){
                     transfermover.setPosition(rconstants.transfermoverfull);
@@ -259,9 +262,6 @@ public class closebyauton extends OpMode {
                     //shoot third ball
                 break;
             case 2:
-                spindexermoved1=true;
-                spindexermoved2=true;
-                spindexermoved3=true;
                 if(pathTimer.getElapsedTimeSeconds()>1) {
                     //move to begening of 1,2,3
                     follower.followPath(Path1);
@@ -278,32 +278,63 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 4:
-                if (pathTimer.getElapsedTimeSeconds() > 1.5 && pathTimer.getElapsedTimeSeconds() < 2&&spindexermoved1) {
-                    target+=rconstants.movespindexer;
-                    spindexermoved1=false;
+                // Set base target once, right when we start collecting this trio
+                if (!intakeBaseSet) {
+                    // align base to nearest slot boundary so math is clean
+                    int cur = spindexer.getCurrentPosition();
+                    intakeBaseTarget = cur - (cur % rconstants.movespindexer);
+                    target = intakeBaseTarget;
+                    intakeBaseSet = true;
+                }
 
-                }
-                if (pathTimer.getElapsedTimeSeconds() > 2.1 && pathTimer.getElapsedTimeSeconds() < 2.5&&spindexermoved2) {
-                    target+=rconstants.movespindexer;
-                    spindexermoved2=false;
+                boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
 
+                // READ COLOR (same hue method as teleop)
+                colorSensor.getNormalizedColors();
+                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+
+                float hue = hsv[0];
+                boolean isPurple = (hue > 200 && hue < 300);
+                boolean isGreen  = (hue > 95  && hue < 200);
+                boolean colorDetected = (isPurple || isGreen);
+
+                // New ball enters
+                if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                    // record color into slot memory
+                    if (isPurple) ballSlots[ballCount] = 1;
+                    if (isGreen)  ballSlots[ballCount] = 2;
+
+                    ballCount++;
+                    colorPreviouslyDetected = true;
+
+                    // schedule ONE move after short delay (no sleep in OpMode)
+                    actionTimer.resetTimer();
+                    pendingMove = true;
                 }
-                if (pathTimer.getElapsedTimeSeconds() > 2.6 && pathTimer.getElapsedTimeSeconds() < 3&&spindexermoved3) {
-                    target+=rconstants.movespindexer;
-                    spindexermoved3=false;
+
+                // reset detection when sensor no longer sees a ball
+                if (!colorDetected) {
+                    colorPreviouslyDetected = false;
                 }
-                if (pathTimer.getElapsedTimeSeconds() > 6.5) {
+
+                // Execute the scheduled move exactly once
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > 0.25) {
+                    // absolute target based on count (never grows indefinitely)
+                    target = intakeBaseTarget + ballCount * rconstants.movespindexer;
+                    pendingMove = false;
+                }
+
+                // after 3 balls, move to next path state once follower done
+                if (ballCount >= 3 && !follower.isBusy()) {
                     setPathState(5);
-
                 }
-                break;
 
+                break;
             case 5:
                 if(!follower.isBusy()) {
 
-                    spindexermoved1=true;
-                    spindexermoved2=true;
-                    spindexermoved3=true;
+
                     follower.followPath(Path3);
                     setPathState(6);
                     //move to shoot position
@@ -313,14 +344,12 @@ public class closebyauton extends OpMode {
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
 
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4&&spindexermoved1 ) {
-                    target+=rconstants.movespindexer;
-                    spindexermoved1=false;
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
+                    target=6*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5&&spindexermoved2) {
-                    target+=rconstants.movespindexer;
+                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
+                    target=7*rconstants.movespindexer;
                     transfermover.setPosition(rconstants.transfermoveridle);
-                    spindexermoved2=false;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>5.5&&pathTimer.getElapsedTimeSeconds()<5.8){
                     transfermover.setPosition(rconstants.transfermoverfull);
@@ -331,9 +360,7 @@ public class closebyauton extends OpMode {
                 break;
             case 7:
 
-                spindexermoved1=true;
-                spindexermoved2=true;
-                spindexermoved3=true;
+
                     setPathState(8);
 
                 break;
@@ -361,19 +388,16 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 11:
-                if (pathTimer.getElapsedTimeSeconds() > 1.5 && pathTimer.getElapsedTimeSeconds() < 2&&spindexermoved1) {
+                if (pathTimer.getElapsedTimeSeconds() > 1.5 && pathTimer.getElapsedTimeSeconds() < 2) {
                     target+=rconstants.movespindexer;
-                    spindexermoved1=false;
 
                 }
-                if (pathTimer.getElapsedTimeSeconds() > 2.1 && pathTimer.getElapsedTimeSeconds() < 2.5&& spindexermoved2) {
+                if (pathTimer.getElapsedTimeSeconds() > 2.1 && pathTimer.getElapsedTimeSeconds() < 2.5) {
                     target+=rconstants.movespindexer;
-                    spindexermoved2=false;
 
                 }
-                if (pathTimer.getElapsedTimeSeconds() > 2.6 && pathTimer.getElapsedTimeSeconds() < 3&&spindexermoved3) {
+                if (pathTimer.getElapsedTimeSeconds() > 2.6 && pathTimer.getElapsedTimeSeconds() < 3) {
                     target+=rconstants.movespindexer;
-                    spindexermoved3=false;
                 }
                 if (pathTimer.getElapsedTimeSeconds() > 6.5) {
                     setPathState(12);
@@ -383,9 +407,7 @@ public class closebyauton extends OpMode {
             case 12:
                 if(!follower.isBusy()) {
                     //move to shooting position for balls 4,5,6
-                    spindexermoved1=true;
-                    spindexermoved2=true;
-                    spindexermoved3=true;
+
                     follower.followPath(Path6);
                     setPathState(13);
                 }

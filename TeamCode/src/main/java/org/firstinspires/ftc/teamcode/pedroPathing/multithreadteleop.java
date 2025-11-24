@@ -1,197 +1,236 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import android.graphics.Color;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-
-import java.util.Timer;
-
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
+
 @Configurable
 @Config
 @TeleOp
 public class multithreadteleop extends LinearOpMode {
-    private DcMotor lf;
-    private DcMotor lb;
-    private DcMotor rf;
 
-    private double targetx;
-
-    private IMU imu;
-    public ServoImplEx transfermover;
-    private DcMotorEx spindexer;
+    private DcMotor lf, lb, rf, rb;
+    private DcMotorEx flywheel, intake, spindexer;
     private CRServoImplEx transfer;
-    private Limelight3A limelight;
-    private int turretOscillationDirection;
-    private DcMotorEx flywheel;
-    private DcMotorEx intake;
-    private DcMotorEx rb;
-    private ControlSystem cs;
-    public static double transfermoveridle = 0.6;
-    public static double transfermoverscore = 0.73;
-    public static double transfermoverfull = 1;
+    private ServoImplEx transfermover;
+
+    public static NormalizedColorSensor colorSensor;
+
+    ControlSystem cs, cs1;
+
     public static int movespindexer = 2731;
     public static double p=0.0039,i=0,d=0.0000005;
     public static double v=0.000372,a=0.7,s=0.0000005;
-    ControlSystem cs1;
     public static double p1=0.0009,i1=0,d1=0;
-    private static int targetpos;
-    private CRServo turretL;
-    private CRServo turretR;
-    private Servo hood;
+
+    float[] hsv = new float[3];
+
+    int ballCount = 0;
+    boolean colorPreviouslyDetected = false;
+
+    // Slot tracking
+    int[] ballSlots = new int[]{0,0,0}; // 0 empty, 1 purple, 2 green
+    boolean sorting = false;
+    int[] sortTarget = new int[]{0,0,0};
+
     public static double targetTicksPerSecond=200;
     public static double shootclose = 1250;
-
-    public static boolean autoalign = false;
     public static double shootfar=1600;
     public static double shooteridle = 200;
-    public static double hoodtop = 0;
-    public static double hoodbottom = 0.1;
-    public ElapsedTime x;
+
     @Override
     public void runOpMode(){
+
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        x= new ElapsedTime();
-        x.reset();
-        turretOscillationDirection = 0;
+
         rconstants.initHardware(hardwareMap);
-        limelight=rconstants.limelight;
-        turretL=rconstants.turretL;
-        turretR=rconstants.turretR;
-        lf=rconstants.lf;
-        lb=rconstants.lb;
-        rf=rconstants.rf;
-        rb=rconstants.rb;
+
+        lf = rconstants.lf;
+        lb = rconstants.lb;
+        rf = rconstants.rf;
+        rb = rconstants.rb;
+
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        flywheel=rconstants.flywheel;
+
+        flywheel = rconstants.flywheel;
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        spindexer=rconstants.spindexer;
-        transfer=rconstants.transfer;
-        intake=rconstants.intake;
-        transfermover=rconstants.transfermover;
+
+        intake = rconstants.intake;
+
+        spindexer = rconstants.spindexer;
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        transfer = rconstants.transfer;
+        transfermover = rconstants.transfermover;
         transfermover.setPosition(rconstants.transfermoveridle);
-        limelight.pipelineSwitch(1);
 
+        colorSensor = rconstants.colorSensor;
+        colorSensor.setGain(2.7f);
 
-       // RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-            //    RevHubOrientationOnRobot.UsbFacingDirection.UP);
-        //imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
+        cs1 = ControlSystem.builder().posPid(p1,i1,d1).build();
+        cs = ControlSystem.builder().velPid(p,i,d).basicFF(v,a,s).build();
+
         int target = 0;
-        Thread g1 = new Thread(() ->{
-            while(opModeIsActive()){
-            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x;
 
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio,
-            // but only if at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (y + x + rx) / denominator;
-            double backLeftPower = (y - x + rx) / denominator;
-            double frontRightPower = (y - x - rx) / denominator;
-            double backRightPower = (y + x - rx) / denominator;
-            lf.setPower(frontLeftPower);
-            lb.setPower(backLeftPower);
-            rf.setPower(frontRightPower);
-            rb.setPower(backRightPower);
+        // ---------------------- DRIVE THREAD ----------------------
+        Thread g1 = new Thread(() -> {
+            while (opModeIsActive()) {
 
+                double y = -gamepad1.left_stick_y;
+                double x = gamepad1.left_stick_x * 1.1;
+                double rx = gamepad1.right_stick_x;
 
+                double denom = Math.max(Math.abs(y)+Math.abs(x)+Math.abs(rx),1);
+                lf.setPower((y+x+rx)/denom);
+                lb.setPower((y-x+rx)/denom);
+                rf.setPower((y-x-rx)/denom);
+                rb.setPower((y+x-rx)/denom);
 
-
-
-            turretL.setPower(gamepad2.right_stick_x);
-            turretR.setPower(gamepad2.right_stick_x);
-            if(gamepad2.right_trigger>0 && !gamepad2.right_bumper){
-                transfermover.setPosition(rconstants.transfermoverscore);
-                transfer.setPower(gamepad2.right_trigger);
+                if(gamepad2.right_trigger>0 && !gamepad2.right_bumper){
+                    transfermover.setPosition(rconstants.transfermoverscore);
+                    transfer.setPower(gamepad2.right_trigger);
+                }
+                if(gamepad2.right_trigger>0 && gamepad2.right_bumper){
+                    transfermover.setPosition(rconstants.transfermoverfull);
+                    transfer.setPower(gamepad2.right_trigger);
+                }
+                if(gamepad2.right_trigger==0){
+                    transfermover.setPosition(rconstants.transfermoveridle);
+                    transfer.setPower(0);
+                }
             }
-            if(gamepad2.right_trigger>0 && gamepad2.right_bumper){
-                transfermover.setPosition(rconstants.transfermoverfull);
-                transfer.setPower(gamepad2.right_trigger);
-            }
-            if(gamepad2.right_trigger==0){
-                transfermover.setPosition(rconstants.transfermoveridle);
-                transfer.setPower(0);
-            }
-
-
-        }
         });
 
         waitForStart();
         g1.start();
-        while (opModeIsActive()){
-            if(gamepad2.y){
-                targetTicksPerSecond=rconstants.shootfar;
-            }
-            if(gamepad2.b){
-                targetTicksPerSecond=rconstants.shootclose;
-            }
-            if(gamepad2.a){
-                targetTicksPerSecond=rconstants.shooteridle;
+
+        // ============================================================
+        //                     MAIN LOOP
+        // ============================================================
+        while (opModeIsActive()) {
+
+            // ---------- INTAKE ----------
+            intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+            boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
+
+            // ---------- READ COLOR ----------
+            colorSensor.getNormalizedColors();
+            Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+
+            float hue = hsv[0];
+            boolean isPurple = (hue > 200 && hue < 300);
+            boolean isGreen  = (hue > 95  && hue < 200);
+
+            boolean colorDetected = (isPurple || isGreen);
+
+            // ---------- BALL DETECTION ----------
+            if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
+                sleep(300);
+                target += rconstants.movespindexer;
+
+                if (isPurple) ballSlots[ballCount] = 1;
+                if (isGreen)  ballSlots[ballCount] = 2;
+
+                ballCount++;
+                colorPreviouslyDetected = true;
             }
 
-            KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
-            cs1 = ControlSystem.builder()
-                    .posPid(p1,i1,d1)
-                    .build();
+            if (!colorDetected) {
+                colorPreviouslyDetected = false;
+            }
+
+            // ---------- SHOOTER ----------
+            if (gamepad2.y) targetTicksPerSecond = rconstants.shootfar;
+            if (gamepad2.b) targetTicksPerSecond = rconstants.shootclose;
+            if (gamepad2.a) targetTicksPerSecond = rconstants.shooteridle;
+
+            // Reset only ballCount (not slots)
+            if (gamepad2.x) {
+                ballCount = 0;
+            }
+
+            // ---------- SORT BUTTONS ----------
+            if (gamepad2.dpad_up && ballCount == 3 && !sorting) {
+                //PPG
+                sortTarget = new int[]{1,2,1};
+                sorting = true;
+            }
+            if (gamepad2.dpad_left && ballCount == 3 && !sorting) {
+                //PGP
+                sortTarget = new int[]{2,1,1};
+                sorting = true;
+            }
+            if (gamepad2.dpad_right && ballCount == 3 && !sorting) {
+                //GPP
+                sortTarget = new int[]{1,1,2};
+                sorting = true;
+            }
+
+            // ---------- FORWARD-ONLY SORTING ----------
+            if (sorting) {
+
+                if (!(ballSlots[0] == sortTarget[0] &&ballSlots[1]==sortTarget[1]&& ballSlots[2]==sortTarget[2])) {
+
+                    target += rconstants.movespindexer;
+
+                    int temp = ballSlots[0];
+                    ballSlots[0] = ballSlots[1];
+                    ballSlots[1] = ballSlots[2];
+                    ballSlots[2] = temp;
+
+                    sleep(250);
+
+                } else {
+                    sorting = false;
+                }
+            }
+
+            // ---------- SPINDEXER PID ----------
+            KineticState current2 = new KineticState(spindexer.getCurrentPosition(), spindexer.getVelocity());
             cs1.setGoal(new KineticState(target));
+
+            if (Math.abs(gamepad2.left_stick_y) < 0.1) {
+                spindexer.setPower(cs1.calculate(current2));
+            } else {
+                spindexer.setPower(0.7*-gamepad2.left_stick_y);
+                target = spindexer.getCurrentPosition();
+            }
+
+            // ---------- SHOOTER ----------
+            cs.setGoal(new KineticState(0,targetTicksPerSecond));
+            KineticState current1 = new KineticState(flywheel.getCurrentPosition(),flywheel.getVelocity());
+            flywheel.setPower(cs.calculate(current1));
             if(gamepad2.left_bumper){
                 int moveamount = rconstants.movespindexer-(target%rconstants.movespindexer);
                 target+=moveamount;
                 sleep(300);
             }
-            if(Math.abs(gamepad2.left_stick_y)==0) {
-                spindexer.setPower(cs1.calculate(current2));
-            } else{
-                spindexer.setPower(-gamepad2.left_stick_y);
-                target=spindexer.getCurrentPosition();
 
-            }
-            cs =  ControlSystem.builder()
-                    .velPid(p, i, d)
-                    .basicFF(v,a,s)
-                    .build();
-            cs.setGoal(new KineticState(0,targetTicksPerSecond));
-            intake.setPower(gamepad1.right_trigger-gamepad1.left_trigger);
-            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
-            flywheel.setPower(cs.calculate(current1));
-            //flywheel.setPower(-gamepad2.right_stick_y);
-            telemetry.addData("motor current speed",Math.abs(flywheel.getVelocity()));
-            telemetry.addData("target",targetTicksPerSecond);
-            telemetry.addData("output of shooter",cs.calculate(current1));
+            // ---------- TELEMETRY ----------
+            telemetry.addData("Hue", hue);
+            telemetry.addData("Ball Count", ballCount);
+            telemetry.addData("Slots", ballSlots[0] + "," + ballSlots[1] + "," + ballSlots[2]);
+            telemetry.addData("Sorting", sorting);
+            telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
+            telemetry.addData("Target", target);
             telemetry.update();
         }
-        try {
-            g1.join();
-        } catch (InterruptedException e) {
-            telemetry.addData("Error", "Thread Interrupted");
-        }
-        telemetry.addData("Status", "Stopped");
-        telemetry.update();
     }
 }
