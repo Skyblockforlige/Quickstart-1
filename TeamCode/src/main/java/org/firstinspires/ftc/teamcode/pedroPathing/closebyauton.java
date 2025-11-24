@@ -7,6 +7,7 @@ import android.graphics.Color;
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
+import com.pedropathing.geometry.BezierCurve;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -94,7 +95,7 @@ public class closebyauton extends OpMode {
     public PathChain Path7;
     public PathChain Path8;
     public static int moveincrement = 2731;
-    public static double constraint =1;
+    public static double constraint =0.6;
     public static int target = 0;
     private double transfermoverpos = 0.5;
     float[] hsv = new float[3];
@@ -114,7 +115,7 @@ public class closebyauton extends OpMode {
         Path1 = follower
             .pathBuilder()
             .addPath(
-                    new BezierLine(new Pose(57, 86), new Pose(48.657, 86.000))
+                    new BezierLine(new Pose(57, 86), new Pose(51.657, 84.500))
             )
             .setLinearHeadingInterpolation(Math.toRadians(130), Math.toRadians(180))
             .build();
@@ -122,7 +123,7 @@ public class closebyauton extends OpMode {
         Path2 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(48.657, 86.000), new Pose(25.700, 86.000))
+                        new BezierLine(new Pose(51.657, 84.500), new Pose(27.800, 84.500))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .setVelocityConstraint(constraint)
@@ -131,7 +132,7 @@ public class closebyauton extends OpMode {
         Path3 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(25.700, 86.000), new Pose(57.600, 86.000))
+                        new BezierLine(new Pose(27.800, 84.500), new Pose(57.600, 84.500))
                 )
 
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(130))
@@ -140,7 +141,7 @@ public class closebyauton extends OpMode {
         Path4 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(57.600, 86.000), new Pose(45.746, 61.134))
+                        new BezierLine(new Pose(57.600, 84.500), new Pose(51.746, 61.134))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(130), Math.toRadians(180))
                 .build();
@@ -148,7 +149,7 @@ public class closebyauton extends OpMode {
         Path5 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(45.746, 61.134), new Pose(22.000, 61.134))
+                        new BezierLine(new Pose(51.746, 61.134), new Pose(25.000, 61.134))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .setVelocityConstraint(constraint)
@@ -157,7 +158,7 @@ public class closebyauton extends OpMode {
         Path6 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(22.000, 61.134), new Pose(57.600, 86.000))
+                        new BezierCurve(new Pose(25.000, 61.134),new Pose(74,32), new Pose(57.600, 86))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(130))
                 .build();
@@ -209,12 +210,12 @@ public class closebyauton extends OpMode {
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //limelight.pipelineSwitch(1);
-
+        colorSensor.setGain(2.7f);
 
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP);
         imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
-
+        target=0;
         //motif = "PGP";
         transfermover.setPosition(rconstants.transfermoveridle);
         cs =  ControlSystem.builder()
@@ -230,7 +231,9 @@ public class closebyauton extends OpMode {
         int pos = spindexer.getCurrentPosition();
         switch (pathState) {
             case 0:
+                target=-500;
                 transfermover.setPosition(rconstants.transfermoverscore);
+                transfer.setPower(1);
                 follower.followPath(firstpath);
                 targetTicksPerSecond=1250;
 
@@ -241,10 +244,9 @@ public class closebyauton extends OpMode {
                 //shoot 2 balls
                 break;
             case 1:
-                transfer.setPower(1);
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) {
-                    target=rconstants.movespindexer;
+                    target=2*rconstants.movespindexer;
 
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
@@ -278,16 +280,6 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 4:
-                // Set base target once, right when we start collecting this trio
-                if (!intakeBaseSet) {
-                    // align base to nearest slot boundary so math is clean
-                    int cur = spindexer.getCurrentPosition();
-                    intakeBaseTarget = cur - (cur % rconstants.movespindexer);
-                    target = intakeBaseTarget;
-                    intakeBaseSet = true;
-                }
-
-                boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
 
                 // READ COLOR (same hue method as teleop)
                 colorSensor.getNormalizedColors();
@@ -299,7 +291,7 @@ public class closebyauton extends OpMode {
                 boolean colorDetected = (isPurple || isGreen);
 
                 // New ball enters
-                if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                     // record color into slot memory
                     if (isPurple) ballSlots[ballCount] = 1;
@@ -319,48 +311,48 @@ public class closebyauton extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > 0.25) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .35) {
                     // absolute target based on count (never grows indefinitely)
-                    target = intakeBaseTarget + ballCount * rconstants.movespindexer;
+                    target +=rconstants.movespindexer;
                     pendingMove = false;
                 }
 
                 // after 3 balls, move to next path state once follower done
-                if (ballCount >= 3 && !follower.isBusy()) {
+                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
                     setPathState(5);
                 }
 
                 break;
             case 5:
                 if(!follower.isBusy()) {
-
-
                     follower.followPath(Path3);
+                    target-=500;
                     setPathState(6);
                     //move to shoot position
                 }
                 break;
             case 6:
-                transfermover.setPosition(rconstants.transfermoverscore);
-                transfer.setPower(1);
+                if(!follower.isBusy()){
+                    transfermover.setPosition(rconstants.transfermoverscore);
+                    transfer.setPower(1);
+                }
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
-                    target=6*rconstants.movespindexer;
+                    target=7*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
                     target=7*rconstants.movespindexer;
-                    transfermover.setPosition(rconstants.transfermoveridle);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>5.5&&pathTimer.getElapsedTimeSeconds()<5.8){
+                if(pathTimer.getElapsedTimeSeconds()>6&&pathTimer.getElapsedTimeSeconds()<6.5){
                     transfermover.setPosition(rconstants.transfermoverfull);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>6){
+                if(pathTimer.getElapsedTimeSeconds()>6.5){
                     setPathState(7);
                 }
                 break;
             case 7:
 
-
+                    ballCount=0;
                     setPathState(8);
 
                 break;
@@ -375,7 +367,6 @@ public class closebyauton extends OpMode {
 
                     transfermover.setPosition(rconstants.transfermoveridle);
                     intake.setPower(1);
-                    transfer.setPower(0);
 
                     setPathState(10);
 
@@ -383,31 +374,59 @@ public class closebyauton extends OpMode {
             case 10:
                 if(!follower.isBusy()) {
                     //picks up balls 4,5,6
+                    transfer.setPower(0);
                     follower.followPath(Path5);
                     setPathState(11);
                 }
                 break;
             case 11:
-                if (pathTimer.getElapsedTimeSeconds() > 1.5 && pathTimer.getElapsedTimeSeconds() < 2) {
-                    target+=rconstants.movespindexer;
 
-                }
-                if (pathTimer.getElapsedTimeSeconds() > 2.1 && pathTimer.getElapsedTimeSeconds() < 2.5) {
-                    target+=rconstants.movespindexer;
+                // READ COLOR (same hue method as teleop)
+                colorSensor.getNormalizedColors();
+                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
+                 hue = hsv[0];
+                 isPurple = (hue > 200 && hue < 300);
+                 isGreen  = (hue > 95  && hue < 200);
+                 colorDetected = (isPurple || isGreen);
+
+                // New ball enters
+                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                    // record color into slot memory
+                    if (isPurple) ballSlots[ballCount] = 1;
+                    if (isGreen)  ballSlots[ballCount] = 2;
+
+                    ballCount++;
+                    colorPreviouslyDetected = true;
+
+                    // schedule ONE move after short delay (no sleep in OpMode)
+                    actionTimer.resetTimer();
+                    pendingMove = true;
                 }
-                if (pathTimer.getElapsedTimeSeconds() > 2.6 && pathTimer.getElapsedTimeSeconds() < 3) {
-                    target+=rconstants.movespindexer;
+
+                // reset detection when sensor no longer sees a ball
+                if (!colorDetected) {
+                    colorPreviouslyDetected = false;
                 }
-                if (pathTimer.getElapsedTimeSeconds() > 6.5) {
+
+                // Execute the scheduled move exactly once
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .5) {
+                    // absolute target based on count (never grows indefinitely)
+                    target +=rconstants.movespindexer;
+                    pendingMove = false;
+                }
+
+                // after 3 balls, move to next path state once follower done
+                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
                     setPathState(12);
-
                 }
+
                 break;
             case 12:
                 if(!follower.isBusy()) {
                     //move to shooting position for balls 4,5,6
-
+                    target-=500;
                     follower.followPath(Path6);
                     setPathState(13);
                 }
@@ -421,20 +440,21 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 14:
-                transfermover.setPosition(rconstants.transfermoverscore);
-                transfer.setPower(1);
+                if(!follower.isBusy()){
+                    transfermover.setPosition(rconstants.transfermoverscore);
+                    transfer.setPower(1);
+                }
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
-                    target+=rconstants.movespindexer;
+                    target=12*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
-                    target+=rconstants.movespindexer;
-                    transfermover.setPosition(rconstants.transfermoveridle);
+                    target=12*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>5.5&&pathTimer.getElapsedTimeSeconds()<5.8){
+                if(pathTimer.getElapsedTimeSeconds()>6&&pathTimer.getElapsedTimeSeconds()<6.5){
                     transfermover.setPosition(rconstants.transfermoverfull);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>6){
+                if(pathTimer.getElapsedTimeSeconds()>6.5){
                     setPathState(15);
                 }
                 break;
@@ -482,16 +502,17 @@ public class closebyauton extends OpMode {
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
-        float hue = hsv[0];
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(cs1.calculate(current2));
+        spindexer.setPower(0.7*cs1.calculate(current2));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
         telemetry.addData("sped", flywheel.getVelocity());
         telemetry.addData("power of spindexer", cs1.calculate(current2));
+        telemetry.addData("Hue", hsv[0]);
+        telemetry.addData("Ball Count", ballCount);
         telemetry.addData("position of spindexer",spindexer.getCurrentPosition());
         telemetry.addData("target",target);
         telemetry.update();
