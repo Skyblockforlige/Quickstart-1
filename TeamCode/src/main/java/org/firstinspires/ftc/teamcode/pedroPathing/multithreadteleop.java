@@ -224,8 +224,8 @@ public class multithreadteleop extends LinearOpMode {
             }
 
             // ---------- TELEMETRY ----------
-            telemetry.addData("Hue", hue);
-            telemetry.addData("Ball Count", ballCount);
+                telemetry.addData("Hue", hue);
+                telemetry.addData("Ball Count", ballCount);
             telemetry.addData("Slots", ballSlots[0] + "," + ballSlots[1] + "," + ballSlots[2]);
             telemetry.addData("Sorting", sorting);
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
