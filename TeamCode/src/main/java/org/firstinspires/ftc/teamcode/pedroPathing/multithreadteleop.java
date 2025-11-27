@@ -99,9 +99,13 @@ public class multithreadteleop extends LinearOpMode {
         colorSensor = rconstants.colorSensor;
         colorSensor.setGain(2.7f);
 
-        cs1 = ControlSystem.builder().posPid(p1,i1,d1).build();
-        cs = ControlSystem.builder().velPid(p,i,d).basicFF(v,a,s).build();
-
+        cs1 = ControlSystem.builder()
+                .posPid(p1,i1,d1)
+                .build();
+        cs = ControlSystem.builder()
+                .velPid(p,i,d)
+                .basicFF(v,a,s)
+                .build();
         int target = 0;
 
         // ---------------------- DRIVE THREAD ----------------------
