@@ -6,13 +6,18 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -28,6 +33,9 @@ public class multithreadteleop extends LinearOpMode {
     private DcMotorEx flywheel, intake, spindexer;
     private CRServoImplEx transfer;
     private ServoImplEx transfermover;
+    private CRServo turretL;
+    private CRServo turretR;
+    private double targetx;
 
     public static NormalizedColorSensor colorSensor;
 
@@ -52,11 +60,15 @@ public class multithreadteleop extends LinearOpMode {
     public static double shootclose = 1250;
     public static double shootfar=1600;
     public static double shooteridle = 200;
+    public static boolean autoalign = false;
+    private Limelight3A limelight;
+    private Servo hood;
 
     @Override
     public void runOpMode(){
 
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry());
+        int turretOscillationDirection = 0; // 0=left, 1=righ
 
         rconstants.initHardware(hardwareMap);
 
@@ -67,8 +79,11 @@ public class multithreadteleop extends LinearOpMode {
 
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        turretL=rconstants.turretL;
+        turretR=rconstants.turretR;
+        limelight=rconstants.limelight;
         flywheel = rconstants.flywheel;
+        hood=rconstants.hood;
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         intake = rconstants.intake;
@@ -125,7 +140,52 @@ public class multithreadteleop extends LinearOpMode {
         //                     MAIN LOOP
         // ============================================================
         while (opModeIsActive()) {
+            LLResult llResult = limelight.getLatestResult();
+            if(gamepad2.ps){
+                autoalign=!autoalign;
+                sleep(300);
+            }
+            if(autoalign) {
+                if (Math.abs(gamepad2.left_stick_x) == 0) {
+                    if (llResult != null) {
+                        targetx = llResult.getTx();
+                        telemetry.addData("targetx", llResult.getTx());
 
+                        if (targetx >= 5.5) {
+                            // not necesary but makes it move exactly one degree
+                            turretL.setPower(0.5);
+                            turretR.setPower(0.5);
+                            turretOscillationDirection = 0;
+                            //switch to negative and make other postive if goes wrong direction
+                        } else if (targetx <= -5.5) {
+                            turretL.setPower(-0.5);
+                            turretR.setPower(-0.5);
+                            turretOscillationDirection = 1;
+                        } else if (targetx >= -5.5 && targetx <= 5.5) {
+                            turretR.setPower(0);
+                            turretL.setPower(0);
+                        }
+                    } else {
+                        if (turretOscillationDirection == 0) {
+                            turretL.setPower(-0.1);
+                            turretR.setPower(-0.1);
+                            sleep(500);
+                            turretOscillationDirection = 1;
+                        } else {
+                            turretL.setPower(0.1);
+                            turretR.setPower(0.1);
+                            sleep(500);
+                            turretOscillationDirection = 0;
+                        }
+                    }
+                } else{
+                    turretL.setPower(gamepad2.left_stick_x);
+                    turretR.setPower(gamepad2.left_stick_x);
+                }
+            } else{
+                turretL.setPower(gamepad2.left_stick_x);
+                turretR.setPower(gamepad2.left_stick_x);
+            }
             // ---------- INTAKE ----------
             intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
             boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
@@ -224,8 +284,8 @@ public class multithreadteleop extends LinearOpMode {
             }
 
             // ---------- TELEMETRY ----------
-                telemetry.addData("Hue", hue);
-                telemetry.addData("Ball Count", ballCount);
+            telemetry.addData("Hue", hue);
+            telemetry.addData("Ball Count", ballCount);
             telemetry.addData("Slots", ballSlots[0] + "," + ballSlots[1] + "," + ballSlots[2]);
             telemetry.addData("Sorting", sorting);
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
