@@ -231,7 +231,7 @@ public class closebyauton extends OpMode {
         int pos = spindexer.getCurrentPosition();
         switch (pathState) {
             case 0:
-                target=-500;
+                target=500;
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
                 follower.followPath(firstpath);
@@ -246,11 +246,11 @@ public class closebyauton extends OpMode {
             case 1:
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) {
-                    target=2*rconstants.movespindexer;
+                    target=-2*rconstants.movespindexer;
 
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
-                    target=2*rconstants.movespindexer;
+                    target=-2*rconstants.movespindexer;
                     transfermover.setPosition(rconstants.transfermoveridle);
                 }
                 if(pathTimer.getElapsedTimeSeconds()>5.5&&pathTimer.getElapsedTimeSeconds()<5.8){
@@ -313,7 +313,7 @@ public class closebyauton extends OpMode {
                 // Execute the scheduled move exactly once
                 if (pendingMove && actionTimer.getElapsedTimeSeconds() > .35) {
                     // absolute target based on count (never grows indefinitely)
-                    target +=rconstants.movespindexer;
+                    target -=rconstants.movespindexer;
                     pendingMove = false;
                 }
 
@@ -326,7 +326,7 @@ public class closebyauton extends OpMode {
             case 5:
                 if(!follower.isBusy()) {
                     follower.followPath(Path3);
-                    target-=500;
+                    target+=500;
                     setPathState(6);
                     //move to shoot position
                 }
@@ -338,10 +338,10 @@ public class closebyauton extends OpMode {
                 }
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
-                    target=7*rconstants.movespindexer;
+                    target=-7*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
-                    target=7*rconstants.movespindexer;
+                    target=-7*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>6&&pathTimer.getElapsedTimeSeconds()<6.5){
                     transfermover.setPosition(rconstants.transfermoverfull);
@@ -413,7 +413,7 @@ public class closebyauton extends OpMode {
                 // Execute the scheduled move exactly once
                 if (pendingMove && actionTimer.getElapsedTimeSeconds() > .5) {
                     // absolute target based on count (never grows indefinitely)
-                    target +=rconstants.movespindexer;
+                    target -=rconstants.movespindexer;
                     pendingMove = false;
                 }
 
@@ -426,7 +426,7 @@ public class closebyauton extends OpMode {
             case 12:
                 if(!follower.isBusy()) {
                     //move to shooting position for balls 4,5,6
-                    target-=500;
+                    target+=500;
                     follower.followPath(Path6);
                     setPathState(13);
                 }
@@ -446,10 +446,10 @@ public class closebyauton extends OpMode {
                 }
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
-                    target=12*rconstants.movespindexer;
+                    target=-12*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
-                    target=12*rconstants.movespindexer;
+                    target=-12*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>6&&pathTimer.getElapsedTimeSeconds()<6.5){
                     transfermover.setPosition(rconstants.transfermoverfull);

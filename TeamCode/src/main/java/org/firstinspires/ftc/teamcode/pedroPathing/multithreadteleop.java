@@ -207,7 +207,7 @@ public class multithreadteleop extends LinearOpMode {
             // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
                 sleep(300);
-                target += rconstants.movespindexer;
+                target -= rconstants.movespindexer;
 
                 if (isPurple) ballSlots[ballCount] = 1;
                 if (isGreen)  ballSlots[ballCount] = 2;
@@ -252,7 +252,7 @@ public class multithreadteleop extends LinearOpMode {
 
                 if (!(ballSlots[0] == sortTarget[0] &&ballSlots[1]==sortTarget[1]&& ballSlots[2]==sortTarget[2])) {
 
-                    target += rconstants.movespindexer;
+                    target -= rconstants.movespindexer;
 
                     int temp = ballSlots[0];
                     ballSlots[0] = ballSlots[1];
@@ -273,7 +273,7 @@ public class multithreadteleop extends LinearOpMode {
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
                 spindexer.setPower(cs1.calculate(current2));
             } else {
-                spindexer.setPower(0.7*-gamepad2.left_stick_y);
+                spindexer.setPower(0.7*gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             }
 
@@ -283,7 +283,7 @@ public class multithreadteleop extends LinearOpMode {
             flywheel.setPower(cs.calculate(current1));
             if(gamepad2.left_bumper){
                 int moveamount = rconstants.movespindexer-(target%rconstants.movespindexer);
-                target+=moveamount;
+                target-=moveamount;
                 sleep(300);
             }
 
