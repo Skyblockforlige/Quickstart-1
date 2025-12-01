@@ -112,18 +112,18 @@ public class llautoalignblue extends LinearOpMode {
 
 
             if (llResult != null) {
-                targetx = llResult.getTx();
+                targetx = llResult.getTy();
                 telemetry.addData("targetx", llResult.getTx());
 
                 if (targetx >= 5.5) {
                     // not necesary but makes it move exactly one degree
-                    turretL.setPower(0.5);
-                    turretR.setPower(0.5);
+                    turretL.setPower(0.25);
+                    turretR.setPower(0.25);
                     turretOscillationDirection = 0;
                     //switch to negative and make other postive if goes wrong direction
                 } else if (targetx <= -5.5) {
-                    turretL.setPower(-0.5);
-                    turretR.setPower(-0.5);
+                    turretL.setPower(-0.25);
+                    turretR.setPower(-0.25);
                     turretOscillationDirection = 1;
                 } else if(targetx>=-5.5&& targetx<=5.5){
                     turretR.setPower(0);

@@ -82,6 +82,7 @@ public class multithreadteleop extends LinearOpMode {
         turretL=rconstants.turretL;
         turretR=rconstants.turretR;
         limelight=rconstants.limelight;
+        limelight.pipelineSwitch(1);
         flywheel = rconstants.flywheel;
         hood=rconstants.hood;
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -106,6 +107,7 @@ public class multithreadteleop extends LinearOpMode {
                 .velPid(p,i,d)
                 .basicFF(v,a,s)
                 .build();
+        limelight.start();
         int target = 0;
 
         // ---------------------- DRIVE THREAD ----------------------
@@ -145,14 +147,14 @@ public class multithreadteleop extends LinearOpMode {
         // ============================================================
         while (opModeIsActive()) {
             LLResult llResult = limelight.getLatestResult();
-            if(gamepad2.ps){
+            if(gamepad2.back){
                 autoalign=!autoalign;
                 sleep(300);
             }
             if(autoalign) {
                 if (Math.abs(gamepad2.left_stick_x) == 0) {
                     if (llResult != null) {
-                        targetx = llResult.getTx();
+                        targetx = llResult.getTy();
                         telemetry.addData("targetx", llResult.getTx());
 
                         if (targetx >= 5.5) {
@@ -271,9 +273,9 @@ public class multithreadteleop extends LinearOpMode {
             cs1.setGoal(new KineticState(target));
 
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
-                spindexer.setPower(cs1.calculate(current2));
+                spindexer.setPower(-cs1.calculate(current2));
             } else {
-                spindexer.setPower(0.7*-gamepad2.left_stick_y);
+                spindexer.setPower(0.7*gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             }
 
@@ -294,6 +296,7 @@ public class multithreadteleop extends LinearOpMode {
             telemetry.addData("Sorting", sorting);
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
             telemetry.addData("Target", target);
+            telemetry.addData("Autoalign:", autoalign);
             telemetry.update();
         }
     }

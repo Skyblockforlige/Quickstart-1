@@ -106,7 +106,7 @@ public class closebyauton extends OpMode {
         firstpath = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.463, 131.821), new Pose(57,86))
+                        new BezierLine(new Pose(27.463, 131.821), new Pose(57.6,86))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(130))
                 .build();
@@ -115,7 +115,7 @@ public class closebyauton extends OpMode {
         Path1 = follower
             .pathBuilder()
             .addPath(
-                    new BezierLine(new Pose(57, 86), new Pose(51.657, 84.500))
+                    new BezierLine(new Pose(57.6, 86), new Pose(55.657, 86))
             )
             .setLinearHeadingInterpolation(Math.toRadians(130), Math.toRadians(180))
             .build();
@@ -123,16 +123,15 @@ public class closebyauton extends OpMode {
         Path2 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(51.657, 84.500), new Pose(27.800, 84.500))
+                        new BezierLine(new Pose(55.657, 86), new Pose(27.800, 86))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
-                .setVelocityConstraint(constraint)
                 .build();
 
         Path3 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.800, 84.500), new Pose(57.600, 84.500))
+                        new BezierLine(new Pose(27.800, 86), new Pose(57.600, 86))
                 )
 
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(130))
@@ -141,7 +140,7 @@ public class closebyauton extends OpMode {
         Path4 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(57.600, 84.500), new Pose(51.746, 61.134))
+                        new BezierLine(new Pose(57.600, 86), new Pose(51.746, 61.134))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(130), Math.toRadians(180))
                 .build();
@@ -152,7 +151,6 @@ public class closebyauton extends OpMode {
                         new BezierLine(new Pose(51.746, 61.134), new Pose(25.000, 61.134))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
-                .setVelocityConstraint(constraint)
                 .build();
 
         Path6 = follower
@@ -235,17 +233,16 @@ public class closebyauton extends OpMode {
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
                 follower.followPath(firstpath);
-                targetTicksPerSecond=1250;
+                targetTicksPerSecond=1300;
 
-                if(flywheel.getVelocity()>1050){
                     setPathState(1);
-                }
+
 
                 //shoot 2 balls
                 break;
             case 1:
 
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) {
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 &&flywheel.getVelocity()>=1050) {
                     target=2*rconstants.movespindexer;
 
                 }
@@ -275,6 +272,7 @@ public class closebyauton extends OpMode {
             case 3:
                 if(!follower.isBusy()) {
                     //pick up 1,2,3
+                    follower.setMaxPower(0.25);
                     follower.followPath(Path2);
                     setPathState(4);
                 }
@@ -325,6 +323,7 @@ public class closebyauton extends OpMode {
                 break;
             case 5:
                 if(!follower.isBusy()) {
+                    follower.setMaxPower(1);
                     follower.followPath(Path3);
                     target-=500;
                     setPathState(6);
@@ -375,6 +374,7 @@ public class closebyauton extends OpMode {
                 if(!follower.isBusy()) {
                     //picks up balls 4,5,6
                     transfer.setPower(0);
+                    follower.setMaxPower(0.25);
                     follower.followPath(Path5);
                     setPathState(11);
                 }
@@ -427,6 +427,7 @@ public class closebyauton extends OpMode {
                 if(!follower.isBusy()) {
                     //move to shooting position for balls 4,5,6
                     target-=500;
+                    follower.setMaxPower(1);
                     follower.followPath(Path6);
                     setPathState(13);
                 }
@@ -505,7 +506,7 @@ public class closebyauton extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(0.7*cs1.calculate(current2));
+        spindexer.setPower(-cs1.calculate(current2));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
