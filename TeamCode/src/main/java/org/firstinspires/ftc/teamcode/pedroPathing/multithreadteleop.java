@@ -136,6 +136,7 @@ public class multithreadteleop extends LinearOpMode {
                     transfermover.setPosition(rconstants.transfermoveridle);
                     transfer.setPower(0);
                 }
+                intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
             }
         });
 
@@ -155,7 +156,7 @@ public class multithreadteleop extends LinearOpMode {
                 if (Math.abs(gamepad2.left_stick_x) == 0) {
                     if (llResult != null) {
                         targetx = llResult.getTy();
-                        telemetry.addData("targetx", llResult.getTx());
+                        telemetry.addData("targetx", llResult.getTy());
 
                         if (targetx >= 5.5) {
                             // not necesary but makes it move exactly one degree
@@ -193,7 +194,6 @@ public class multithreadteleop extends LinearOpMode {
                 turretR.setPower(gamepad2.left_stick_x);
             }
             // ---------- INTAKE ----------
-            intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
             boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
 
             // ---------- READ COLOR ----------
@@ -207,8 +207,8 @@ public class multithreadteleop extends LinearOpMode {
             boolean colorDetected = (isPurple || isGreen);
 
             // ---------- BALL DETECTION ----------
-            if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
-                sleep(300);
+            if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3 && target%rconstants.movespindexer==0) {
+                sleep(500);
                 target += rconstants.movespindexer;
 
                 if (isPurple) ballSlots[ballCount] = 1;
@@ -216,6 +216,7 @@ public class multithreadteleop extends LinearOpMode {
 
                 ballCount++;
                 colorPreviouslyDetected = true;
+                sleep(200);
             }
 
             if (!colorDetected) {
@@ -275,7 +276,7 @@ public class multithreadteleop extends LinearOpMode {
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
                 spindexer.setPower(-cs1.calculate(current2));
             } else {
-                spindexer.setPower(0.7*gamepad2.left_stick_y);
+                spindexer.setPower(gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             }
 

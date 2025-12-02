@@ -140,7 +140,7 @@ public class closebyauton extends OpMode {
         Path4 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(57.600, 86), new Pose(51.746, 61.134))
+                        new BezierLine(new Pose(57.600, 86), new Pose(55.746, 61.134))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(130), Math.toRadians(180))
                 .build();
@@ -148,7 +148,7 @@ public class closebyauton extends OpMode {
         Path5 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(51.746, 61.134), new Pose(25.000, 61.134))
+                        new BezierLine(new Pose(55.746, 61.134), new Pose(25.000, 61.134))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
@@ -230,12 +230,11 @@ public class closebyauton extends OpMode {
         switch (pathState) {
             case 0:
                 target=-500;
-                transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
                 follower.followPath(firstpath);
-                targetTicksPerSecond=1300;
+                targetTicksPerSecond=1400;
 
-                    setPathState(1);
+                setPathState(1);
 
 
                 //shoot 2 balls
@@ -243,18 +242,18 @@ public class closebyauton extends OpMode {
             case 1:
 
                 if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 &&flywheel.getVelocity()>=1050) {
+                    transfermover.setPosition(rconstants.transfermoverscore);
                     target=2*rconstants.movespindexer;
-
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
                     target=2*rconstants.movespindexer;
                     transfermover.setPosition(rconstants.transfermoveridle);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>5.5&&pathTimer.getElapsedTimeSeconds()<5.8){
+                if(pathTimer.getElapsedTimeSeconds()>5&&pathTimer.getElapsedTimeSeconds()<5.3){
                     transfermover.setPosition(rconstants.transfermoverfull);
 
                 }
-                if(pathTimer.getElapsedTimeSeconds()>6){
+                if(pathTimer.getElapsedTimeSeconds()>5.3){
                     setPathState(2);
                 }
 
@@ -342,10 +341,10 @@ public class closebyauton extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
                     target=7*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>6&&pathTimer.getElapsedTimeSeconds()<6.5){
+                if(pathTimer.getElapsedTimeSeconds()>5&&pathTimer.getElapsedTimeSeconds()<5.3){
                     transfermover.setPosition(rconstants.transfermoverfull);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>6.5){
+                if(pathTimer.getElapsedTimeSeconds()>5.3){
                     setPathState(7);
                 }
                 break;
@@ -452,10 +451,10 @@ public class closebyauton extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
                     target=12*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>6&&pathTimer.getElapsedTimeSeconds()<6.5){
+                if(pathTimer.getElapsedTimeSeconds()>5&&pathTimer.getElapsedTimeSeconds()<5.3){
                     transfermover.setPosition(rconstants.transfermoverfull);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>6.5){
+                if(pathTimer.getElapsedTimeSeconds()>5.3){
                     setPathState(15);
                 }
                 break;
