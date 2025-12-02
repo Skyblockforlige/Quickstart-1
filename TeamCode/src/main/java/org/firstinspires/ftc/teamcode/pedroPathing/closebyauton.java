@@ -232,7 +232,7 @@ public class closebyauton extends OpMode {
                 target=-500;
                 transfer.setPower(1);
                 follower.followPath(firstpath);
-                targetTicksPerSecond=1400;
+                targetTicksPerSecond=1350;
 
                 setPathState(1);
 
@@ -240,33 +240,33 @@ public class closebyauton extends OpMode {
                 //shoot 2 balls
                 break;
             case 1:
-
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 &&flywheel.getVelocity()>=1050) {
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                     transfermover.setPosition(rconstants.transfermoverscore);
+                }
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 &&flywheel.getVelocity()>=1200) {
                     target=2*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
+                if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.8) {
                     target=2*rconstants.movespindexer;
                     transfermover.setPosition(rconstants.transfermoveridle);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>5&&pathTimer.getElapsedTimeSeconds()<5.3){
+                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5.1){
                     transfermover.setPosition(rconstants.transfermoverfull);
 
                 }
-                if(pathTimer.getElapsedTimeSeconds()>5.3){
+                if(pathTimer.getElapsedTimeSeconds()>5.1){
                     setPathState(2);
                 }
 
                     //shoot third ball
                 break;
             case 2:
-                if(pathTimer.getElapsedTimeSeconds()>1) {
                     //move to begening of 1,2,3
                     follower.followPath(Path1);
                     transfermover.setPosition(rconstants.transfermoveridle);
                     intake.setPower(1);
                     setPathState(3);
-                }
+
                 break;
             case 3:
                 if(!follower.isBusy()) {
@@ -335,16 +335,16 @@ public class closebyauton extends OpMode {
                     transfer.setPower(1);
                 }
 
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4.1) {
                     target=7*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5) {
+                if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.8) {
                     target=7*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>5&&pathTimer.getElapsedTimeSeconds()<5.3){
+                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5){
                     transfermover.setPosition(rconstants.transfermoverfull);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>5.3){
+                if(pathTimer.getElapsedTimeSeconds()>5){
                     setPathState(7);
                 }
                 break;

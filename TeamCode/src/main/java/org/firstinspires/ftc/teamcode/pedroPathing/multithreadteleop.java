@@ -186,12 +186,12 @@ public class multithreadteleop extends LinearOpMode {
                         }
                     }
                 } else{
-                    turretL.setPower(gamepad2.left_stick_x);
-                    turretR.setPower(gamepad2.left_stick_x);
+                    turretL.setPower(gamepad2.right_stick_x);
+                    turretR.setPower(gamepad2.right_stick_x);
                 }
             } else{
-                turretL.setPower(gamepad2.left_stick_x);
-                turretR.setPower(gamepad2.left_stick_x);
+                turretL.setPower(gamepad2.right_stick_x);
+                turretR.setPower(gamepad2.right_stick_x);
             }
             // ---------- INTAKE ----------
             boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
