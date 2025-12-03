@@ -63,7 +63,7 @@ public class rconstants {
         hood=hardwareMap.servo.get("hood");
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         imu = hardwareMap.get(IMU.class, "imu");
-
+        hood=hardwareMap.servo.get("hood");
         rb = hardwareMap.get(DcMotorEx.class,"rb");
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);

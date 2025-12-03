@@ -208,7 +208,7 @@ public class multithreadteleop extends LinearOpMode {
 
             // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3 && target%rconstants.movespindexer==0) {
-                sleep(500);
+                sleep(100);
                 target += rconstants.movespindexer;
 
                 if (isPurple) ballSlots[ballCount] = 1;
@@ -216,7 +216,6 @@ public class multithreadteleop extends LinearOpMode {
 
                 ballCount++;
                 colorPreviouslyDetected = true;
-                sleep(200);
             }
 
             if (!colorDetected) {
