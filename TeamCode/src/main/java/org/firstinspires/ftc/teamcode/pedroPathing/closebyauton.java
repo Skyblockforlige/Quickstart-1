@@ -23,12 +23,14 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import dev.nextftc.control.ControlSystem;
@@ -100,6 +102,7 @@ public class closebyauton extends OpMode {
     private double transfermoverpos = 0.5;
     float[] hsv = new float[3];
     public static boolean spindexermoved=false;
+    DistanceSensor distance;
 
 
     public void buildPaths() {
@@ -110,55 +113,53 @@ public class closebyauton extends OpMode {
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(133.5))
                 .build();
-
-
         Path1 = follower
             .pathBuilder()
             .addPath(
-                    new BezierLine(new Pose(57.6, 86), new Pose(55.657, 86))
+                    new BezierLine(new Pose(57.6, 86), new Pose(55.657, 88))
             )
-            .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
+            .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(187.5))
             .build();
 
         Path2 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(55.657, 86), new Pose(27.800, 86))
+                        new BezierLine(new Pose(55.657, 88), new Pose(28.800, 88))
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setConstantHeadingInterpolation(Math.toRadians(187.5))
                 .build();
 
         Path3 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.800, 86), new Pose(57.600, 86))
+                        new BezierLine(new Pose(28.800, 88), new Pose(57.600, 86))
                 )
 
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
+                .setLinearHeadingInterpolation(Math.toRadians(187.5), Math.toRadians(133.5))
                 .build();
 
         Path4 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(57.600, 86), new Pose(55.746, 61.134))
+                        new BezierLine(new Pose(57.600, 86), new Pose(55.746, 62.634))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(187.5))
                 .build();
 
         Path5 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(55.746, 61.134), new Pose(25.000, 61.134))
+                        new BezierLine(new Pose(55.746, 62.634), new Pose(34.500, 62.634))
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setConstantHeadingInterpolation(Math.toRadians(187.5))
                 .build();
 
         Path6 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierCurve(new Pose(25.000, 61.134),new Pose(74,46), new Pose(57.600, 86))
+                        new BezierCurve(new Pose(34.500, 61.134),new Pose(74,46), new Pose(57.600, 86))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
+                .setLinearHeadingInterpolation(Math.toRadians(187.5), Math.toRadians(133.5))
                 .build();
 
         Path7 = follower
@@ -166,7 +167,7 @@ public class closebyauton extends OpMode {
                 .addPath(
                         new BezierLine(new Pose(57.600, 86.000), new Pose(39.403, 38.448))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(187.5))
                 .build();
 
         Path8 = follower
@@ -174,7 +175,7 @@ public class closebyauton extends OpMode {
                 .addPath(
                         new BezierLine(new Pose(39.403, 38.448), new Pose(22.000, 38.687))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(187.5), Math.toRadians(187.5))
                 .build();
 
     }
@@ -210,6 +211,8 @@ public class closebyauton extends OpMode {
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //limelight.pipelineSwitch(1);
         colorSensor.setGain(2.7f);
+        distance = (DistanceSensor) colorSensor;
+
 
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP);
@@ -234,7 +237,7 @@ public class closebyauton extends OpMode {
                 target=-500;
                 transfer.setPower(1);
                 follower.followPath(firstpath);
-                targetTicksPerSecond=1225;
+                targetTicksPerSecond=1190;
 
                 setPathState(1);
 
@@ -246,12 +249,11 @@ public class closebyauton extends OpMode {
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                 }
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 &&flywheel.getVelocity()>=1200) {
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 &&flywheel.getVelocity()>=1190) {
                     target=2*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.8) {
                     target=2*rconstants.movespindexer;
-                    transfermover.setPosition(rconstants.transfermoveridle);
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5.1){
                     transfermover.setPosition(rconstants.transfermoverfull);
@@ -280,7 +282,6 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 4:
-
                 // READ COLOR (same hue method as teleop)
                 colorSensor.getNormalizedColors();
                 Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
@@ -311,7 +312,7 @@ public class closebyauton extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .1) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .2 && distance.getDistance(DistanceUnit.CM)>2.6 && distance.getDistance(DistanceUnit.CM)<4.5) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -338,16 +339,14 @@ public class closebyauton extends OpMode {
                     transfer.setPower(1);
                 }
 
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4.1) {
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2.3&& pathTimer.getElapsedTimeSeconds()<3.8) {
                     target=7*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.8) {
-                    target=7*rconstants.movespindexer;
-                }
-                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5){
+
+                if(pathTimer.getElapsedTimeSeconds()>3.8&&pathTimer.getElapsedTimeSeconds()<4.2){
                     transfermover.setPosition(rconstants.transfermoverfull);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>5){
+                if(pathTimer.getElapsedTimeSeconds()>4.2){
                     setPathState(7);
                 }
                 break;
@@ -413,7 +412,7 @@ public class closebyauton extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .1) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .2 && distance.getDistance(DistanceUnit.CM)>2.6 && distance.getDistance(DistanceUnit.CM)<4.5) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -448,14 +447,14 @@ public class closebyauton extends OpMode {
                     transfer.setPower(1);
                 }
 
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>1&& pathTimer.getElapsedTimeSeconds()<3 ) {
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2&& pathTimer.getElapsedTimeSeconds()<3.7) {
                     target=12*rconstants.movespindexer;
                 }
 
-                if(pathTimer.getElapsedTimeSeconds()>3.5&&pathTimer.getElapsedTimeSeconds()<3.8){
+                if(pathTimer.getElapsedTimeSeconds()>3.7&&pathTimer.getElapsedTimeSeconds()<4.1){
                     transfermover.setPosition(rconstants.transfermoverfull);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>3.8){
+                if(pathTimer.getElapsedTimeSeconds()>4.1){
                     setPathState(15);
                 }
                 break;
@@ -516,6 +515,7 @@ public class closebyauton extends OpMode {
         telemetry.addData("Ball Count", ballCount);
         telemetry.addData("position of spindexer",spindexer.getCurrentPosition());
         telemetry.addData("target",target);
+        telemetry.addData("Distance", distance.getDistance(DistanceUnit.CM));
         telemetry.update();
 
 

@@ -16,10 +16,13 @@ import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
@@ -62,6 +65,7 @@ public class multithreadteleop extends LinearOpMode {
     public static double shooteridle = 200;
     public static boolean autoalign = false;
     private Limelight3A limelight;
+    DistanceSensor distance;
     private Servo hood;
 
     @Override
@@ -108,6 +112,8 @@ public class multithreadteleop extends LinearOpMode {
                 .basicFF(v,a,s)
                 .build();
         limelight.start();
+        distance = (DistanceSensor) colorSensor;
+
         int target = 0;
 
         // ---------------------- DRIVE THREAD ----------------------
@@ -208,7 +214,7 @@ public class multithreadteleop extends LinearOpMode {
 
             // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3 && target%rconstants.movespindexer==0) {
-                sleep(100);
+                if(distance.getDistance(DistanceUnit.CM)>2.6 && distance.getDistance(DistanceUnit.CM)<4.5)
                 target += rconstants.movespindexer;
 
                 if (isPurple) ballSlots[ballCount] = 1;
