@@ -214,14 +214,16 @@ public class multithreadteleop extends LinearOpMode {
 
             // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3 && target%rconstants.movespindexer==0) {
-                if(distance.getDistance(DistanceUnit.CM)>2.6 && distance.getDistance(DistanceUnit.CM)<4.5)
-                target += rconstants.movespindexer;
+                if(distance.getDistance(DistanceUnit.CM)>2.6 && distance.getDistance(DistanceUnit.CM)<4.5) {
+                    sleep(200);
+                    target += rconstants.movespindexer;
 
-                if (isPurple) ballSlots[ballCount] = 1;
-                if (isGreen)  ballSlots[ballCount] = 2;
+                    if (isPurple) ballSlots[ballCount] = 1;
+                    if (isGreen) ballSlots[ballCount] = 2;
 
-                ballCount++;
-                colorPreviouslyDetected = true;
+                    ballCount++;
+                    colorPreviouslyDetected = true;
+                }
             }
 
             if (!colorDetected) {
@@ -239,17 +241,17 @@ public class multithreadteleop extends LinearOpMode {
             }
 
             // ---------- SORT BUTTONS ----------
-            if (gamepad2.dpad_up && ballCount == 3 && !sorting) {
+            if (gamepad2.dpad_right && ballCount == 3 && !sorting) {
                 //PPG
                 sortTarget = new int[]{1,2,1};
                 sorting = true;
             }
-            if (gamepad2.dpad_left && ballCount == 3 && !sorting) {
+            if (gamepad2.dpad_up && ballCount == 3 && !sorting) {
                 //PGP
                 sortTarget = new int[]{2,1,1};
                 sorting = true;
             }
-            if (gamepad2.dpad_right && ballCount == 3 && !sorting) {
+            if (gamepad2.dpad_left && ballCount == 3 && !sorting) {
                 //GPP
                 sortTarget = new int[]{1,1,2};
                 sorting = true;
@@ -303,6 +305,7 @@ public class multithreadteleop extends LinearOpMode {
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
             telemetry.addData("Target", target);
             telemetry.addData("Autoalign:", autoalign);
+            telemetry.addData("spindexer_pos", spindexer.getCurrentPosition());
             telemetry.update();
         }
     }
