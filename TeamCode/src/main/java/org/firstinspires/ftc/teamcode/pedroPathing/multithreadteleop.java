@@ -48,6 +48,7 @@ public class multithreadteleop extends LinearOpMode {
     public static double p=0.0039,i=0,d=0.0000005;
     public static double v=0.000372,a=0.7,s=0.0000005;
     public static double p1=0.0009,i1=0,d1=0;
+    public static double llturretspeed = 0.2;
 
     float[] hsv = new float[3];
 
@@ -60,12 +61,13 @@ public class multithreadteleop extends LinearOpMode {
     int[] sortTarget = new int[]{0,0,0};
 
     public static double targetTicksPerSecond=200;
-    public static double shootclose = 1250;
+    public static double shootclose = 1000;
     public static double shootfar=1600;
     public static double shooteridle = 200;
     public static boolean autoalign = false;
     private Limelight3A limelight;
     DistanceSensor distance;
+    private boolean movedoffsetspindexer;
     private Servo hood;
 
     @Override
@@ -154,9 +156,19 @@ public class multithreadteleop extends LinearOpMode {
         // ============================================================
         while (opModeIsActive()) {
             LLResult llResult = limelight.getLatestResult();
+            if(gamepad2.ps){
+                spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                target=0;
+                spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            }
             if(gamepad2.back){
                 autoalign=!autoalign;
                 sleep(300);
+            }
+            if(ballCount==3&&!movedoffsetspindexer){
+                sleep(100);
+                target-=750;
+                movedoffsetspindexer=true;
             }
             if(autoalign) {
                 if (Math.abs(gamepad2.left_stick_x) == 0) {
@@ -164,15 +176,15 @@ public class multithreadteleop extends LinearOpMode {
                         targetx = llResult.getTy();
                         telemetry.addData("targetx", llResult.getTy());
 
-                        if (targetx >= 5.5) {
+                        if (targetx >= 0) {
                             // not necesary but makes it move exactly one degree
-                            turretL.setPower(0.5);
-                            turretR.setPower(0.5);
+                            turretL.setPower(llturretspeed);
+                            turretR.setPower(llturretspeed);
                             turretOscillationDirection = 0;
                             //switch to negative and make other postive if goes wrong direction
-                        } else if (targetx <= -5.5) {
-                            turretL.setPower(-0.5);
-                            turretR.setPower(-0.5);
+                        } else if (targetx <= -2.5) {
+                            turretL.setPower(-llturretspeed);
+                            turretR.setPower(-llturretspeed);
                             turretOscillationDirection = 1;
                         } else if (targetx >= -5.5 && targetx <= 5.5) {
                             turretR.setPower(0);
@@ -238,6 +250,7 @@ public class multithreadteleop extends LinearOpMode {
             // Reset only ballCount (not slots)
             if (gamepad2.x) {
                 ballCount = 0;
+                movedoffsetspindexer=false;
             }
 
             // ---------- SORT BUTTONS ----------

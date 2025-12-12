@@ -28,7 +28,7 @@ public class rconstants {
     public static double transfermoveridle = 0.6;
     public static Limelight3A limelight;
     public static NormalizedColorSensor colorSensor;
-    public static double transfermoverscore = 0.74;
+    public static double transfermoverscore = 0.73;
     public static double transfermoverfull = 1;
     public static int movespindexer = 2731;
 
@@ -45,8 +45,8 @@ public class rconstants {
     public static DcMotorEx rb;
     public static double targetTicksPerSecond=200;
     public static double shootclose = 1250;
-    public static double shootfar=1600;
-    public static double shooteridle = 200;
+    public static double shootfar=1655;
+    public static double shooteridle = 1000;
     public static double hoodtop = 0;
     public static double hoodbottom = 0.1;
     public static CRServo turretL;

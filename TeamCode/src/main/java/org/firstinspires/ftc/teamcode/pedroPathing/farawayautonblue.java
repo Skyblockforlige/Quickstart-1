@@ -36,6 +36,12 @@ public class farawayautonblue extends OpMode {
     private CRServoImplEx transfer;
     private DcMotorEx flywheel;
     private DcMotorEx intake;
+
+    ControlSystem cs1;
+
+    public static int target = 0;
+
+    public static double p1=0.0009;
     private DcMotorEx rb;
     private ControlSystem cs;
     public static double transfermoveridle = 0.6;
@@ -60,7 +66,7 @@ public class farawayautonblue extends OpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    private final Pose startPose = new Pose(57, 10, Math.toRadians(90));
+    private final Pose startPose = new Pose(57, 8, Math.toRadians(90));
 
     public PathChain firstpath;
     public PathChain Path1;
@@ -91,9 +97,9 @@ public class farawayautonblue extends OpMode {
         Path1 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(57.000, 10.000), new Pose(47.54533152909337, 35.26928281461434))
+                        new BezierLine(new Pose(57, 8.000), new Pose(30, 35))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
+                .setConstantHeadingInterpolation(Math.toRadians(90))
                 .build();
 
 
@@ -119,12 +125,16 @@ public class farawayautonblue extends OpMode {
         intake = hardwareMap.get(DcMotorEx.class,"intake");
         transfermover=hardwareMap.get(ServoImplEx.class,"transfermover");
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         //motif = "PGP";
         transfermover.setPosition(transfermoveridle);
         cs =  ControlSystem.builder()
                 .velPid(p, i, d)
                 .basicFF(v,a,s)
+                .build();
+        cs1 = ControlSystem.builder()
+                .posPid(p1)
                 .build();
 
 
@@ -139,9 +149,10 @@ public class farawayautonblue extends OpMode {
         switch (pathState) {
             case 0:
                 transfermover.setPosition(transfermoverscore);
-                targetTicksPerSecond=1600;
+                targetTicksPerSecond = 1655;
+                target=rconstants.movespindexer;
 
-                if(flywheel.getVelocity()>targetTicksPerSecond-25){
+                if (flywheel.getVelocity() > targetTicksPerSecond -10) {
                     setPathState(1);
                 }
 
@@ -150,21 +161,24 @@ public class farawayautonblue extends OpMode {
             case 1:
                 transfer.setPower(1);
 
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 ) {
-                    indexgoto(moveincrement*2 + pos);
+
+                if (pathTimer.getElapsedTimeSeconds() > 0.2 && pathTimer.getElapsedTimeSeconds() < 2.5) {
+                    transfermover.setPosition(rconstants.transfermoverscore);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>6&&pathTimer.getElapsedTimeSeconds()<7&&flywheel.getVelocity()>1575) {
-                    indexgoto(moveincrement +pos);
-                    transfermover.setPosition(transfermoveridle);
-                }
-                if(pathTimer.getElapsedTimeSeconds()>7.8&&pathTimer.getElapsedTimeSeconds()<9.2&&flywheel.getVelocity()>1575){
-                    transfermover.setPosition(transfermoverfull);
-                }
-                if(pathTimer.getElapsedTimeSeconds()>10){
-                    setPathState(2);
+                if (pathTimer.getElapsedTimeSeconds() > 5 && pathTimer.getElapsedTimeSeconds() < 6) {
+                    target = 2 * rconstants.movespindexer;
                 }
 
-                //shoot third ball
+                if (pathTimer.getElapsedTimeSeconds() > 8.5 && pathTimer.getElapsedTimeSeconds() < 10) {
+                    target=3*rconstants.movespindexer;
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 13 && pathTimer.getElapsedTimeSeconds() < 14)
+                {
+                    transfermover.setPosition(rconstants.transfermoverfull);
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 15) {
+                    setPathState(2);
+                }
                 break;
             case 2:
                 if(pathTimer.getElapsedTimeSeconds()>1) {
@@ -191,6 +205,9 @@ public class farawayautonblue extends OpMode {
     public void loop() {
         follower.update();
         autonomousPathUpdate();
+        KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
+        cs1.setGoal(new KineticState(target));
+        spindexer.setPower(0.85*(-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));

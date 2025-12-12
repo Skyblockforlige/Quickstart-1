@@ -234,10 +234,11 @@ public class closebyauton extends OpMode {
         int pos = spindexer.getCurrentPosition();
         switch (pathState) {
             case 0:
-                target=-500;
+                //offset go back on spindexer
+                target=-750;
                 transfer.setPower(1);
                 follower.followPath(firstpath);
-                targetTicksPerSecond=1190;
+                targetTicksPerSecond=1250;
 
                 setPathState(1);
 
@@ -328,18 +329,17 @@ public class closebyauton extends OpMode {
                 if(!follower.isBusy()) {
                     follower.setMaxPower(1);
                     follower.followPath(Path3);
-                    target-=500;
+                    target-=750;
                     setPathState(6);
                     //move to shoot position
                 }
                 break;
             case 6:
-                if(!follower.isBusy()){
+                if(pathTimer.getElapsedTimeSeconds()>.2 && pathTimer.getElapsedTimeSeconds()<2.5) {
                     transfermover.setPosition(rconstants.transfermoverscore);
                     transfer.setPower(1);
                 }
-
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2.3&& pathTimer.getElapsedTimeSeconds()<3.8) {
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2.5&& pathTimer.getElapsedTimeSeconds()<3.8) {
                     target=7*rconstants.movespindexer;
                 }
 
@@ -349,6 +349,7 @@ public class closebyauton extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds()>4.2){
                     setPathState(7);
                 }
+
                 break;
             case 7:
 
@@ -427,7 +428,7 @@ public class closebyauton extends OpMode {
             case 12:
                 if(!follower.isBusy()) {
                     //move to shooting position for balls 4,5,6
-                    target-=500;
+                    target-=750;
                     follower.setMaxPower(1);
                     follower.followPath(Path6);
                     setPathState(13);
@@ -442,19 +443,18 @@ public class closebyauton extends OpMode {
                 }
                 break;
             case 14:
-                if(!follower.isBusy()){
+                if(pathTimer.getElapsedTimeSeconds()>.2 && pathTimer.getElapsedTimeSeconds()<2.5) {
                     transfermover.setPosition(rconstants.transfermoverscore);
                     transfer.setPower(1);
                 }
-
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2&& pathTimer.getElapsedTimeSeconds()<3.7) {
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2.5&& pathTimer.getElapsedTimeSeconds()<3.8) {
                     target=12*rconstants.movespindexer;
                 }
 
-                if(pathTimer.getElapsedTimeSeconds()>3.7&&pathTimer.getElapsedTimeSeconds()<4.1){
+                if(pathTimer.getElapsedTimeSeconds()>3.8&&pathTimer.getElapsedTimeSeconds()<4.2){
                     transfermover.setPosition(rconstants.transfermoverfull);
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.1){
+                if(pathTimer.getElapsedTimeSeconds()>4.2){
                     setPathState(15);
                 }
                 break;
@@ -505,7 +505,7 @@ public class closebyauton extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(-cs1.calculate(current2));
+        spindexer.setPower(0.85*(-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
@@ -516,6 +516,7 @@ public class closebyauton extends OpMode {
         telemetry.addData("position of spindexer",spindexer.getCurrentPosition());
         telemetry.addData("target",target);
         telemetry.addData("Distance", distance.getDistance(DistanceUnit.CM));
+        telemetry.addData("path state", pathState);
         telemetry.update();
 
 
