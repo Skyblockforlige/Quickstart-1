@@ -30,7 +30,7 @@ import dev.nextftc.control.KineticState;
 @Configurable
 @Config
 @TeleOp
-public class multithreadteleop extends LinearOpMode {
+public class fakemulti extends LinearOpMode {
 
     private DcMotor lf, lb, rf, rb;
     private DcMotorEx flywheel, intake, spindexer;
@@ -184,12 +184,8 @@ public class multithreadteleop extends LinearOpMode {
             }
             if(ballCount==3&&!movedoffsetspindexer){
                 sleep(100);
-                target+=movespindexer/2;
                 target-=750;
                 movedoffsetspindexer=true;
-            }
-            if(gamepad2.left_trigger >0.1){
-                target+=movespindexer/2;
             }
             if(autoalign) {
                 if (Math.abs(gamepad2.left_stick_x) == 0) {
@@ -246,9 +242,9 @@ public class multithreadteleop extends LinearOpMode {
             boolean colorDetected = (isPurple || isGreen);
 
             // ---------- BALL DETECTION ----------
-            if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
+            if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3 && target%rconstants.movespindexer==0) {
                 if(distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
-                    //sleep(200);
+                    sleep(200);
                     target += rconstants.movespindexer;
 
                     if (isPurple) ballSlots[ballCount] = 1;
@@ -264,6 +260,7 @@ public class multithreadteleop extends LinearOpMode {
             }
 
             // ---------- SHOOTER ----------
+           targetTicksPerSecond=targetvolfromll(distancefromll(llResult.getTa()));
             if (gamepad2.y) targetTicksPerSecond = rconstants.shootfar;
             if (gamepad2.b) targetTicksPerSecond = rconstants.shootclose;
             if (gamepad2.a) targetTicksPerSecond = rconstants.shooteridle;
@@ -271,7 +268,6 @@ public class multithreadteleop extends LinearOpMode {
             // Reset only ballCount (not slots)
             if (gamepad2.x) {
                 ballCount = 0;
-                target-=movespindexer/2;
                 movedoffsetspindexer=false;
             }
 
@@ -347,7 +343,7 @@ public class multithreadteleop extends LinearOpMode {
             telemetry.addData("Autoalign:", autoalign);
             telemetry.addData("spindexer_pos", spindexer.getCurrentPosition());
             telemetry.addData("distance", distancefromll(llResult.getTa()));
-            telemetry.addData("distance of spindexer", distance.getDistance(DistanceUnit.CM));
+
             telemetry.update();
         }
     }

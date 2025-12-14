@@ -314,7 +314,7 @@ public class closebyautonred extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .2 && distance.getDistance(DistanceUnit.CM)>2.6 && distance.getDistance(DistanceUnit.CM)<4.5) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .2 && distance.getDistance(DistanceUnit.CM)>4 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -416,7 +416,7 @@ public class closebyautonred extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .2 && distance.getDistance(DistanceUnit.CM)>2.6 && distance.getDistance(DistanceUnit.CM)<4.5) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .2 && distance.getDistance(DistanceUnit.CM)>4 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;

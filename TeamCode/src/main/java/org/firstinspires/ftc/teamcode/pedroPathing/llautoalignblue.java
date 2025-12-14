@@ -35,6 +35,8 @@ public class llautoalignblue extends LinearOpMode {
     private Limelight3A limelight;
     double gear_rotio=200.0/38.0;
     private CRServo turretL;
+
+    public double distance;
     private CRServo turretR;
     private double targetx;
     private IMU imu;
@@ -45,6 +47,15 @@ public class llautoalignblue extends LinearOpMode {
     private DcMotor rb;
     private Timer goontimer;
     public static double multiplier=0.3333;
+
+    public double distancefromll(double ta)
+    {
+
+        double dis = (71.7321*(Math.pow(ta,-0.4550)));
+        return dis;
+    }
+
+
 
     double regularDivBy = 1;
 
@@ -98,6 +109,8 @@ public class llautoalignblue extends LinearOpMode {
             LLResult llResult = limelight.getLatestResult();
             if (llResult != null && llResult.isValid()) {
                 Pose3D botPose = llResult.getBotpose_MT2();
+                distance=distancefromll(llResult.getTa());
+
                 telemetry.addData("Tx", llResult.getTx());
                 telemetry.addData("Ty", llResult.getTy());
                 telemetry.addData("Ta", llResult.getTa());
@@ -115,15 +128,15 @@ public class llautoalignblue extends LinearOpMode {
                 targetx = llResult.getTy();
                 telemetry.addData("targetx", llResult.getTx());
 
-                if (targetx >= 5.5) {
+                if (targetx >= 2.5) {
                     // not necesary but makes it move exactly one degree
-                    turretL.setPower(0.25);
-                    turretR.setPower(0.25);
+                    //turretL.setPower(0.2);
+                    //turretR.setPower(0.2);
                     turretOscillationDirection = 0;
                     //switch to negative and make other postive if goes wrong direction
-                } else if (targetx <= -5.5) {
-                    turretL.setPower(-0.25);
-                    turretR.setPower(-0.25);
+                } else if (targetx <= -2.5) {
+                    //turretL.setPower(-0.2);
+                    //turretR.setPower(-0.2);
                     turretOscillationDirection = 1;
                 } else if(targetx>=-5.5&& targetx<=5.5){
                     turretR.setPower(0);
@@ -131,13 +144,13 @@ public class llautoalignblue extends LinearOpMode {
                 }
             } else{
                 if(turretOscillationDirection == 0){
-                    turretL.setPower(-0.1);
-                    turretR.setPower(-0.1);
+                    //turretL.setPower(-0.1);
+                    //turretR.setPower(-0.1);
                     sleep(500);
                     turretOscillationDirection=1;
                 } else{
-                    turretL.setPower(0.1);
-                    turretR.setPower(0.1);
+                    //turretL.setPower(0.1);
+                    //turretR.setPower(0.1);
                     sleep(500);
                     turretOscillationDirection=0;
                 }
@@ -149,6 +162,10 @@ public class llautoalignblue extends LinearOpMode {
 
             telemetry.addData("Xseen", llResult.getTx());
             telemetry.addData("turretOscillationDirection", turretOscillationDirection);
+            telemetry.addData("Tx", llResult.getTx());
+            telemetry.addData("distance",distance);
+            telemetry.addData("Ty", llResult.getTy());
+            telemetry.addData("Ta", llResult.getTa());
             telemetry.update();
         }
 
