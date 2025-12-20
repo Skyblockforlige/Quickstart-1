@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.geometry.BezierCurve;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -30,13 +31,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
-
 @Configurable
 @Config
-@Autonomous(name = "auton_red_real", group = "Examples")
+@Autonomous(name = "9 Ball Red", group = "Examples")
 public class closebyautonred extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
@@ -102,69 +103,82 @@ public class closebyautonred extends OpMode {
     float[] hsv = new float[3];
     public static boolean spindexermoved=false;
     DistanceSensor distance;
+
+
     public void buildPaths() {
         firstpath = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.463, 131.821).mirror(), new Pose(65.6,90).mirror())
+                        new BezierLine(new Pose(27.463, 131.821).mirror(), new Pose(31.345, 116.100).mirror())
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(40))
+                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(46.5))
                 .build();
+
         Path1 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(65.6, 90).mirror(), new Pose(49.657, 90).mirror())
+                        new BezierCurve(
+                                new Pose(31.345, 116.100).mirror(),
+                                new Pose(62.690, 96.517).mirror(),
+                                new Pose(49.345, 83.793).mirror()
+                        )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(40), Math.toRadians(-7.5))
+                .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
                 .build();
 
         Path2 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(49.657, 90).mirror(), new Pose(18.900, 90).mirror())
+                        new BezierLine(new Pose(49.345, 83.793).mirror(), new Pose(30.000, 83.793).mirror())
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(-7.5))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
 
         Path3 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(18.900, 90).mirror(), new Pose(65.6, 90).mirror())
+                        new BezierLine(new Pose(30.000, 83.793).mirror(), new Pose(31.345, 116.379).mirror())
                 )
-
-                .setLinearHeadingInterpolation(Math.toRadians(-7.5), Math.toRadians(40))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(46.5))
                 .build();
 
         Path4 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(65.6, 90).mirror(), new Pose(51.746, 66.634).mirror())
+                        new BezierCurve(
+                                new Pose(31.345, 116.379).mirror(),
+                                new Pose(73.552, 66.724).mirror(),
+                                new Pose(51.700, 59.793).mirror()
+                        )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(40), Math.toRadians(-7.5))
+                .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
                 .build();
 
         Path5 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(51.746, 66.634).mirror(), new Pose(15.500, 66.634).mirror())
+                        new BezierLine(new Pose(51.700, 59.793).mirror(), new Pose(26.000, 59.793).mirror())
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(-7.5))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
 
         Path6 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierCurve(new Pose(15.500, 61.134).mirror(),new Pose(74,56).mirror(), new Pose(65.6, 90).mirror())
+                        new BezierCurve(
+                                new Pose(26.000, 59.793).mirror(),
+                                new Pose(83.336, 56.759).mirror(),
+                                new Pose(31.345, 116.379).mirror()
+                        )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(-7.5), Math.toRadians(40))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(46.5))
                 .build();
-
         Path7 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(65.6, 90).mirror(), new Pose(39.403, 38.448).mirror())
+                        new BezierLine(new Pose(31.345, 116.379).mirror(), new Pose(39.403, 38.448).mirror())
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(40), Math.toRadians(7.5))
+                .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
                 .build();
 
         Path8 = follower
@@ -172,8 +186,9 @@ public class closebyautonred extends OpMode {
                 .addPath(
                         new BezierLine(new Pose(39.403, 38.448).mirror(), new Pose(22.000, 38.687).mirror())
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(7.5), Math.toRadians(7.5))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
+
     }
 
     @Override
@@ -226,20 +241,15 @@ public class closebyautonred extends OpMode {
         hood.setPosition(0.4);
     }
 
-    private void indexgoto(int target) {
-        spindexer.setTargetPosition(target);
-        spindexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        spindexer.setPower(0.5);
-    }
-
     public void autonomousPathUpdate() {
         int pos = spindexer.getCurrentPosition();
         switch (pathState) {
             case 0:
-                target=-750;
+                //offset go back on spindexer
+
                 transfer.setPower(1);
                 follower.followPath(firstpath);
-                targetTicksPerSecond=1220;
+                targetTicksPerSecond=1000;
 
                 setPathState(1);
 
@@ -251,13 +261,16 @@ public class closebyautonred extends OpMode {
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                 }
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4 &&flywheel.getVelocity()>=1190) {
-                    target=2*rconstants.movespindexer;
+                if(!follower.isBusy() && ((pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) ||flywheel.getVelocity()>=970)) {
+                    target =2*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.8) {
-                    target=2*rconstants.movespindexer;
+                if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.6) {
+                    target =3*rconstants.movespindexer;
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.8&&pathTimer.getElapsedTimeSeconds()<5.1){
+                if(pathTimer.getElapsedTimeSeconds()>4.6&&pathTimer.getElapsedTimeSeconds()<4.9) {
+                    target =4*rconstants.movespindexer;
+                }
+                if(pathTimer.getElapsedTimeSeconds()>4.9&&pathTimer.getElapsedTimeSeconds()<5.1){
                     transfermover.setPosition(rconstants.transfermoverfull);
 
                 }
@@ -278,7 +291,8 @@ public class closebyautonred extends OpMode {
             case 3:
                 if(!follower.isBusy()) {
                     //pick up 1,2,3
-                    follower.setMaxPower(0.35);
+                    transfer.setPower(0);
+                    follower.setMaxPower(0.5);
                     follower.followPath(Path2);
                     setPathState(4);
                 }
@@ -314,7 +328,7 @@ public class closebyautonred extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .2 && distance.getDistance(DistanceUnit.CM)>4 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .2 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -327,32 +341,36 @@ public class closebyautonred extends OpMode {
 
                 break;
             case 5:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()<1) {
+                if(!follower.isBusy()) {
                     follower.setMaxPower(1);
                     follower.followPath(Path3);
-
-                    //move to shoot position
-                }
-                if(pathTimer.getElapsedTimeSeconds()>1){
-                    target-=750;
                     setPathState(6);
+                    //move to shoot position
                 }
                 break;
             case 6:
-                if(pathTimer.getElapsedTimeSeconds()>.2 && pathTimer.getElapsedTimeSeconds()<2.5) {
-                    transfermover.setPosition(rconstants.transfermoverscore);
+                if(!follower.isBusy()){
                     transfer.setPower(1);
+                    intake.setPower(1);
+                    transfermover.setPosition(rconstants.transfermoverscore);
                 }
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2.5&& pathTimer.getElapsedTimeSeconds()<3.8) {
-                    target=7*rconstants.movespindexer;
+                if(!follower.isBusy() && ((pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) ||flywheel.getVelocity()>=970)) {
+                    target =8*rconstants.movespindexer;
                 }
-
-                if(pathTimer.getElapsedTimeSeconds()>3.8&&pathTimer.getElapsedTimeSeconds()<4.2){
+                if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.6) {
+                    target =9*rconstants.movespindexer;
+                }
+                if(pathTimer.getElapsedTimeSeconds()>4.6&&pathTimer.getElapsedTimeSeconds()<4.9) {
+                    target =10*rconstants.movespindexer;
+                }
+                if(pathTimer.getElapsedTimeSeconds()>4.9&&pathTimer.getElapsedTimeSeconds()<5.1){
                     transfermover.setPosition(rconstants.transfermoverfull);
+
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.2){
+                if(pathTimer.getElapsedTimeSeconds()>5.1){
                     setPathState(7);
                 }
+
                 break;
             case 7:
 
@@ -379,7 +397,7 @@ public class closebyautonred extends OpMode {
                 if(!follower.isBusy()) {
                     //picks up balls 4,5,6
                     transfer.setPower(0);
-                    follower.setMaxPower(0.35);
+                    follower.setMaxPower(0.5);
                     follower.followPath(Path5);
                     setPathState(11);
                 }
@@ -429,14 +447,10 @@ public class closebyautonred extends OpMode {
 
                 break;
             case 12:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()<1) {
+                if(!follower.isBusy()) {
+                    //move to shooting position for balls 4,5,6
                     follower.setMaxPower(1);
                     follower.followPath(Path6);
-
-                    //move to shoot position
-                }
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1){
-                    target-=750;
                     setPathState(13);
                 }
                 break;
@@ -449,18 +463,25 @@ public class closebyautonred extends OpMode {
                 }
                 break;
             case 14:
-                if(pathTimer.getElapsedTimeSeconds()>.2 && pathTimer.getElapsedTimeSeconds()<2.5) {
-                    transfermover.setPosition(rconstants.transfermoverscore);
+                if(!follower.isBusy()){
                     transfer.setPower(1);
+                    intake.setPower(1);
+                    transfermover.setPosition(rconstants.transfermoverscore);
                 }
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2.5&& pathTimer.getElapsedTimeSeconds()<3.8) {
-                    target=12*rconstants.movespindexer;
+                if(!follower.isBusy() && ((pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) ||flywheel.getVelocity()>=970)) {
+                    target =14*rconstants.movespindexer;
                 }
-
-                if(pathTimer.getElapsedTimeSeconds()>3.8&&pathTimer.getElapsedTimeSeconds()<4.2){
+                if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.6) {
+                    target =15*rconstants.movespindexer;
+                }
+                if(pathTimer.getElapsedTimeSeconds()>4.6&&pathTimer.getElapsedTimeSeconds()<4.9) {
+                    target =16*rconstants.movespindexer;
+                }
+                if(pathTimer.getElapsedTimeSeconds()>4.9&&pathTimer.getElapsedTimeSeconds()<5.1){
                     transfermover.setPosition(rconstants.transfermoverfull);
+
                 }
-                if(pathTimer.getElapsedTimeSeconds()>4.2){
+                if(pathTimer.getElapsedTimeSeconds()>5.1){
                     setPathState(15);
                 }
                 break;
@@ -497,12 +518,10 @@ public class closebyautonred extends OpMode {
 
         }
     }
-
     public void setPathState(int pState) {
         pathState = pState;
         pathTimer.resetTimer();
     }
-
 
     @Override
     public void loop() {
@@ -523,7 +542,8 @@ public class closebyautonred extends OpMode {
         telemetry.addData("Ball Count", ballCount);
         telemetry.addData("position of spindexer",spindexer.getCurrentPosition());
         telemetry.addData("target",target);
-
+        telemetry.addData("Distance", distance.getDistance(DistanceUnit.CM));
+        telemetry.addData("path state", pathState);
         telemetry.update();
 
 

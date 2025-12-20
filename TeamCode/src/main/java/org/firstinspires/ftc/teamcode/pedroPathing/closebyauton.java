@@ -37,7 +37,7 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Autonomous(name = "autonbluereal", group = "Examples")
+@Autonomous(name = "9 Ball Blue", group = "Examples")
 public class closebyauton extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
