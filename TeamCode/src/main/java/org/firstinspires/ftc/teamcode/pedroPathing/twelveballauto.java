@@ -384,6 +384,13 @@ public class twelveballauto extends OpMode {
                 }
                 break;
             case 6:
+                if(!follower.isBusy()) {
+                    follower.followPath(Path4);
+                    setPathState(7);
+                }
+                break;
+            case 7:
+
                 if(!follower.isBusy()){
                     transfer.setPower(1);
                     intake.setPower(1);
@@ -403,24 +410,18 @@ public class twelveballauto extends OpMode {
 
                 }
                 if(pathTimer.getElapsedTimeSeconds()>5.1){
-                    setPathState(7);
+                    setPathState(8);
                 }
 
                 break;
-            case 7:
-
-                ballCount=0;
-                setPathState(8);
-
-                break;
             case 8:
-
+                ballCount=0;
                 setPathState(9);
 
                 break;
             case 9:
                 //move to beginning of balls 4,5,6
-                follower.followPath(Path4);
+                follower.followPath(Path5);
 
                 transfermover.setPosition(rconstants.transfermoveridle);
                 intake.setPower(1);
@@ -433,7 +434,7 @@ public class twelveballauto extends OpMode {
                     //picks up balls 4,5,6
                     transfer.setPower(0);
                     follower.setMaxPower(0.5);
-                    follower.followPath(Path5);
+                    follower.followPath(Path6);
                     setPathState(11);
                 }
                 break;
@@ -485,7 +486,7 @@ public class twelveballauto extends OpMode {
                 if(!follower.isBusy()) {
                     //move to shooting position for balls 4,5,6
                     follower.setMaxPower(1);
-                    follower.followPath(Path6);
+                    follower.followPath(Path7);
                     setPathState(13);
                 }
                 break;
@@ -521,35 +522,98 @@ public class twelveballauto extends OpMode {
                 }
                 break;
             case 15:
-                follower.followPath(Path7);
+                follower.followPath(Path8);
                 //shoot ball 6
-                setPathState(-1);
+                setPathState(16);
 
                 break;
             case 16:
-                if(pathTimer.getElapsedTimeSeconds()>2) {
-                    //go to beggining of balls 7,8,9
-                    follower.followPath(Path7);
-                    transfermover.setPosition(rconstants.transfermoveridle);
-                    transfer.setPower(1);
-
+                if(!follower.isBusy()) {
+                    //picks up balls 4,5,6
+                    transfer.setPower(0);
+                    follower.setMaxPower(0.5);
+                    follower.followPath(Path9);
                     setPathState(17);
                 }
                 break;
             case 17:
-                if(!follower.isBusy()) {
-                    //pick up 7,8,9
-                    follower.followPath(Path8);
-                    setPathState(18);
+                // READ COLOR (same hue method as teleop)
+                colorSensor.getNormalizedColors();
+                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+
+                hue = hsv[0];
+                isPurple = (hue > 200 && hue < 300);
+                isGreen  = (hue > 95  && hue < 200);
+                colorDetected = (isPurple || isGreen);
+
+                // New ball enters
+                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                    // record color into slot memory
+                    if (isPurple) ballSlots[ballCount] = 1;
+                    if (isGreen)  ballSlots[ballCount] = 2;
+
+                    ballCount++;
+                    colorPreviouslyDetected = true;
+
+                    // schedule ONE move after short delay (no sleep in OpMode)
+                    actionTimer.resetTimer();
+                    pendingMove = true;
+                }
+
+                // reset detection when sensor no longer sees a ball
+                if (!colorDetected) {
+                    colorPreviouslyDetected = false;
+                }
+
+                // Execute the scheduled move exactly once
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .2 && distance.getDistance(DistanceUnit.CM)>4 && distance.getDistance(DistanceUnit.CM)<6) {
+                    // absolute target based on count (never grows indefinitely)
+                    target +=rconstants.movespindexer;
+                    pendingMove = false;
+                }
+
+                // after 3 balls, move to next path state once follower done
+                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                    setPathState(12);
                 }
                 break;
             case 18:
                 //spindexer.setPower(0.5);
                 if(!follower.isBusy())
                 {
+                    follower.followPath(Path10);
+                    setPathState(19);
+                }
+                break;
+            case 19:
+                if(!follower.isBusy()){
+                    transfer.setPower(1);
+                    intake.setPower(1);
+                    transfermover.setPosition(rconstants.transfermoverscore);
+                }
+                if(!follower.isBusy() && ((pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) ||flywheel.getVelocity()>=970)) {
+                    target =20*rconstants.movespindexer;
+                }
+                if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.6) {
+                    target =21*rconstants.movespindexer;
+                }
+                if(pathTimer.getElapsedTimeSeconds()>4.6&&pathTimer.getElapsedTimeSeconds()<4.9) {
+                    target =22*rconstants.movespindexer;
+                }
+                if(pathTimer.getElapsedTimeSeconds()>4.9&&pathTimer.getElapsedTimeSeconds()<5.1){
+                    transfermover.setPosition(rconstants.transfermoverfull);
+
+                }
+                if(pathTimer.getElapsedTimeSeconds()>5.1){
+                    setPathState(20);
+                }
+                break;
+            case 20:
+                if(!follower.isBusy()){
+                    follower.followPath(Path12);
                     setPathState(-1);
                 }
-
 
         }
     }
