@@ -120,7 +120,7 @@ public class closebyautonred extends OpMode {
                         new BezierCurve(
                                 new Pose(31.345, 116.100).mirror(),
                                 new Pose(62.690, 96.517).mirror(),
-                                new Pose(49.345, 83.793).mirror()
+                                new Pose(49.345, 88.793).mirror()
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
@@ -129,7 +129,7 @@ public class closebyautonred extends OpMode {
         Path2 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(49.345, 83.793).mirror(), new Pose(30.000, 83.793).mirror())
+                        new BezierLine(new Pose(49.345, 88.793).mirror(), new Pose(30.000, 88.793).mirror())
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
@@ -137,7 +137,7 @@ public class closebyautonred extends OpMode {
         Path3 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(30.000, 83.793).mirror(), new Pose(31.345, 116.379).mirror())
+                        new BezierLine(new Pose(30.000, 88.793).mirror(), new Pose(31.345, 116.379).mirror())
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(46.5))
                 .build();
@@ -148,7 +148,7 @@ public class closebyautonred extends OpMode {
                         new BezierCurve(
                                 new Pose(31.345, 116.379).mirror(),
                                 new Pose(73.552, 66.724).mirror(),
-                                new Pose(51.700, 59.793).mirror()
+                                new Pose(51.700, 64.793).mirror()
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
@@ -157,7 +157,7 @@ public class closebyautonred extends OpMode {
         Path5 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(51.700, 59.793).mirror(), new Pose(26.000, 59.793).mirror())
+                        new BezierLine(new Pose(51.700, 64.793).mirror(), new Pose(26.000, 64.793).mirror())
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
@@ -166,7 +166,7 @@ public class closebyautonred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(26.000, 59.793).mirror(),
+                                new Pose(26.000, 64.793).mirror(),
                                 new Pose(83.336, 56.759).mirror(),
                                 new Pose(31.345, 116.379).mirror()
                         )
