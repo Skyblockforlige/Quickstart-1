@@ -37,8 +37,8 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Autonomous(name = "twelveballblue", group = "Examples")
-public class twelveballauto extends OpMode {
+@Autonomous
+public class twelveballspeeeeeeeeed extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
@@ -122,102 +122,72 @@ public class twelveballauto extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Pose(31.345, 116.100),
-                                new Pose(73.552, 66.724),
-                                new Pose(55.000, 59.793)
+                                new Pose(75.652, 82.128),
+                                new Pose(72.823, 56.850),
+                                new Pose(24.500, 59.293)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
                 .build();
-
         Path2 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(55.000, 59.793), new Pose(26.500, 59.793))
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-
-        Path3 = follower
-                .pathBuilder()
-                .addPath(
                         new BezierCurve(
-                                new Pose(26.500, 59.793),
+                                new Pose(24.500, 59.293),
                                 new Pose(33.88347457627118, 64.03078265204387),
-                                new Pose(31.000, 68.500)
+                                new Pose(29.000, 68.500)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
-
-        Path4 = follower
+        Path3 = follower
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(31.000, 68.5),
+                                new Pose(29.000, 68.5),
                                 new Pose(79.400, 67.600),
                                 new Pose(31.345, 116.379)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
-
+        Path4 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(31.345, 116.379),
+                                new Pose(82.678, 80.485),
+                                new Pose(29.000, 83.293)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
+                .build();
         Path5 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierCurve(
-                                new Pose(31.345, 116.379),
-                                new Pose(62.690, 96.517),
-                                new Pose(54.345, 83.793)
-                        )
+                        new BezierLine(new Pose(29.000, 83.293), new Pose(31.345, 116.379))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
-
         Path6 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(54.345, 83.793), new Pose(30.000, 83.793))
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-
-        Path7 = follower
-                .pathBuilder()
-                .addPath(
-                        new BezierLine(new Pose(30.000, 83.793), new Pose(31.345, 116.379))
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
-                .build();
-
-        Path8 = follower
-                .pathBuilder()
-                .addPath(
                         new BezierCurve(
                                 new Pose(31.345, 116.379),
-                                new Pose(61.900, 63.700),
-                                new Pose(55.000, 35.793)
+                                new Pose(91.5, 29.1),
+                                new Pose(26.000, 35.293)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
                 .build();
-
-        Path9 = follower
+        Path7 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(55.000, 35.793), new Pose(26.000, 35.793))
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-
-        Path10 = follower
-                .pathBuilder()
-                .addPath(
-                        new BezierCurve(new Pose(26.000, 35.793),new Pose(59.59063156939212,30.568553737535026), new Pose(31.345, 116.379))
+                        new BezierCurve(new Pose(26.000, 35.293),new Pose(59.59063156939212,30.568553737535026), new Pose(31.345, 116.379))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
-
-        Path12 = follower
+        Path8 = follower
                 .pathBuilder()
                 .addPath(
                         new BezierLine(new Pose(31.345, 116.379), new Pose(35.285, 77.683))
@@ -291,12 +261,12 @@ public class twelveballauto extends OpMode {
                 //shoot 2 balls
                 break;
             case 1:
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=970){
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
                 }
-                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-200)){
+                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-600)){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(2);
 
@@ -306,7 +276,7 @@ public class twelveballauto extends OpMode {
                 break;
             case 2:
                 //move to begening of 1,2,3
-                if(pathTimer.getElapsedTimeSeconds()>0.25) {
+                if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path1);
                     transfermover.setPosition(rconstants.transfermoveridle);
                     intake.setPower(1);
@@ -314,15 +284,6 @@ public class twelveballauto extends OpMode {
                 }
                 break;
             case 3:
-                if(!follower.isBusy()) {
-                    //pick up 1,2,3
-                    transfer.setPower(0);
-                    follower.setMaxPower(0.5);
-                    follower.followPath(Path2);
-                    setPathState(4);
-                }
-                break;
-            case 4:
                 // READ COLOR (same hue method as teleop)
                 colorSensor.getNormalizedColors();
                 Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
@@ -353,7 +314,7 @@ public class twelveballauto extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -361,9 +322,16 @@ public class twelveballauto extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
-                    setPathState(5);
+                    setPathState(4);
                 }
-
+                break;
+            case 4:
+                if(!follower.isBusy()) {
+                    follower.setMaxPower(1);
+                    follower.followPath(Path2);
+                    setPathState(5);
+                    //move to shoot position
+                }
                 break;
             case 5:
                 if(!follower.isBusy()) {
@@ -374,52 +342,106 @@ public class twelveballauto extends OpMode {
                 }
                 break;
             case 6:
-                if(!follower.isBusy()) {
-                    follower.followPath(Path4);
-                    setPathState(7);
-                }
-                break;
-            case 7:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                     intake.setPower(1);
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =10*rconstants.movespindexer;
                 }
-                if(spindexer.getCurrentPosition()>= (10*rconstants.movespindexer-400)){
+                if(spindexer.getCurrentPosition()>= (10*rconstants.movespindexer-800)){
                     transfermover.setPosition(rconstants.transfermoverfull);
-                    setPathState(8);
+                    setPathState(7);
 
                 }
-
                 break;
-            case 8:
-                ballCount=0;
-                setPathState(9);
-
-                break;
-            case 9:
-                //move to beginning of balls 4,5,6
-                if(pathTimer.getElapsedTimeSeconds()>0.25) {
-                    follower.followPath(Path5);
+            case 7:
+                if(pathTimer.getElapsedTimeSeconds()>0.15) {
+                    ballCount=0;
+                    follower.followPath(Path4);
 
                     transfermover.setPosition(rconstants.transfermoveridle);
                     intake.setPower(1);
 
+                    setPathState(8);
+                }
+
+
+                break;
+            case 8:
+// READ COLOR (same hue method as teleop)
+                colorSensor.getNormalizedColors();
+                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+
+                hue = hsv[0];
+                isPurple = (hue > 200 && hue < 300);
+                isGreen  = (hue > 95  && hue < 200);
+                colorDetected = (isPurple || isGreen);
+
+                // New ball enters
+                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                    // record color into slot memory
+                    if (isPurple) ballSlots[ballCount] = 1;
+                    if (isGreen)  ballSlots[ballCount] = 2;
+
+                    ballCount++;
+                    colorPreviouslyDetected = true;
+
+                    // schedule ONE move after short delay (no sleep in OpMode)
+                    actionTimer.resetTimer();
+                    pendingMove = true;
+                }
+
+                // reset detection when sensor no longer sees a ball
+                if (!colorDetected) {
+                    colorPreviouslyDetected = false;
+                }
+
+                // Execute the scheduled move exactly once
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                    // absolute target based on count (never grows indefinitely)
+                    target +=rconstants.movespindexer;
+                    pendingMove = false;
+                }
+
+                // after 3 balls, move to next path state once follower done
+                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                    setPathState(9);
+                }
+
+                break;
+            case 9:
+                if(!follower.isBusy()) {
+                    //move to shooting position for balls 4,5,6
+                    follower.followPath(Path5);
                     setPathState(10);
                 }
                 break;
             case 10:
-                if(!follower.isBusy()) {
-                    //picks up balls 4,5,6
-                    transfer.setPower(0);
-                    follower.setMaxPower(0.5);
-                    follower.followPath(Path6);
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
+                    intake.setPower(1);
+                    transfer.setPower(1);
+                    transfermover.setPosition(rconstants.transfermoverscore);
+                    target =16*rconstants.movespindexer;
+                }
+                if(spindexer.getCurrentPosition()>= (16*rconstants.movespindexer-1000)){
+                    transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(11);
+
                 }
                 break;
             case 11:
+                if(pathTimer.getElapsedTimeSeconds()>0.15) {
+                    ballCount=0;
+                    follower.followPath(Path6);
 
+                    transfermover.setPosition(rconstants.transfermoveridle);
+                    intake.setPower(1);
+
+                    setPathState(12);
+                }
+                break;
+            case 12:
                 // READ COLOR (same hue method as teleop)
                 colorSensor.getNormalizedColors();
                 Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
@@ -450,7 +472,7 @@ public class twelveballauto extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>4 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -458,23 +480,14 @@ public class twelveballauto extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
-                    setPathState(12);
-                }
-
-                break;
-            case 12:
-                if(!follower.isBusy()) {
-                    //move to shooting position for balls 4,5,6
-                    follower.setMaxPower(1);
-                    follower.followPath(Path7);
                     setPathState(13);
                 }
+
                 break;
             case 13:
                 if(!follower.isBusy()) {
-                    //shoot balls 4
-
-
+                    //move to shooting position for balls 4,5,6
+                    follower.followPath(Path7);
                     setPathState(14);
                 }
                 break;
@@ -483,20 +496,20 @@ public class twelveballauto extends OpMode {
                     intake.setPower(1);
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =16*rconstants.movespindexer;
+                    target =22*rconstants.movespindexer;
                 }
-                if(spindexer.getCurrentPosition()>= (16*rconstants.movespindexer-600)){
+                if(spindexer.getCurrentPosition()>= (22*rconstants.movespindexer-1200)){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(15);
 
                 }
                 break;
             case 15:
-                if(pathTimer.getElapsedTimeSeconds()>0.25) {
+                if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path8);
                     transfermover.setPosition(rconstants.transfermoveridle);
                     //shoot ball 6
-                    setPathState(16);
+                    setPathState(-1);
                 }
                 break;
             case 16:
@@ -540,7 +553,7 @@ public class twelveballauto extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>4 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .1 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -579,6 +592,8 @@ public class twelveballauto extends OpMode {
                     follower.followPath(Path12);
                     setPathState(-1);
                 }
+            case -1:
+                stop();
 
         }
     }
