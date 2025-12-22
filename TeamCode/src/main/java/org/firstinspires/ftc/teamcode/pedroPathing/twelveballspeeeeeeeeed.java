@@ -85,7 +85,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(55));
+    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(145));
 
     public PathChain firstpath;
     public PathChain Path1;
@@ -114,7 +114,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 .addPath(
                         new BezierLine(new Pose(27.463, 131.821), new Pose(31.345, 116.100))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(55), Math.toRadians(133.5))
+                .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(133.5))
                 .build();
 
         Path1 = follower
@@ -314,7 +314,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .01 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -398,7 +398,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .01 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -553,7 +553,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .1 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .01 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -611,7 +611,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(0.85*(-cs1.calculate(current2)));
+        spindexer.setPower((-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));

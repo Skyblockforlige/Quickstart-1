@@ -249,7 +249,7 @@ public class closebyauton extends OpMode {
 
                 transfer.setPower(1);
                 follower.followPath(firstpath);
-                targetTicksPerSecond=1000;
+                targetTicksPerSecond=1025;
 
                 setPathState(1);
 
@@ -261,7 +261,7 @@ public class closebyauton extends OpMode {
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                 }
-                if(!follower.isBusy() && ((pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) ||flywheel.getVelocity()>=970)) {
+                if(!follower.isBusy() && ((pathTimer.getElapsedTimeSeconds()>3&& pathTimer.getElapsedTimeSeconds()<4) ||flywheel.getVelocity()>=990)) {
                     target =2*rconstants.movespindexer;
                 }
                 if(pathTimer.getElapsedTimeSeconds()>4.3&&pathTimer.getElapsedTimeSeconds()<4.6) {
