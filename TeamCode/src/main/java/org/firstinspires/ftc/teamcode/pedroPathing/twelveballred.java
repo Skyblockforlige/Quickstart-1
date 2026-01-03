@@ -85,7 +85,7 @@ public class twelveballred extends OpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(55)).mirror();
+    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(145)).mirror();
 
     public PathChain firstpath;
     public PathChain Path1;
@@ -114,7 +114,7 @@ public class twelveballred extends OpMode {
                 .addPath(
                         new BezierLine(new Pose(27.463, 131.821).mirror(), new Pose(31.345, 116.100).mirror())
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(125), Math.toRadians(46.5))
+                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(46.5))
                 .build();
 
         Path1 = follower
