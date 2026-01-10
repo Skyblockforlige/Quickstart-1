@@ -271,7 +271,6 @@ public class multithreadteleop extends LinearOpMode {
             // Reset only ballCount (not slots)
             if (gamepad2.x) {
                 ballCount = 0;
-                target-=movespindexer/2;
                 movedoffsetspindexer=false;
             }
 
@@ -334,6 +333,12 @@ public class multithreadteleop extends LinearOpMode {
 
             }
 
+            while(gamepad1.left_trigger>0){
+                if(ballCount==3&&!isGreen){
+                    target+=rconstants.movespindexer;
+                    sleep(300);
+                }
+            }
 
 
 

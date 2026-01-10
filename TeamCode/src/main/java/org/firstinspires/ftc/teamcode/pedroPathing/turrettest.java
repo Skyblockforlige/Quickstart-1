@@ -25,6 +25,7 @@ public class turrettest extends LinearOpMode {
     CRServo turretL;
     public static double p=0.00035,i=0.0000000005,d=0.0000000002;
     public static double gearratio = 50.0/9.0;
+    public static double tickstodegree = (50.0/9.0) *(8192.0/360.0);
     public static double ticksperdegree = 126.42;
     public static int target = 0;
 

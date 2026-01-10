@@ -164,8 +164,8 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(24.500), 59.293),
-                                new Pose(blueToRedX(33.88347457627118), 64.03078265204387),
+                                new Pose(blueToRedX(24.500-xoffset-1), 59.293+yoffset),
+                                new Pose(blueToRedX(55.88347457627118), 64.03078265204387),
                                 new Pose(blueToRedX(29.000-12.5), 68.500+yoffset)
                         )
                 )
@@ -176,7 +176,7 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(29.000), 68.5),
+                                new Pose(blueToRedX(29.000-12.5), 68.500+yoffset),
                                 new Pose(blueToRedX(79.400), 67.600),
                                 new Pose(blueToRedX(31.345), 116.379)
                         )
@@ -200,7 +200,7 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(blueToRedX(29.000), 83.293),
+                                new Pose(blueToRedX(29.000-xoffset), 83.293+yoffset),
                                 new Pose(blueToRedX(31.345), 116.379)
                         )
                 )
@@ -223,7 +223,7 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(26.000), 35.293),
+                                new Pose(blueToRedX(26.000-xoffset-1.5), 35.293+yoffset+3),
                                 new Pose(blueToRedX(59.59063156939212), 30.568553737535026),
                                 new Pose(blueToRedX(31.345), 116.379)
                         )

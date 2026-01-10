@@ -101,7 +101,7 @@ public class spindexerwonecolorsensor extends LinearOpMode {
             } else {
                 KineticState ks = new KineticState(currPos, spindexer.getVelocity());
                 cs1.setGoal(new KineticState(target));
-                spindexer.setPower(cs1.calculate(ks));
+                spindexer.setPower(-cs1.calculate(ks));
             }
 
             telemetry.addData("Hue", hue);
