@@ -33,7 +33,7 @@ public class turrettest extends LinearOpMode {
     @Override
     public void runOpMode(){
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry());
-        lf=hardwareMap.get(DcMotorEx.class,"lf");
+        lf=hardwareMap.get(DcMotorEx.class,"turret_enc");
         turretL=hardwareMap.crservo.get("turretL");
         lf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
