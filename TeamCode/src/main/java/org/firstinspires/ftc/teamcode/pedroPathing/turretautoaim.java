@@ -1,235 +1,164 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
-
-
-
-
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
-
-@TeleOp
-
+@Config
+@TeleOp(name = "Turret Fused Auto Aim")
 public class turretautoaim extends OpMode {
 
-
-
-    //Max rad the turret can go w/o tangling but idk the actual values
     private Follower follower;
+    private Limelight3A limelight;
+    private CRServo turretL, turretR;
+    private DcMotorEx turretEnc;
 
-    //TODO: find the actual values for these
+    // Constants synced with tele_w_TURRET
+    public static double ticksPerDeg = 126.42;
+    public static double turret_max = 90.0;
+    public static double turret_min = -90.0;
+    public static int servoDir = -1; 
+    public static double kP_limelight = 0.015; // From kP_track in tele_w_TURRET
+    public static double kP_arctan = 0.02;    // From kP_hold in tele_w_TURRET
+    public static double maxPower = 0.3;
 
-    public static final double turret_max = 110;
-    public static Pose startingPose; //See ExampleAuto to understand how to use this
+    // Target Field Position (Pinpointed Target)
+    public static double targetX = 72; 
+    public static double targetY = 72; 
+    private boolean hasTargetLocked = false;
 
-    public static final double turret_min = -110;
-
-
-
-    //the turret offset (so like if .setPos(0) is to the left instead of straight add an offset here)
-
-    //TODO: test and finalize offset!
-
-    public static final double turret_offset = 0;
-
-
-
-    //allowed tolerance between actual pos and goal
-
-    public static final double angle_tolerance = Math.toRadians(5);
-
-    public DcMotorEx turretEnc;
-
-
-
-
-
-   /*
-
-   put like thrubore.getCurrentPos here or something idk
-
-   also update this every loop
-
-   */
-
-    private double currentTurretRad = 67;
-
-
-
-    public double targetRad = 0.0;
-
-
-
-    public void update(double robotX, double robotY, double robotHeading, double targetX, double targetY){
-
-
-
-        double thetaField = Math.atan2(targetY-robotY, targetX-robotX);
-
-
-
-        double desired = wrapAngle(thetaField-robotHeading - turret_offset);
-
-
-
-        Double best = bestAngle(desired, currentTurretRad, turret_min, turret_max);
-
-
-
-        if (best==null){
-
-            targetRad = currentTurretRad;
-
-        }else{
-
-            targetRad = best;
-
-        }
-
-
-
+    /**
+     * Distance calculation from Limelight Area (TA)
+     */
+    public double distancefromll(double ta) {
+        if (ta <= 0) return 0;
+        return (71.7321 * (Math.pow(ta, -0.4550)));
     }
-
-
-
-    public void setCurrentTurretRad(double turretAngleRad){
-
-        this.currentTurretRad = turretAngleRad;
-
-    }
-
-
-
-    private static double wrapAngle(double a){
-
-        while (a>Math.PI) a-=2.0*Math.PI;
-
-        while (a<Math.PI) a+=2.0*Math.PI;
-
-        return a;
-
-    }
-
-
-
-    private static double bestAngle(double desired, double current, double min, double max){
-
-        Double best = null;
-
-        double bestErr = Double.POSITIVE_INFINITY;
-
-
-
-        for (int k = -1; k<=1; k++){
-
-            double candidate = desired + k * 2.0 * Math.PI;
-
-
-
-            if(candidate<min || candidate>max) continue;
-
-
-
-            double err = Math.abs(candidate-current);
-
-            if(err<bestErr){
-
-                bestErr = err;
-
-                best = candidate;
-
-            }
-
-
-
-        }
-
-        return best;
-
-    }
-
-
-
-    private static double clamp(double v, double min, double max){
-
-        return Math.max(min, Math.min(max, v));
-
-    }
-
-
-
-    private boolean nearEdge(double turretRad){
-
-        return (turretRad<turret_min+angle_tolerance) || (turretRad>turret_max+angle_tolerance);
-
-    }
-
 
     @Override
-    public void init(){
-        turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
-        follower.update();
+    public void init() {
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
+        rconstants.initHardware(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+        
+        limelight = rconstants.limelight;
+        turretL = rconstants.turretL;
+        turretR = rconstants.turretR;
+        
+        turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
+        turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        limelight.setPollRateHz(100);
+        limelight.start();
+
+        telemetry.addLine("Initialized. Fused Limelight + ArcTan Aiming.");
+        telemetry.update();
+    }
+
+    @Override
+    public void loop() {
         follower.update();
+        Pose robotPose = follower.getPose();
+        double robotHeadingDeg = Math.toDegrees(robotPose.getHeading());
+        double currentTurretDeg = turretEnc.getCurrentPosition() / ticksPerDeg;
 
-        turretautoaim aim = new turretautoaim();
+        LLResult res = limelight.getLatestResult();
+        boolean hasLimelightTarget = (res != null) && res.isValid();
+        
+        double cmdPower = 0;
 
+        if (hasLimelightTarget) {
+            // 1) DIRECT LIMELIGHT TRACKING
+            double ty = res.getTy(); // Use TY as horizontal per tele_w_TURRET
+            
+            // Calculate power to center the target
+            // In tele_w_TURRET: cmdPower = -kP_track * tyFilt
+            cmdPower = -kP_limelight * ty;
 
+            // 2) UPDATE PINPOINTED TARGET POSITION
+            double distance = distancefromll(res.getTa());
+            if (distance > 0) {
+                // Angle to target in field coords = robot heading + turret relative + limelight offset
+                // Note: If ty > 0 means target is to the right, then we ADD ty.
+                double angleToTargetDeg = angleWrapDeg(robotHeadingDeg + currentTurretDeg + ty);
+                double angleToTargetRad = Math.toRadians(angleToTargetDeg);
+
+                targetX = robotPose.getX() + distance * Math.cos(angleToTargetRad);
+                targetY = robotPose.getY() + distance * Math.sin(angleToTargetRad);
+                hasTargetLocked = true;
+            }
+            
+            telemetry.addData("Status", "TRACKING (Limelight)");
+        } else if (hasTargetLocked) {
+            // 3) ARCTAN FALLBACK
+            double dx = targetX - robotPose.getX();
+            double dy = targetY - robotPose.getY();
+            
+            double thetaFieldDeg = Math.toDegrees(Math.atan2(dy, dx));
+            double relNeededDeg = angleWrapDeg(thetaFieldDeg - robotHeadingDeg);
+            
+            double clampedTargetDeg = Math.max(turret_min, Math.min(turret_max, relNeededDeg));
+            double error = angleWrapDeg(clampedTargetDeg - currentTurretDeg);
+            
+            cmdPower = error * kP_arctan;
+            
+            telemetry.addData("Status", "TRACKING (ArcTan)");
+            telemetry.addData("Target Pos", "X: %.1f, Y: %.1f", targetX, targetY);
+        } else {
+            telemetry.addData("Status", "IDLE (Searching)");
+        }
+
+        // Apply global power clamping
+        cmdPower = Math.max(-maxPower, Math.min(maxPower, cmdPower));
+
+        // Soft limits
+        if (currentTurretDeg >= turret_max && cmdPower > 0) cmdPower = 0;
+        if (currentTurretDeg <= turret_min && cmdPower < 0) cmdPower = 0;
+
+        setTurretPower(cmdPower);
+
+        // Drive controls
+        driveMecanums();
+
+        telemetry.addData("Robot Pose", "X: %.1f, Y: %.1f, H: %.1f", 
+                robotPose.getX(), robotPose.getY(), robotHeadingDeg);
+        telemetry.addData("Turret Rel Angle", "%.2f", currentTurretDeg);
+        telemetry.addData("Command Power", "%.3f", cmdPower);
+        telemetry.update();
     }
 
-    @Override
-    public void start(){
+    private void driveMecanums() {
+        double y = -gamepad1.left_stick_y;
+        double x = gamepad1.left_stick_x * 1.1;
+        double rx = gamepad1.right_stick_x;
 
+        double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+        rconstants.lf.setPower((y + x + rx) / denom);
+        rconstants.lb.setPower((y - x + rx) / denom);
+        rconstants.rf.setPower((y - x - rx) / denom);
+        rconstants.rb.setPower((y + x - rx) / denom);
     }
 
-    @Override
-    public void loop(){
-        // 1) Get pose from Pinpoint
+    private void setTurretPower(double pwr) {
+        // servoDir is -1, matches tele_w_TURRET logic
+        turretL.setPower(pwr * servoDir);
+        turretR.setPower(pwr * servoDir);
+    }
 
-        // pose.x, pose.y, pose.headingRad
-
-        double x = follower.getPose().getX();
-
-        double y = follower.getPose().getY();
-
-        double heading = follower.getPose().getHeading();
-
-
-
-        // 2) Update turret current angle from encoder (you implement this conversion)
-
-        aim.setCurrentTurretRad(currentTurretRad);
-
-
-
-        // 3) Choose target field point idk what that is
-
-        double targetX = ...;
-
-        double targetY = ...;
-
-
-
-        // 4) Compute turret setpoint
-
-        aim.update(x, y, heading, targetX, targetY);
-
-
-
-        // 5) Turret PID to aim.turretSetpointRad
-
-        // turretController.setTarget(aimer.turretSetpointRad);
-
-
-
-
-
-
+    private double angleWrapDeg(double deg) {
+        while (deg > 180) deg -= 360;
+        while (deg < -180) deg += 360;
+        return deg;
     }
 }

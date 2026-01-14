@@ -455,9 +455,7 @@ public class tele_w_TURRET extends LinearOpMode {
                 movedoffsetspindexer = true;
             }
 
-            if (gamepad2.left_trigger > 0.1) {
-                target += movespindexer / 2;
-            }
+
 
             // ---------- INTAKE ----------
             boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
@@ -496,7 +494,6 @@ public class tele_w_TURRET extends LinearOpMode {
 
             if (gamepad2.x) {
                 ballCount = 0;
-                target -= movespindexer / 2;
                 movedoffsetspindexer = false;
             }
 

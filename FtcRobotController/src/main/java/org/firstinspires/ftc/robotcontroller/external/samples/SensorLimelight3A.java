@@ -67,7 +67,6 @@ import java.util.List;
  *   below the name of the Limelight on the top level configuration screen.
  */
 @TeleOp(name = "Sensor: Limelight3A", group = "Sensor")
-@Disabled
 public class SensorLimelight3A extends LinearOpMode {
 
     private Limelight3A limelight;
@@ -77,9 +76,9 @@ public class SensorLimelight3A extends LinearOpMode {
     {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
-        telemetry.setMsTransmissionInterval(11);
+        telemetry.setMsTransmissionInterval(1);
 
-        limelight.pipelineSwitch(9);
+        limelight.pipelineSwitch(3);
 
         /*
          * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
@@ -88,6 +87,8 @@ public class SensorLimelight3A extends LinearOpMode {
 
         telemetry.addData(">", "Robot Ready.  Press Play.");
         telemetry.update();
+        int detected = 0;
+        int actual= 0;
         waitForStart();
 
         while (opModeIsActive()) {
@@ -139,6 +140,16 @@ public class SensorLimelight3A extends LinearOpMode {
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
                     telemetry.addData("ID:", fr.getFiducialId());
+                    detected=fr.getFiducialId();
+                    if(detected==23){
+                        actual=22;
+                    } else if(detected==22){
+                        actual=21;
+                    } else if(detected==21){
+                        actual=23;
+                    }
+                    telemetry.addData("April Tag:", actual);
+                    telemetry.addData("Detected:" , detected);
                     telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
                 }
 

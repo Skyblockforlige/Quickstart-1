@@ -37,7 +37,7 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Autonomous
+@Autonomous(name = "12 Ball Blue")
 public class twelveballspeeeeeeeeed extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
@@ -214,7 +214,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
         rconstants.initHardware(hardwareMap);
         colorSensor=rconstants.colorSensor;
         turretL = hardwareMap.crservo.get("turretL");
-        turretR = hardwareMap.crservo.get("turretR");
+        //turretR = hardwareMap.crservo.get("turretR");
         hood= hardwareMap.servo.get("hood");
         // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
@@ -226,7 +226,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //limelight.pipelineSwitch(1);
-        colorSensor.setGain(2.7f);
+        colorSensor.setGain(2.9f);
         distance = (DistanceSensor) colorSensor;
 
 
@@ -613,6 +613,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
         cs1.setGoal(new KineticState(target));
         spindexer.setPower((-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
+        turretL.setPower(0);
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
         telemetry.addData("sped", flywheel.getVelocity());

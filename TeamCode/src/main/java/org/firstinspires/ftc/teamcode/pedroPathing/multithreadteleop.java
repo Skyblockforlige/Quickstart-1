@@ -118,7 +118,7 @@ public class multithreadteleop extends LinearOpMode {
         transfermover.setPosition(rconstants.transfermoveridle);
 
         colorSensor = rconstants.colorSensor;
-        colorSensor.setGain(2.7f);
+        colorSensor.setGain(2.9f);
 
         cs1 = ControlSystem.builder()
                 .posPid(p1,i1,d1)
@@ -247,7 +247,7 @@ public class multithreadteleop extends LinearOpMode {
 
             // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
-                if(distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                if(distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<7) {
                     //sleep(200);
                     target += rconstants.movespindexer;
 
