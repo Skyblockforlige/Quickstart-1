@@ -450,8 +450,7 @@ public class tele_w_TURRET extends LinearOpMode {
 
             if (ballCount == 3 && !movedoffsetspindexer) {
                 sleep(100);
-                target += movespindexer / 2;
-                target -= 750;
+
                 movedoffsetspindexer = true;
             }
 
