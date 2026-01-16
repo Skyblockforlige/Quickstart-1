@@ -139,7 +139,7 @@ public class twelveballred extends OpMode {
                 .addPath(
                         new BezierLine(
                                 new Pose(blueToRedX(27.463), 131.821),
-                                new Pose(blueToRedX(31.345), 116.100)
+                                new Pose(blueToRedX(31.345), 112.100)
                         )
                 )
                 // NOTE: your interpolation headings were already matching your mirrored startPose,
@@ -151,10 +151,10 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(31.345), 116.100),
+                                new Pose(blueToRedX(31.345), 112.100),
                                 new Pose(blueToRedX(75.652), 82.128),
                                 new Pose(blueToRedX(72.823), 56.850),
-                                new Pose(blueToRedX(24.500-xoffset-1), 59.293+yoffset)
+                                new Pose(blueToRedX(24.500-xoffset-7), 59.293+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
@@ -164,7 +164,7 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(24.500-xoffset-1), 59.293+yoffset),
+                                new Pose(blueToRedX(24.500-xoffset-7), 59.293+yoffset),
                                 new Pose(blueToRedX(55.88347457627118), 64.03078265204387),
                                 new Pose(blueToRedX(29.000-12.5), 68.500+yoffset)
                         )
@@ -178,7 +178,7 @@ public class twelveballred extends OpMode {
                         new BezierCurve(
                                 new Pose(blueToRedX(29.000-12.5), 68.500+yoffset),
                                 new Pose(blueToRedX(79.400), 67.600),
-                                new Pose(blueToRedX(31.345), 116.379)
+                                new Pose(blueToRedX(31.345), 112.379)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(46.5))
@@ -188,7 +188,7 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(31.345), 116.379),
+                                new Pose(blueToRedX(31.345), 112.379),
                                 new Pose(blueToRedX(82.678), 80.485),
                                 new Pose(blueToRedX(29.000-xoffset), 83.293+yoffset)
                         )
@@ -201,7 +201,7 @@ public class twelveballred extends OpMode {
                 .addPath(
                         new BezierLine(
                                 new Pose(blueToRedX(29.000-xoffset), 83.293+yoffset),
-                                new Pose(blueToRedX(31.345), 116.379)
+                                new Pose(blueToRedX(31.345), 112.379)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(46.5))
@@ -211,9 +211,9 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(31.345), 116.379),
+                                new Pose(blueToRedX(31.345), 112.379),
                                 new Pose(blueToRedX(94.5), 29.1),
-                                new Pose(blueToRedX(26.000-xoffset-1.5), 35.293+yoffset+3)
+                                new Pose(blueToRedX(26.000-xoffset-5), 35.293+yoffset+3)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
@@ -223,9 +223,9 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(26.000-xoffset-1.5), 35.293+yoffset+3),
+                                new Pose(blueToRedX(26.000-xoffset-5), 35.293+yoffset+3),
                                 new Pose(blueToRedX(59.59063156939212), 30.568553737535026),
-                                new Pose(blueToRedX(31.345), 116.379)
+                                new Pose(blueToRedX(31.345), 112.379)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(46.5))
@@ -235,7 +235,7 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(blueToRedX(31.345), 116.379),
+                                new Pose(blueToRedX(31.345), 112.379),
                                 new Pose(blueToRedX(35.285), 77.683)
                         )
                 )
@@ -379,7 +379,7 @@ public class twelveballred extends OpMode {
                 }
                 break;
             case 5:
-                if(!follower.isBusy()) {
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2) {
                     follower.setMaxPower(1);
                     follower.followPath(Path3);
                     setPathState(6);
@@ -605,7 +605,7 @@ public class twelveballred extends OpMode {
                 }
 
                 // after 3 balls, move to next path state once follower done
-                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4) && !follower.isBusy()) {
                     setPathState(18);
                 }
 
@@ -655,6 +655,7 @@ public class twelveballred extends OpMode {
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
         autonomousPathUpdate();
+        turretL.setPower(0);
 
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));

@@ -334,7 +334,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 }
                 break;
             case 5:
-                if(!follower.isBusy()) {
+                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2) {
                     follower.setMaxPower(1);
                     follower.followPath(Path3);
                     setPathState(6);
@@ -560,7 +560,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 }
 
                 // after 3 balls, move to next path state once follower done
-                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4) && !follower.isBusy()) {
                     setPathState(18);
                 }
 
