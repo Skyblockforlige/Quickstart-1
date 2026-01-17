@@ -38,8 +38,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@Autonomous(name="12 Ball Red")
-public class twelveballred extends OpMode {
+@Autonomous(name="12 Ball Red - No Empty")
+public class noempty12ballred extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
@@ -176,7 +176,7 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(29.000-12.5), 68.500+yoffset),
+                                new Pose(blueToRedX(24.500-xoffset-7), 59.293+yoffset),
                                 new Pose(blueToRedX(79.400), 67.600),
                                 new Pose(blueToRedX(31.345), 112.379)
                         )
@@ -339,7 +339,7 @@ public class twelveballred extends OpMode {
                 boolean colorDetected = (isPurple || isGreen);
 
                 // New ball enters
-                if (hue>0 && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                     // record color into slot memory
                     if (isPurple) ballSlots[ballCount] = 1;
@@ -373,18 +373,19 @@ public class twelveballred extends OpMode {
             case 4:
                 if(!follower.isBusy()) {
                     follower.setMaxPower(1);
-                    follower.followPath(Path2);
+                    follower.followPath(Path3);
                     setPathState(5);
                     //move to shoot position
                 }
                 break;
             case 5:
-                if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2) {
+                /*if(!follower.isBusy()&& pathTimer.getElapsedTimeSeconds()>2) {
                     follower.setMaxPower(1);
                     follower.followPath(Path3);
                     setPathState(6);
                     //move to shoot position
-                }
+                }*/
+                setPathState(6);
                 break;
             case 6:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
@@ -554,7 +555,7 @@ public class twelveballred extends OpMode {
                     follower.followPath(Path8);
                     transfermover.setPosition(rconstants.transfermoveridle);
                     //shoot ball 6
-                    setPathState(-1);
+                    setPathState(16);
                 }
                 break;
             case 16:
@@ -578,7 +579,7 @@ public class twelveballred extends OpMode {
                 colorDetected = (isPurple || isGreen);
 
                 // New ball enters
-                if (hue>0 && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                     // record color into slot memory
                     if (isPurple) ballSlots[ballCount] = 1;

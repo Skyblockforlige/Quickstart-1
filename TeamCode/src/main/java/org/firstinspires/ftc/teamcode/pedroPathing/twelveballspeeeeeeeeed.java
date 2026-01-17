@@ -121,7 +121,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(31.345, 116.100),
+                                    new Pose(31.345, 116.100),
                                 new Pose(75.652, 82.128),
                                 new Pose(72.823, 56.850),
                                 new Pose(24.500, 59.293)
@@ -226,7 +226,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //limelight.pipelineSwitch(1);
-        colorSensor.setGain(2.9f);
+        colorSensor.setGain(4f);
         distance = (DistanceSensor) colorSensor;
 
 
@@ -294,7 +294,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 boolean colorDetected = (isPurple || isGreen);
 
                 // New ball enters
-                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                if (hue>0 && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                     // record color into slot memory
                     if (isPurple) ballSlots[ballCount] = 1;
@@ -378,7 +378,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 colorDetected = (isPurple || isGreen);
 
                 // New ball enters
-                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                if (hue>0 && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                     // record color into slot memory
                     if (isPurple) ballSlots[ballCount] = 1;
@@ -452,7 +452,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 colorDetected = (isPurple || isGreen);
 
                 // New ball enters
-                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                if (hue>0 && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                     // record color into slot memory
                     if (isPurple) ballSlots[ballCount] = 1;
@@ -533,7 +533,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 colorDetected = (isPurple || isGreen);
 
                 // New ball enters
-                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                if (hue>0 && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                     // record color into slot memory
                     if (isPurple) ballSlots[ballCount] = 1;
