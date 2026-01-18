@@ -154,7 +154,7 @@ public class new9ballred extends OpMode {
                                 new Pose(blueToRedX(31.345), 112.100),
                                 new Pose(blueToRedX(75.652), 82.128),
                                 new Pose(blueToRedX(72.823), 56.850),
-                                new Pose(blueToRedX(24.500-xoffset-7), 59.293+yoffset)
+                                new Pose(blueToRedX(24.500-xoffset-7), 57.293+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
@@ -164,9 +164,9 @@ public class new9ballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(24.500-xoffset-7), 59.293+yoffset),
+                                new Pose(blueToRedX(24.500-xoffset-7), 57.293+yoffset),
                                 new Pose(blueToRedX(45.88347457627118), 64.03078265204387),
-                                new Pose(blueToRedX(29.000-15.5), 68.500+yoffset)
+                                new Pose(blueToRedX(29.000-15.5), 65.500+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
@@ -176,7 +176,7 @@ public class new9ballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(24.500-xoffset-7), 59.293+yoffset),
+                                new Pose(blueToRedX(24.500-xoffset-7), 57.293+yoffset),
                                 new Pose(blueToRedX(79.400), 67.600),
                                 new Pose(blueToRedX(31.345), 112.379)
                         )
@@ -330,8 +330,10 @@ public class new9ballred extends OpMode {
                 break;
             case 3:
                 // READ COLOR (same hue method as teleop)
-                colorSensor.getNormalizedColors();
-                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+                if(spindexer.getCurrentPosition()%rconstants.movespindexer <= 100 || spindexer.getCurrentPosition()%rconstants.movespindexer >= rconstants.movespindexer-100) {
+                    colorSensor.getNormalizedColors();
+                    Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+                }
 
                 float hue = hsv[0];
                 boolean isPurple = (hue > 200 && hue < 300);
@@ -415,8 +417,10 @@ public class new9ballred extends OpMode {
                 break;
             case 8:
 // READ COLOR (same hue method as teleop)
-                colorSensor.getNormalizedColors();
-                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+                if(spindexer.getCurrentPosition()%rconstants.movespindexer <= 100 || spindexer.getCurrentPosition()%rconstants.movespindexer >= rconstants.movespindexer-100) {
+                    colorSensor.getNormalizedColors();
+                    Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+                }
 
                 hue = hsv[0];
                 isPurple = (hue > 200 && hue < 300);
@@ -489,8 +493,10 @@ public class new9ballred extends OpMode {
                 break;
             case 12:
                 // READ COLOR (same hue method as teleop)
-                colorSensor.getNormalizedColors();
-                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+                if(spindexer.getCurrentPosition()%rconstants.movespindexer <= 100 || spindexer.getCurrentPosition()%rconstants.movespindexer >= rconstants.movespindexer-100) {
+                    colorSensor.getNormalizedColors();
+                    Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+                }
 
                 hue = hsv[0];
                 isPurple = (hue > 200 && hue < 300);
@@ -570,8 +576,10 @@ public class new9ballred extends OpMode {
             case 17:
 
                 // READ COLOR (same hue method as teleop)
-                colorSensor.getNormalizedColors();
-                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+                if(spindexer.getCurrentPosition()%rconstants.movespindexer <= 100 || spindexer.getCurrentPosition()%rconstants.movespindexer >= rconstants.movespindexer-100) {
+                    colorSensor.getNormalizedColors();
+                    Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+                }
 
                 hue = hsv[0];
                 isPurple = (hue > 200 && hue < 300);

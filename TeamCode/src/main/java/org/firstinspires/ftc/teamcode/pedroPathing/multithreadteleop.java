@@ -236,8 +236,10 @@ public class multithreadteleop extends LinearOpMode {
             boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
 
             // ---------- READ COLOR ----------
-            colorSensor.getNormalizedColors();
-            Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+            if(spindexer.getCurrentPosition()%rconstants.movespindexer <= 100 || spindexer.getCurrentPosition()%rconstants.movespindexer >= rconstants.movespindexer-100) {
+                colorSensor.getNormalizedColors();
+                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+            }
 
             float hue = hsv[0];
             boolean isPurple = (hue > 200 && hue < 300);

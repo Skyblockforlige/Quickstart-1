@@ -35,17 +35,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
-
 @Configurable
 @Config
-@Autonomous(name="12 Ball Red")
-public class twelveballred extends OpMode {
+@Autonomous(name = "12 Ball Goddard Meet 2 - Blue")
+public class twelveballgm2 extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
-    private double yoffset = 5;
-    private double xoffset=11;
 
     private IMU imu;
     private DcMotorEx flywheel;
@@ -86,31 +83,9 @@ public class twelveballred extends OpMode {
 
     boolean pendingMove = false;
 
-    private Timer pathTimer, actionTimer, opmodeTimer, goonTimer;
+    private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-
-    // -------------------------
-    // BLUE -> RED MIRROR HELPERS
-    // -------------------------
-    private static final double FIELD_WIDTH = 144.0;     // inches
-    private static final double FIELD_MID_X = FIELD_WIDTH / 2.0; // 72
-    private static final double HEADING_MID_RAD = Math.toRadians(90.0); // 90 deg
-
-    // X' = 72 + (72 - X) = 144 - X
-    private static double blueToRedX(double x) {
-        return FIELD_MID_X + (FIELD_MID_X - x);
-    }
-
-    // heading' = 90 + (90 - heading) = 180 - heading  (in radians -> π - heading)
-    private static double blueToRedHeadingRad(double headingRad) {
-        return (2.0 * HEADING_MID_RAD) - headingRad; // = Math.PI - headingRad
-    }
-
-    private final Pose startPose = new Pose(
-            blueToRedX(27.463),
-            131.821,
-            blueToRedHeadingRad(Math.toRadians(145))
-    );
+    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(145));
 
     public PathChain firstpath;
     public PathChain Path1;
@@ -124,7 +99,6 @@ public class twelveballred extends OpMode {
     public PathChain Path9;
     public PathChain Path10;
     public PathChain Path12;
-
     public static int moveincrement = 2731;
     public static double constraint =0.6;
     public static int target = 0;
@@ -133,114 +107,92 @@ public class twelveballred extends OpMode {
     public static boolean spindexermoved=false;
     DistanceSensor distance;
 
+
     public void buildPaths() {
         firstpath = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(
-                                new Pose(blueToRedX(27.463), 131.821),
-                                new Pose(blueToRedX(31.345), 112.100)
-                        )
+                        new BezierLine(new Pose(27.463, 131.821), new Pose(31.345, 116.100))
                 )
-                // NOTE: your interpolation headings were already matching your mirrored startPose,
-                // so I left these EXACTLY as you had them.
-                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(46.5))
+                .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(133.5))
                 .build();
 
         Path1 = follower
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(31.345), 112.100),
-                                new Pose(blueToRedX(75.652), 82.128),
-                                new Pose(blueToRedX(72.823), 56.850),
-                                new Pose(blueToRedX(24.500-xoffset-7), 57.293+yoffset)
+                                new Pose(31.345, 116.100),
+                                new Pose(75.652, 82.128),
+                                new Pose(72.823, 56.850),
+                                new Pose(21.500, 59.293)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
+                .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
                 .build();
-
         Path2 = follower
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(24.500-xoffset-7), 57.293+yoffset),
-                                new Pose(blueToRedX(45.88347457627118), 64.03078265204387),
-                                new Pose(blueToRedX(29.000-15.5), 66.500+yoffset)
+                                new Pose(21.500, 59.293),
+                                new Pose(33.88347457627118, 64.03078265204387),
+                                new Pose(27.000, 68.500)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
-
         Path3 = follower
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(29.000-15.5), 66.500+yoffset),
-                                new Pose(blueToRedX(79.400), 67.600),
-                                new Pose(blueToRedX(31.345), 112.379)
+                                new Pose(27.000, 68.5),
+                                new Pose(79.400, 67.600),
+                                new Pose(31.345, 116.379)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(46.5))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
-
         Path4 = follower
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(31.345), 112.379),
-                                new Pose(blueToRedX(82.678), 80.485),
-                                new Pose(blueToRedX(29.000-xoffset-3), 83.293+yoffset)
+                                new Pose(31.345, 116.379),
+                                new Pose(82.678, 80.485),
+                                new Pose(29.000, 83.293)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
+                .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
                 .build();
-
         Path5 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(
-                                new Pose(blueToRedX(29.000-xoffset-3), 83.293+yoffset),
-                                new Pose(blueToRedX(31.345), 112.379)
-                        )
+                        new BezierLine(new Pose(29.000, 83.293), new Pose(31.345, 116.379))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(46.5))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
-
         Path6 = follower
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(31.345), 112.379),
-                                new Pose(blueToRedX(94.5), 29.1),
-                                new Pose(blueToRedX(26.000-xoffset-8), 35.293+yoffset+1)
+                                new Pose(31.345, 116.379),
+                                new Pose(91.5, 29.1),
+                                new Pose(23.000, 35.293)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
+                .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
                 .build();
-
         Path7 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierCurve(
-                                new Pose(blueToRedX(26.000-xoffset-8), 35.293+yoffset+1
-                                ),
-                                new Pose(blueToRedX(59.59063156939212), 30.568553737535026),
-                                new Pose(blueToRedX(31.345), 112.379)
-                        )
+                        new BezierCurve(new Pose(23.000, 35.293),new Pose(59.59063156939212,30.568553737535026), new Pose(31.345, 116.379))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(46.5))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
-
         Path8 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(
-                                new Pose(blueToRedX(31.345), 112.379),
-                                new Pose(blueToRedX(35.285), 77.683)
-                        )
+                        new BezierLine(new Pose(31.345, 116.379), new Pose(35.285, 77.683))
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(46.5))
+                .setConstantHeadingInterpolation(Math.toRadians(133.5))
                 .build();
     }
 
@@ -249,7 +201,9 @@ public class twelveballred extends OpMode {
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         buildPaths();
-
+        //colorSensor1 = hardwareMap.get(NormalizedColorSensor.class, "cs1");
+        //colorSensor2 = hardwareMap.get(NormalizedColorSensor.class, "cs2");
+        //colorSensor3 = hardwareMap.get(NormalizedColorSensor.class, "cs3");
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         actionTimer = new Timer();
@@ -260,8 +214,9 @@ public class twelveballred extends OpMode {
         rconstants.initHardware(hardwareMap);
         colorSensor=rconstants.colorSensor;
         turretL = hardwareMap.crservo.get("turretL");
-        turretR = hardwareMap.crservo.get("turretR");
+        //turretR = hardwareMap.crservo.get("turretR");
         hood= hardwareMap.servo.get("hood");
+        // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -270,17 +225,16 @@ public class twelveballred extends OpMode {
         transfermover=hardwareMap.get(ServoImplEx.class,"transfermover");
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
+        //limelight.pipelineSwitch(1);
         colorSensor.setGain(4f);
         distance = (DistanceSensor) colorSensor;
 
-        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP
-        );
+
+        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP);
         imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
         target=0;
-
+        //motif = "PGP";
         transfermover.setPosition(rconstants.transfermoverscore);
         cs =  ControlSystem.builder()
                 .velPid(p, i, d)
@@ -651,7 +605,6 @@ public class twelveballred extends OpMode {
 
         }
     }
-
     public void setPathState(int pState) {
         pathState = pState;
         pathTimer.resetTimer();
@@ -664,16 +617,13 @@ public class twelveballred extends OpMode {
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
         autonomousPathUpdate();
-        turretL.setPower(0);
-
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(1*(-cs1.calculate(current2)));
-
+        spindexer.setPower((-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
+        turretL.setPower(0);
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
-
         telemetry.addData("sped", flywheel.getVelocity());
         telemetry.addData("power of spindexer", cs1.calculate(current2));
         telemetry.addData("Hue", hsv[0]);
@@ -683,5 +633,109 @@ public class twelveballred extends OpMode {
         telemetry.addData("Distance", distance.getDistance(DistanceUnit.CM));
         telemetry.addData("path state", pathState);
         telemetry.update();
+
+
+
+
+/*
+
+        NormalizedRGBA cs1 = colorSensor1.getNormalizedColors();
+        Color.colorToHSV(cs1.toColor(), hsvValues1);
+        NormalizedRGBA cs2 = colorSensor2.getNormalizedColors();
+        Color.colorToHSV(cs2.toColor(), hsvValues2);
+        NormalizedRGBA cs3 = colorSensor3.getNormalizedColors();
+        Color.colorToHSV(cs3.toColor(), hsvValues3);
+
+        boolean idle = true;
+        for (int i = 0; i < classifier.length; i++) {
+            if (classifier[i] == 0) break;
+            int next = (i + 1 < classifier.length) ? classifier[i + 1] : 0;
+            int next2 = (i + 2 < classifier.length) ? classifier[i + 2] : 0;
+            switch (motif) {
+                case "PGP":
+                    if (classifier[i] == 1 && next == 2 && next2 == 1) {
+                        targetPurple = true;
+                        idle = false;
+                    } else if (classifier[i] == 1 && next == 2 && next2 == 0) {
+                        targetPurple = true;
+                        idle = false;
+                    } else if (classifier[i] == 2 && next == 1) {
+                        targetPurple = true;
+                        idle = false;
+                    }
+                    break;
+                case "PPG":
+                    if (classifier[i] == 1 && next == 1 && next2 == 2) {
+                        targetPurple = false;
+                        idle = false;
+                    } else if (classifier[i] == 1 && next == 2) {
+                        targetPurple = false;
+                        idle = false;
+                    }
+                    break;
+                case "GPP":
+                    if (classifier[i] == 2 && next == 1 && next2 == 1) {
+                        targetPurple = true;
+                        idle = false;
+                    } else if (classifier[i] == 2 && next == 1) {
+                        targetPurple = true;
+                        idle = false;
+                    }
+                    break;
+                default:
+                    idle = true;
+                    break;
+            }
+            if (!idle) break;
+        }
+
+        if (targetPurple && !idle) {
+            if (hsvValues1[0] <= 290 && hsvValues1[0] >= 270) {
+                spindexer.setPower(0);
+                transfer.setPower(1);
+                transfermover.setPosition(transfermoverpos);
+            } else {
+                if ((hsvValues2[0] >= 270 && hsvValues2[0] <= 290)) {
+                    spindexer.setPower(1);
+                    transfer.setPower(0);
+                    transfermover.setPosition(0);
+                } else if (hsvValues3[0] >= 270 && hsvValues3[0] <= 290) {
+                    spindexer.setPower(-1);
+                    transfer.setPower(0);
+                    transfermover.setPosition(0);
+                } else {
+                    spindexer.setPower(0);
+                    transfer.setPower(0);
+                    transfermover.setPosition(0);
+                }
+            }
+        } else if (!targetPurple && !idle) {
+            if (hsvValues1[0] <= 110 && hsvValues1[0] >= 90) {
+                spindexer.setPower(0);
+                transfer.setPower(1);
+                transfermover.setPosition(transfermoverpos);
+            } else {
+                if ((hsvValues2[0] >= 90 && hsvValues2[0] <= 110)) {
+                    spindexer.setPower(1);
+                    transfer.setPower(0);
+                    transfermover.setPosition(0);
+                } else if (hsvValues3[0] >= 90 && hsvValues3[0] <= 110) {
+                    spindexer.setPower(-1);
+                    transfer.setPower(0);
+                    transfermover.setPosition(0);
+                } else {
+                    spindexer.setPower(0);
+                    transfer.setPower(0);
+                    transfermover.setPosition(0);
+                }
+            }
+        } else if (idle) {
+            spindexer.setPower(0);
+            transfer.setPower(0);
+            transfermover.setPosition(0);
+        }
+
+
+ */
     }
 }
