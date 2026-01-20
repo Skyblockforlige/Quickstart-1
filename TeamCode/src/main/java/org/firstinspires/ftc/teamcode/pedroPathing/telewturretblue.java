@@ -31,8 +31,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp(name="Turret Tele - Red")
-public class tele_w_TURRET extends LinearOpMode {
+@TeleOp(name="Turret Tele - Blue")
+public class telewturretblue extends LinearOpMode {
 
     // ===================== DRIVE =====================
     private DcMotor lf, lb, rf, rb;
@@ -109,7 +109,7 @@ public class tele_w_TURRET extends LinearOpMode {
     public static double maxTurretDeg = 90.0;
     public static double minTurretDeg = -90.0;
 
-    public static int pipelineIndex = 2;
+    public static int pipelineIndex = 1;
     public static double powerSlewPerSec = 1.2;
     public static double searchPower = 0.18;
 
@@ -130,7 +130,7 @@ public class tele_w_TURRET extends LinearOpMode {
 
     // ===================== LIMELIGHT AIM OFFSET (FIX) =====================
     // + = shift aim left, - = shift aim right
-    public static double tyOffsetDeg = -3.5;
+    public static double tyOffsetDeg = 2.5;
 
     // ===================== TURRET STATE =====================
     private enum TurretMode { TRACK, HOLD, EDGE_SEARCH, IDLE, MANUAL }

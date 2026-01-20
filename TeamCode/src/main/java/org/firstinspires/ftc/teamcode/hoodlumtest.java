@@ -15,6 +15,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class hoodlumtest extends LinearOpMode {
     public static Servo hood;
     public static double pos=0.0;//0-0.4 ONLY STRICTLY
+    //bottom pos 0.61
+    //top pos 0.52
     @Override
     public void runOpMode(){
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry());

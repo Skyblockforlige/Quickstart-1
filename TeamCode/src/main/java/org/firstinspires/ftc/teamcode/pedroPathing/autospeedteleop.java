@@ -30,7 +30,7 @@ import dev.nextftc.control.KineticState;
 @Configurable
 @Config
 @TeleOp
-public class multithreadteleop extends LinearOpMode {
+public class autospeedteleop extends LinearOpMode {
 
     private DcMotor lf, lb, rf, rb;
     private DcMotorEx flywheel, intake, spindexer;
@@ -265,16 +265,12 @@ public class multithreadteleop extends LinearOpMode {
             }
 
             // ---------- SHOOTER ----------
-            if (gamepad2.y) {
-                targetTicksPerSecond = rconstants.shootfar;
+            if(llResult.isValid()) {
+                targetTicksPerSecond = targetvolfromll(distancefromll(llResult.getTa()));
+            }
+            if(targetTicksPerSecond>=1450){
                 hood.setPosition(rconstants.hoodtop);
-            }
-            if (gamepad2.b){
-                targetTicksPerSecond = rconstants.shootclose;
-                hood.setPosition(rconstants.hoodbottom);
-            }
-            if (gamepad2.a) {
-                targetTicksPerSecond = rconstants.shooteridle;
+            } else{
                 hood.setPosition(rconstants.hoodbottom);
             }
 

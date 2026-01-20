@@ -112,7 +112,7 @@ public class noempty12ballblue extends OpMode {
         firstpath = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.463, 131.821), new Pose(31.345, 116.100))
+                        new BezierLine(new Pose(27.463, 131.821), new Pose(33.345, 114.100))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(133.5))
                 .build();
@@ -121,7 +121,7 @@ public class noempty12ballblue extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(31.345, 116.100),
+                                new Pose(33.345, 114.100),
                                 new Pose(75.652, 82.128),
                                 new Pose(72.823, 56.850),
                                 new Pose(24.500, 59.293)
@@ -146,7 +146,7 @@ public class noempty12ballblue extends OpMode {
                         new BezierCurve(
                                 new Pose(24.500, 59.293),
                                 new Pose(79.400, 67.600),
-                                new Pose(31.345, 116.379)
+                                new Pose(33.345, 114.100)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
@@ -155,7 +155,7 @@ public class noempty12ballblue extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(31.345, 116.379),
+                                new Pose(33.345, 114.100),
                                 new Pose(82.678, 80.485),
                                 new Pose(29.000, 83.293)
                         )
@@ -165,7 +165,7 @@ public class noempty12ballblue extends OpMode {
         Path5 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(29.000, 83.293), new Pose(31.345, 116.379))
+                        new BezierLine(new Pose(29.000, 83.293), new Pose(33.345, 114.100))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
@@ -173,7 +173,7 @@ public class noempty12ballblue extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(31.345, 116.379),
+                                new Pose(33.345, 114.100),
                                 new Pose(91.5, 29.1),
                                 new Pose(26.000, 35.293)
                         )
@@ -183,14 +183,14 @@ public class noempty12ballblue extends OpMode {
         Path7 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierCurve(new Pose(26.000, 35.293),new Pose(59.59063156939212,30.568553737535026), new Pose(31.345, 116.379))
+                        new BezierCurve(new Pose(26.000, 35.293),new Pose(59.59063156939212,30.568553737535026), new Pose(33.345, 114.100))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
         Path8 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(31.345, 116.379), new Pose(35.285, 77.683))
+                        new BezierLine(new Pose(33.345, 114.100), new Pose(35.285, 77.683))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(133.5))
                 .build();
@@ -243,7 +243,6 @@ public class noempty12ballblue extends OpMode {
         cs1 = ControlSystem.builder()
                 .posPid(p1)
                 .build();
-        hood.setPosition(0.4);
     }
 
     public void autonomousPathUpdate() {
@@ -253,7 +252,7 @@ public class noempty12ballblue extends OpMode {
                 //offset go back on spindexer
                 transfer.setPower(1);
                 follower.followPath(firstpath);
-                targetTicksPerSecond=1025;
+                targetTicksPerSecond=1050;
 
                 setPathState(1);
 

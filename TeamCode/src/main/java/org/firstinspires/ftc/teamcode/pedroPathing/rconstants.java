@@ -45,10 +45,10 @@ public class rconstants {
     public static DcMotorEx rb;
     public static double targetTicksPerSecond=200;
     public static double shootclose = 1250;
-    public static double shootfar=1655;
+    public static double shootfar=1550;
     public static double shooteridle = 1000;
-    public static double hoodtop = 0;
-    public static double hoodbottom = 0.1;
+    public static double hoodtop = 0.52;
+    public static double hoodbottom = 0.61;
     public static CRServo turretL;
     public static CRServo turretR;
 
