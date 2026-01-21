@@ -560,6 +560,7 @@ public class tele_w_TURRET extends LinearOpMode {
             telemetry.addData("turretRelNeededDeg", turretRelNeededDeg);
             telemetry.addData("holdErrDeg", holdErrDeg);
             telemetry.addData("turretOut", turretOut);
+            telemetry.addData("velocity", flywheel.getVelocity());
 
             if (llResult != null && llResult.isValid()) {
                 telemetry.addData("distance(ll ta)", distancefromll(llResult.getTa()));
