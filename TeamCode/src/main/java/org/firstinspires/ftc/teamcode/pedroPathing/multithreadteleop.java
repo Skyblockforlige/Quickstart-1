@@ -117,7 +117,7 @@ public class multithreadteleop extends LinearOpMode {
         transfermover.setPosition(rconstants.transfermoveridle);
 
         colorSensor = rconstants.colorSensor;
-        colorSensor.setGain(2.9f);
+        colorSensor.setGain(rconstants.csgain);
 
         cs1 = ControlSystem.builder()
                 .posPid(p1,i1,d1)
@@ -241,8 +241,9 @@ public class multithreadteleop extends LinearOpMode {
             }
 
             float hue = hsv[0];
-            boolean isPurple = (hue > 200 && hue < 300);
-            boolean isGreen  = (hue > 95  && hue < 200);
+
+            boolean isPurple = (hue > 195 && hue < 220);
+            boolean isGreen = (hue > 150 && hue < 170);
 
             boolean colorDetected = (isPurple || isGreen);
 

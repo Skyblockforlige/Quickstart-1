@@ -31,7 +31,9 @@ public class rconstants {
     public static double transfermoverscore = 0.73;
     public static double transfermoverfull = 1;
     public static int movespindexer = 2731;
-
+    public static float csgain = 15f;
+    //purple=195-220
+    //green- 150-170
     public static Servo hood;
     public static IMU imu;
     public static DcMotor lf;

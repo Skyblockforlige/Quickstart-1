@@ -236,7 +236,7 @@ public class twelveballsorted extends OpMode {
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //limelight.pipelineSwitch(1);
-        colorSensor.setGain(2.7f);
+        colorSensor.setGain(rconstants.csgain);
         distance = (DistanceSensor) colorSensor;
 
 
@@ -302,8 +302,9 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         float hue = hsv[0];
-                        boolean isPurple = (hue > 200 && hue < 300);
-                        boolean isGreen = (hue > 95 && hue < 200);
+
+                        boolean isPurple = (hue > 195 && hue < 220);
+                        boolean isGreen = (hue > 150 && hue < 170);
                         boolean colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -389,8 +390,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen = (hue > 95 && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -463,8 +464,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen = (hue > 95 && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -545,8 +546,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen = (hue > 95 && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -661,8 +662,9 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         float hue = hsv[0];
-                        boolean isPurple = (hue > 200 && hue < 300);
-                        boolean isGreen  = (hue > 95  && hue < 200);
+
+                        boolean isPurple = (hue > 195 && hue < 220);
+                        boolean isGreen = (hue > 150 && hue < 170);
                         boolean colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -746,8 +748,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen  = (hue > 95  && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -821,8 +823,9 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen  = (hue > 95  && hue < 200);
+
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -902,8 +905,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen  = (hue > 95  && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -1020,8 +1023,9 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         float hue = hsv[0];
-                        boolean isPurple = (hue > 200 && hue < 300);
-                        boolean isGreen  = (hue > 95  && hue < 200);
+
+                        boolean isPurple = (hue > 195 && hue < 220);
+                        boolean isGreen = (hue > 150 && hue < 170);
                         boolean colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -1106,8 +1110,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen  = (hue > 95  && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -1180,8 +1184,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen  = (hue > 95  && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -1262,8 +1266,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen  = (hue > 95  && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -1373,8 +1377,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         float hue = hsv[0];
-                        boolean isPurple = (hue > 200 && hue < 300);
-                        boolean isGreen  = (hue > 95  && hue < 200);
+                        boolean isPurple = (hue > 195 && hue < 220);
+                        boolean isGreen = (hue > 150 && hue < 170);
                         boolean colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -1457,8 +1461,9 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen  = (hue > 95  && hue < 200);
+
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -1531,8 +1536,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen  = (hue > 95  && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters
@@ -1612,8 +1617,8 @@ public class twelveballsorted extends OpMode {
                         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
                         hue = hsv[0];
-                        isPurple = (hue > 200 && hue < 300);
-                        isGreen  = (hue > 95  && hue < 200);
+                        isPurple = (hue > 195 && hue < 220);
+                        isGreen = (hue > 150 && hue < 170);
                         colorDetected = (isPurple || isGreen);
 
                         // New ball enters

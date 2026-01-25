@@ -7,6 +7,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
+import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -31,7 +32,7 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp(name="Turret Tele - Red")
+@TeleOp(name="Turret Tele - RED")
 public class tele_w_TURRET extends LinearOpMode {
 
     // ===================== DRIVE =====================
@@ -56,6 +57,7 @@ public class tele_w_TURRET extends LinearOpMode {
     float[] hsv = new float[3];
 
     int ballCount = 0;
+    public static int ballshot = 0;
     boolean colorPreviouslyDetected = false;
 
     // Slot tracking
@@ -131,6 +133,7 @@ public class tele_w_TURRET extends LinearOpMode {
     // ===================== LIMELIGHT AIM OFFSET (FIX) =====================
     // + = shift aim left, - = shift aim right
     public static double tyOffsetDeg = -3.5;
+    private boolean farmode = false;
 
     // ===================== TURRET STATE =====================
     private enum TurretMode { TRACK, HOLD, EDGE_SEARCH, IDLE, MANUAL }
@@ -158,14 +161,18 @@ public class tele_w_TURRET extends LinearOpMode {
     private volatile double turretRelNeededDeg = 0.0;
     private volatile double holdErrDeg = 0.0;
     private volatile double turretOut = 0.0;
+    public static Timer shottimer;
+    public static boolean shots=true;
 
     // ===================== HELPERS =====================
     public double distancefromll(double ta) {
         return (71.7321 * (Math.pow(ta, -0.4550)));
     }
+    public static double hoodpos;
 
     @Override
     public void runOpMode() {
+        shottimer= new Timer();
 
         telemetry = new MultipleTelemetry(
                 telemetry,
@@ -179,6 +186,8 @@ public class tele_w_TURRET extends LinearOpMode {
         lb = rconstants.lb;
         rf = rconstants.rf;
         rb = rconstants.rb;
+        boolean shotLatched = false;
+
 
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -218,7 +227,7 @@ public class tele_w_TURRET extends LinearOpMode {
         transfermover.setPosition(rconstants.transfermoveridle);
 
         colorSensor = rconstants.colorSensor;
-        colorSensor.setGain(2.7f);
+        colorSensor.setGain(rconstants.csgain);
         distance = (DistanceSensor) colorSensor;
 
         cs1 = ControlSystem.builder()
@@ -455,8 +464,10 @@ public class tele_w_TURRET extends LinearOpMode {
             Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
             float hue = hsv[0];
-            boolean isPurple = (hue > 200 && hue < 300);
-            boolean isGreen = (hue > 95 && hue < 200);
+            //purple=195-220
+            //green- 150-170
+            boolean isPurple = (hue >= 195 && hue <= 220);
+            boolean isGreen = (hue >= 150 && hue <= 170);
 
             boolean colorDetected = (isPurple || isGreen);
 
@@ -480,19 +491,72 @@ public class tele_w_TURRET extends LinearOpMode {
             // ---------- SHOOTER ----------
             if (gamepad2.y) {
                 targetTicksPerSecond = rconstants.shootfar;
-                hood.setPosition(rconstants.hoodtop);
+                farmode=true;
+                hoodpos=rconstants.hoodtop;
             }
             if (gamepad2.b){
                 targetTicksPerSecond = rconstants.shootclose;
-                hood.setPosition(rconstants.hoodbottom);
+                farmode=false;
+                hoodpos=rconstants.hoodbottom;
             }
             if (gamepad2.a) {
+                farmode=false;
                 targetTicksPerSecond = rconstants.shooteridle;
-                hood.setPosition(rconstants.hoodbottom);
+                hoodpos=rconstants.hoodbottom;
+            }
+            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
+
+            /*if(farmode) {
+                if(cs.calculate(current1)>1.4&&shots){
+                    shottimer=new Timer();
+                    shots=false;
+                }
+                if(!shots){
+                    ballshot++;
+                    shots=true;
+                    sleep(200);
+                }
+                if(ballshot==0) {
+                    hoodpos=rconstants.hoodtop;
+                } else if(ballshot==1){
+                    hoodpos=rconstants.hoodtop+0.04;
+                } else if(ballshot==2){
+                    hoodpos=rconstants.hoodtop+0.08;
+                }
+            }*/
+            final double SHOT_THRESHOLD = 1.4;
+            final double RESET_THRESHOLD = 1.0; // must fall below this before next shot
+
+
+            if (farmode) {
+
+                double current = cs.calculate(current1);
+
+                // Shot detected → advance hood instantly
+                if (!shotLatched && current > SHOT_THRESHOLD) {
+                    ballshot++;            // NEXT shot
+                    shotLatched = true;    // lock until system settles
+                }
+
+                // Re-arm only after current drops
+                if (shotLatched && current < RESET_THRESHOLD) {
+                    shotLatched = false;
+                }
+
+                // Hood position based on number of shots
+                if (ballshot == 0) {
+                    hoodpos = rconstants.hoodtop;
+                } else if (ballshot == 1) {
+                    hoodpos = rconstants.hoodtop + 0.02;
+                } else if (ballshot == 2) {
+                    hoodpos = rconstants.hoodtop + 0.04;
+                }
             }
 
+            hood.setPosition(hoodpos);
             if (gamepad2.x) {
                 ballCount = 0;
+                ballshot=0;
                 movedoffsetspindexer = false;
             }
 
@@ -523,6 +587,9 @@ public class tele_w_TURRET extends LinearOpMode {
 
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
                 spindexer.setPower(-cs1.calculate(current2));
+            } else if(farmode){
+                spindexer.setPower(gamepad2.left_stick_y);
+                target = spindexer.getCurrentPosition();
             } else {
                 spindexer.setPower(gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
@@ -530,7 +597,6 @@ public class tele_w_TURRET extends LinearOpMode {
 
             // ---------- SHOOTER CONTROL ----------
             cs.setGoal(new KineticState(0, targetTicksPerSecond));
-            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
             flywheel.setPower(cs.calculate(current1));
 
             if (gamepad2.left_bumper) {
@@ -540,13 +606,14 @@ public class tele_w_TURRET extends LinearOpMode {
             }
 
             // ---------- TELEMETRY ----------
+            telemetry.addData("power", cs.calculate(current1));
             telemetry.addData("Hue", hue);
             telemetry.addData("Ball Count", ballCount);
             telemetry.addData("Slots", ballSlots[0] + "," + ballSlots[1] + "," + ballSlots[2]);
             telemetry.addData("Sorting", sorting);
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
             telemetry.addData("Target", target);
-
+            telemetry.addData("balls shot", ballshot);
             telemetry.addData("T_MODE", turretMode);
             telemetry.addData("hasTarget", hasTarget);
             telemetry.addData("tyRaw(deg)", tyRaw);
@@ -561,7 +628,7 @@ public class tele_w_TURRET extends LinearOpMode {
             telemetry.addData("holdErrDeg", holdErrDeg);
             telemetry.addData("turretOut", turretOut);
             telemetry.addData("velocity", flywheel.getVelocity());
-
+            telemetry.addData("Target Ticks Per Second", targetTicksPerSecond);
             if (llResult != null && llResult.isValid()) {
                 telemetry.addData("distance(ll ta)", distancefromll(llResult.getTa()));
             } else {

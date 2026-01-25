@@ -227,7 +227,7 @@ public class telewturretblue extends LinearOpMode {
         transfermover.setPosition(rconstants.transfermoveridle);
 
         colorSensor = rconstants.colorSensor;
-        colorSensor.setGain(2.7f);
+        colorSensor.setGain(rconstants.csgain);
         distance = (DistanceSensor) colorSensor;
 
         cs1 = ControlSystem.builder()
@@ -464,8 +464,10 @@ public class telewturretblue extends LinearOpMode {
             Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
             float hue = hsv[0];
-            boolean isPurple = (hue > 200 && hue < 300);
-            boolean isGreen = (hue > 95 && hue < 200);
+            //purple=195-220
+            //green- 150-170
+            boolean isPurple = (hue >= 195 && hue <= 220);
+            boolean isGreen = (hue >= 150 && hue <= 170);
 
             boolean colorDetected = (isPurple || isGreen);
 
@@ -545,9 +547,9 @@ public class telewturretblue extends LinearOpMode {
                 if (ballshot == 0) {
                     hoodpos = rconstants.hoodtop;
                 } else if (ballshot == 1) {
-                    hoodpos = rconstants.hoodtop + 0.04;
+                    hoodpos = rconstants.hoodtop + 0.02;
                 } else if (ballshot == 2) {
-                    hoodpos = rconstants.hoodtop + 0.08;
+                    hoodpos = rconstants.hoodtop + 0.04;
                 }
             }
 
@@ -586,7 +588,7 @@ public class telewturretblue extends LinearOpMode {
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
                 spindexer.setPower(-cs1.calculate(current2));
             } else if(farmode){
-                spindexer.setPower(0.8*gamepad2.left_stick_y);
+                spindexer.setPower(gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             } else {
                 spindexer.setPower(gamepad2.left_stick_y);
