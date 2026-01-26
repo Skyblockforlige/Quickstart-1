@@ -293,10 +293,10 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
             cs2 = ControlSystem.builder()
                     .posPid(p3,i3,d3)
                     .build();
-            cs2.setGoal(new KineticState(0));
+            cs2.setGoal(new KineticState(300));
 
             KineticState current4 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
-            if(opmodeTimer.getElapsedTimeSeconds()>1){
+            if(opmodeTimer.getElapsedTimeSeconds()>1.5){
                 turretL.setPower(0);
             }else{
                 turretL.setPower(-cs2.calculate(current4));

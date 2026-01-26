@@ -304,7 +304,7 @@ public class twelveballsortedred extends LinearOpMode {
             cs2 = ControlSystem.builder()
                     .posPid(p3,i3,d3)
                     .build();
-            cs2.setGoal(new KineticState(-13700));
+            cs2.setGoal(new KineticState(13700));
             KineticState current3 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
 
             turretL.setPower(-cs2.calculate(current3));
