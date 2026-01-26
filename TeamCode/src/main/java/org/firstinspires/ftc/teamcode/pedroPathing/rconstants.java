@@ -49,8 +49,8 @@ public class rconstants {
     public static double shootclose = 1250;
     public static double shootfar=1550;
     public static double shooteridle = 1000;
-    public static double hoodtop = 0.52;
-    public static double hoodbottom = 0.61;
+    public static double hoodtop = 0.32;
+    public static double hoodbottom = 0.395;
     public static CRServo turretL;
     public static CRServo turretR;
 

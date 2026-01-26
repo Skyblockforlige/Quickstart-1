@@ -35,6 +35,8 @@ public class turrettest extends LinearOpMode {
     public static double tickstodegree = (50.0/9.0) *(8192.0/360.0);
     public static double ticksperdegree = 126.42;
     //target=12500
+
+    //-5000
     public static int target = 0;
     private Limelight3A limelight;
 
@@ -60,7 +62,6 @@ public class turrettest extends LinearOpMode {
                 detected=fiducialResults.get(0).getFiducialId();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
                     telemetry.addData("ID:", fr.getFiducialId());
-                    detected=fr.getFiducialId();
                     if(detected==23){
                         actual=22;
                     } else if(detected==22){

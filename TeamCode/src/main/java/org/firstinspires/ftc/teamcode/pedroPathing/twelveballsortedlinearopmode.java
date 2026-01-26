@@ -15,6 +15,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -42,8 +43,8 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Autonomous
-public class twelveballsorted extends OpMode {
+@Autonomous(name = "12 Ball Sort- Blue")
+public class twelveballsortedlinearopmode extends LinearOpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
@@ -77,6 +78,7 @@ public class twelveballsorted extends OpMode {
     public static double p1=0.0009,i1=0,d1=0;
     public static double hoodtop = 0;
     public static double hoodbottom = 0.1;
+    public static boolean turretmoving = true;
     public static int ball1_pos=950;
     public static int ball2_pos=950;
     public static int ball3_pos=950;
@@ -94,7 +96,7 @@ public class twelveballsorted extends OpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(55));
+    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(145));
 
     public PathChain firstpath;
     public PathChain Path1;
@@ -129,7 +131,7 @@ public class twelveballsorted extends OpMode {
                 .addPath(
                         new BezierLine(new Pose(27.463, 131.821), new Pose(33.345, 114.100))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(55), Math.toRadians(133.5))
+                .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(133.5))
                 .build();
 
         Path1 = follower
@@ -139,7 +141,7 @@ public class twelveballsorted extends OpMode {
                                 new Pose(33.345, 114.100),
                                 new Pose(75.652, 82.128),
                                 new Pose(72.823, 56.850),
-                                new Pose(24.500, 59.293)
+                                new Pose(21.500, 59.293)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
@@ -148,7 +150,7 @@ public class twelveballsorted extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(24.500, 59.293),
+                                new Pose(21.500, 59.293),
                                 new Pose(33.88347457627118, 64.03078265204387),
                                 new Pose(29.000, 68.500)
                         )
@@ -190,7 +192,7 @@ public class twelveballsorted extends OpMode {
                         new BezierCurve(
                                 new Pose(33.345, 114.100),
                                 new Pose(91.5, 29.1),
-                                new Pose(26.000, 35.293)
+                                new Pose(23.000, 35.293)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
@@ -198,7 +200,7 @@ public class twelveballsorted extends OpMode {
         Path7 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierCurve(new Pose(26.000, 35.293),new Pose(59.59063156939212,30.568553737535026), new Pose(33.345, 114.100))
+                        new BezierCurve(new Pose(23.000, 35.293),new Pose(59.59063156939212,30.568553737535026), new Pose(33.345, 114.100))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
@@ -210,15 +212,15 @@ public class twelveballsorted extends OpMode {
                 .setConstantHeadingInterpolation(Math.toRadians(133.5))
                 .build();
     }
-
     @Override
-    public void init() {
+    public void runOpMode(){
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         telemetry.setMsTransmissionInterval(1);
         limelight.pipelineSwitch(3);
         limelight.start();
+        target3=-5000;
         buildPaths();
         //colorSensor1 = hardwareMap.get(NormalizedColorSensor.class, "cs1");
         //colorSensor2 = hardwareMap.get(NormalizedColorSensor.class, "cs2");
@@ -234,6 +236,7 @@ public class twelveballsorted extends OpMode {
         colorSensor=rconstants.colorSensor;
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry());
         lf=hardwareMap.get(DcMotorEx.class,"turret_enc");
+        lf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretL=hardwareMap.crservo.get("turretL");
         hood= hardwareMap.servo.get("hood");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
@@ -246,35 +249,29 @@ public class twelveballsorted extends OpMode {
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         colorSensor.setGain(rconstants.csgain);
         distance = (DistanceSensor) colorSensor;
-        LLResult llResult = limelight.getLatestResult();
-        if (llResult.isValid()) {
-            List<LLResultTypes.FiducialResult> fiducialResults = llResult.getFiducialResults();
-            detected=fiducialResults.get(0).getFiducialId();
-            for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                telemetry.addData("ID:", fr.getFiducialId());
-                detected=fr.getFiducialId();
-                if(detected==23){
-                    actual=22;
-                } else if(detected==22){
-                    actual=21;
-                } else if(detected==21){
-                    actual=23;
+
+        while(opModeInInit()){
+            LLResult llResult = limelight.getLatestResult();
+            if (llResult.isValid()) {
+                List<LLResultTypes.FiducialResult> fiducialResults = llResult.getFiducialResults();
+                detected=fiducialResults.get(0).getFiducialId();
+                for (LLResultTypes.FiducialResult fr : fiducialResults) {
+                    telemetry.addData("ID:", fr.getFiducialId());
+                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
                 }
-                telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
+                telemetry.addData("Detected: ",detected);
             }
+            cs2 = ControlSystem.builder()
+                    .posPid(p3,i3,d3)
+                    .build();
+            cs2.setGoal(new KineticState(-13700));
+            KineticState current3 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
 
+            turretL.setPower(-cs2.calculate(current3));
+            telemetry.update();
         }
-        cs2 = ControlSystem.builder()
-                .posPid(p3,i3,d3)
-                .build();
-        cs2.setGoal(new KineticState(target3));
-        if(detected==0){
-            target3=-5000;
 
-        }
-        KineticState current3 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
 
-        turretL.setPower(-cs1.calculate(current3));
 
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP);
@@ -290,12 +287,49 @@ public class twelveballsorted extends OpMode {
         cs1 = ControlSystem.builder()
                 .posPid(p1)
                 .build();
-        hood.setPosition(0.4);
+        waitForStart();
+        opmodeTimer.resetTimer();
+        while(opModeIsActive()){
+            cs2 = ControlSystem.builder()
+                    .posPid(p3,i3,d3)
+                    .build();
+            cs2.setGoal(new KineticState(0));
+
+            KineticState current4 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
+            if(opmodeTimer.getElapsedTimeSeconds()>1){
+                turretL.setPower(0);
+            }else{
+                turretL.setPower(-cs2.calculate(current4));
+            }
+
+            follower.update();
+            colorSensor.getNormalizedColors();
+            Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+
+            autonomousPathUpdate();
+            KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
+            cs1.setGoal(new KineticState(target));
+            spindexer.setPower(0.85*(-cs1.calculate(current2)));
+            cs.setGoal(new KineticState(0,targetTicksPerSecond));
+            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
+            flywheel.setPower(cs.calculate(current1));
+            telemetry.addData("sped", flywheel.getVelocity());
+            telemetry.addData("power of spindexer", cs1.calculate(current2));
+            telemetry.addData("Hue", hsv[0]);
+            telemetry.addData("Ball Count", ballCount);
+            telemetry.addData("position of spindexer",spindexer.getCurrentPosition());
+            telemetry.addData("target",target);
+            telemetry.addData("Distance", distance.getDistance(DistanceUnit.CM));
+            telemetry.addData("path state", pathState);
+            telemetry.addData("Detected: ", detected);
+            telemetry.update();
+
+        }
     }
 
     public void autonomousPathUpdate() {
         int pos = spindexer.getCurrentPosition();
-        switch (pattern){
+        switch (detected){
             case 21:
                 //GPP
                 switch (pathState) {
@@ -303,7 +337,7 @@ public class twelveballsorted extends OpMode {
                         transfer.setPower(1);
                         follower.followPath(firstpath);
                         targetTicksPerSecond = 1025;
-
+                        target3=0;
                         setPathState(1);
 
 
@@ -311,6 +345,7 @@ public class twelveballsorted extends OpMode {
                         break;
 
                     case 1:
+                        follower.turnTo(Math.toRadians(133.5));
                         if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 970) {
                             intake.setPower(1);
                             transfermover.setPosition(rconstants.transfermoverscore);
@@ -335,21 +370,12 @@ public class twelveballsorted extends OpMode {
                         break;
                     case 3:
                         // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        float hue = hsv[0];
-
-                        boolean isPurple = (hue >= 195 && hue <= 220);
-                        boolean isGreen = (hue >= 150 && hue <= 170);
-                        boolean colorDetected = (isPurple || isGreen);
+                        boolean distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen) ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -360,22 +386,22 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM) > 4.5 && distance.getDistance(DistanceUnit.CM) < 6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
-                            target += rconstants.movespindexer;
+                            target +=rconstants.movespindexer;
                             pendingMove = false;
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3 || pathTimer.getElapsedTimeSeconds() > 3.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>10.5) && !follower.isBusy()) {
                             setPathState(4);
                         }
-                        break;
+
                     case 4:
                         if (!follower.isBusy()) {
                             follower.setMaxPower(1);
@@ -422,21 +448,12 @@ public class twelveballsorted extends OpMode {
 
                         break;
                     case 8:
-                        // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
+                         distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen) ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -447,21 +464,22 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM) > 4.5 && distance.getDistance(DistanceUnit.CM) < 6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
-                            target += rconstants.movespindexer;
+                            target +=rconstants.movespindexer;
                             pendingMove = false;
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3 || pathTimer.getElapsedTimeSeconds() > 3.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
                             setPathState(9);
                         }
+
 
                         break;
                     case 9:
@@ -496,21 +514,12 @@ public class twelveballsorted extends OpMode {
                         }
                         break;
                     case 12:
-                        // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen) ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -521,21 +530,22 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM) > 4.5 && distance.getDistance(DistanceUnit.CM) < 6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
-                            target += rconstants.movespindexer;
+                            target +=rconstants.movespindexer;
                             pendingMove = false;
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3 || pathTimer.getElapsedTimeSeconds() > 3.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
                             setPathState(13);
                         }
+
 
                         break;
                     case 13:
@@ -578,21 +588,12 @@ public class twelveballsorted extends OpMode {
                         break;
                     case 17:
 
-                        // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen) ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -603,21 +604,22 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .1 && distance.getDistance(DistanceUnit.CM) > 4.5 && distance.getDistance(DistanceUnit.CM) < 6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
-                            target += rconstants.movespindexer;
+                            target +=rconstants.movespindexer;
                             pendingMove = false;
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3 || pathTimer.getElapsedTimeSeconds() > 3.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
                             setPathState(18);
                         }
+
 
                         break;
                     case 18:
@@ -656,16 +658,20 @@ public class twelveballsorted extends OpMode {
                         transfer.setPower(1);
                         follower.followPath(firstpath);
                         targetTicksPerSecond = 1025;
+                        target3=0;
                         setPathState(1);
+
+
                         //shoot 2 balls
                         break;
+
                     case 1:
-                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=970){
+                        if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 970) {
                             intake.setPower(1);
                             transfermover.setPosition(rconstants.transfermoverscore);
-                            target =4*rconstants.movespindexer;
+                            target = 4 * rconstants.movespindexer;
                         }
-                        if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-600)){
+                        if (spindexer.getCurrentPosition() >= (4 * rconstants.movespindexer - 600)) {
                             transfermover.setPosition(rconstants.transfermoverfull);
                             setPathState(2);
 
@@ -684,21 +690,12 @@ public class twelveballsorted extends OpMode {
                         break;
                     case 3:
                         // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        float hue = hsv[0];
-
-                        boolean isPurple = (hue >= 195 && hue <= 220);
-                        boolean isGreen = (hue >= 150 && hue <= 170);
-                        boolean colorDetected = (isPurple || isGreen);
+                        boolean distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -709,19 +706,19 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
                             target +=rconstants.movespindexer;
                             pendingMove = false;
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>10.5) && !follower.isBusy()) {
                             setPathState(4);
                         }
                         break;
@@ -770,20 +767,12 @@ public class twelveballsorted extends OpMode {
                         break;
                     case 8:
                         // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -794,12 +783,12 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
                             target +=rconstants.movespindexer;
                             pendingMove = false;
@@ -845,21 +834,12 @@ public class twelveballsorted extends OpMode {
                         break;
                     case 12:
                         // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -870,12 +850,12 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
                             target +=rconstants.movespindexer;
                             pendingMove = false;
@@ -885,6 +865,7 @@ public class twelveballsorted extends OpMode {
                         if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
                             setPathState(13);
                         }
+
 
                         break;
                     case 13:
@@ -927,20 +908,12 @@ public class twelveballsorted extends OpMode {
                     case 17:
 
                         // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -951,12 +924,12 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .1 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
                             target +=rconstants.movespindexer;
                             pendingMove = false;
@@ -966,6 +939,7 @@ public class twelveballsorted extends OpMode {
                         if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
                             setPathState(18);
                         }
+
 
                         break;
                     case 18:
@@ -1006,16 +980,20 @@ public class twelveballsorted extends OpMode {
                         transfer.setPower(1);
                         follower.followPath(firstpath);
                         targetTicksPerSecond = 1025;
+                        target3=0;
                         setPathState(1);
+
+
                         //shoot 2 balls
                         break;
+
                     case 1:
-                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=970){
+                        if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 970) {
                             intake.setPower(1);
                             transfermover.setPosition(rconstants.transfermoverscore);
-                            target =4*rconstants.movespindexer;
+                            target = 4 * rconstants.movespindexer;
                         }
-                        if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-200)){
+                        if (spindexer.getCurrentPosition() >= (4 * rconstants.movespindexer - 600)) {
                             transfermover.setPosition(rconstants.transfermoverfull);
                             setPathState(2);
 
@@ -1034,21 +1012,12 @@ public class twelveballsorted extends OpMode {
                         break;
                     case 3:
                         // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        float hue = hsv[0];
-
-                        boolean isPurple = (hue >= 195 && hue <= 220);
-                        boolean isGreen = (hue >= 150 && hue <= 170);
-                        boolean colorDetected = (isPurple || isGreen);
+                        boolean distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -1059,19 +1028,19 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
                             target +=rconstants.movespindexer;
                             pendingMove = false;
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>10.5) && !follower.isBusy()) {
                             setPathState(4);
                         }
                         break;
@@ -1119,20 +1088,12 @@ public class twelveballsorted extends OpMode {
                         break;
                     case 8:
                         // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -1143,12 +1104,12 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                        if (pendingMove&& distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
                             target +=rconstants.movespindexer;
                             pendingMove = false;
@@ -1175,7 +1136,7 @@ public class twelveballsorted extends OpMode {
                             transfermover.setPosition(rconstants.transfermoverscore);
                             target =17*rconstants.movespindexer;
                         }
-                        if(spindexer.getCurrentPosition()>= (17*rconstants.movespindexer-100)){
+                        if(spindexer.getCurrentPosition()>= (17*rconstants.movespindexer-1000)){
                             transfermover.setPosition(rconstants.transfermoverfull);
                             setPathState(11);
 
@@ -1194,20 +1155,12 @@ public class twelveballsorted extends OpMode {
                         break;
                     case 12:
                         // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -1218,12 +1171,12 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
                             target +=rconstants.movespindexer;
                             pendingMove = false;
@@ -1233,6 +1186,7 @@ public class twelveballsorted extends OpMode {
                         if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
                             setPathState(13);
                         }
+
 
                         break;
                     case 13:
@@ -1275,21 +1229,12 @@ public class twelveballsorted extends OpMode {
                         break;
                     case 17:
 
-                        // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
 
                             // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
 
                             ballCount++;
                             colorPreviouslyDetected = true;
@@ -1300,12 +1245,12 @@ public class twelveballsorted extends OpMode {
                         }
 
                         // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
+                        if (!distanceDetected) {
                             colorPreviouslyDetected = false;
                         }
 
                         // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .1 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
                             // absolute target based on count (never grows indefinitely)
                             target +=rconstants.movespindexer;
                             pendingMove = false;
@@ -1315,6 +1260,7 @@ public class twelveballsorted extends OpMode {
                         if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
                             setPathState(18);
                         }
+
 
                         break;
                     case 18:
@@ -1348,357 +1294,7 @@ public class twelveballsorted extends OpMode {
                         stop();
 
                 }
-            default:
-                switch (pathState) {
-                    case 0:
-                        transfer.setPower(1);
-                        follower.followPath(firstpath);
-                        targetTicksPerSecond = 1025;
 
-                        setPathState(1);
-
-
-                        //shoot 2 balls
-                        break;
-
-                    case 1:
-
-                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=970){
-                            intake.setPower(1);
-                            transfermover.setPosition(rconstants.transfermoverscore);
-                            target =4*rconstants.movespindexer;
-                        }
-                        if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-600)){
-                            transfermover.setPosition(rconstants.transfermoverfull);
-                            setPathState(2);
-
-                        }
-
-                        //shoot third ball
-                        break;
-                    case 2:
-                        //move to begening of 1,2,3
-                        if(pathTimer.getElapsedTimeSeconds()>0.15) {
-                            follower.followPath(Path1);
-                            transfermover.setPosition(rconstants.transfermoveridle);
-                            intake.setPower(1);
-                            setPathState(3);
-                        }
-                        break;
-                    case 3:
-                        // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        float hue = hsv[0];
-                        boolean isPurple = (hue >= 195 && hue <= 220);
-                        boolean isGreen = (hue >= 150 && hue <= 170);
-                        boolean colorDetected = (isPurple || isGreen);
-
-                        // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
-
-                            // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
-
-                            ballCount++;
-                            colorPreviouslyDetected = true;
-
-                            // schedule ONE move after short delay (no sleep in OpMode)
-                            actionTimer.resetTimer();
-                            pendingMove = true;
-                        }
-
-                        // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
-                            colorPreviouslyDetected = false;
-                        }
-
-                        // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
-                            // absolute target based on count (never grows indefinitely)
-                            target +=rconstants.movespindexer;
-                            pendingMove = false;
-                        }
-
-                        // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
-                            setPathState(4);
-                        }
-                        break;
-                    case 4:
-                        if(!follower.isBusy()) {
-                            follower.setMaxPower(1);
-                            follower.followPath(Path2);
-                            setPathState(5);
-                            //move to shoot position
-                        }
-                        break;
-                    case 5:
-                        if(!follower.isBusy()) {
-                            follower.setMaxPower(1);
-                            follower.followPath(Path3);
-                            setPathState(6);
-                            //move to shoot position
-                        }
-                        break;
-                    case 6:
-                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                            intake.setPower(1);
-                            transfer.setPower(1);
-                            transfermover.setPosition(rconstants.transfermoverscore);
-                            target =10*rconstants.movespindexer;
-                        }
-                        if(spindexer.getCurrentPosition()>= (10*rconstants.movespindexer-800)){
-                            transfermover.setPosition(rconstants.transfermoverfull);
-                            setPathState(7);
-
-                        }
-                        break;
-                    case 7:
-                        if(pathTimer.getElapsedTimeSeconds()>0.15) {
-                            ballCount=0;
-                            follower.followPath(Path4);
-
-                            transfermover.setPosition(rconstants.transfermoveridle);
-                            intake.setPower(1);
-
-                            setPathState(8);
-                        }
-
-
-                        break;
-                    case 8:
-// READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
-
-                        // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
-
-                            // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
-
-                            ballCount++;
-                            colorPreviouslyDetected = true;
-
-                            // schedule ONE move after short delay (no sleep in OpMode)
-                            actionTimer.resetTimer();
-                            pendingMove = true;
-                        }
-
-                        // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
-                            colorPreviouslyDetected = false;
-                        }
-
-                        // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
-                            // absolute target based on count (never grows indefinitely)
-                            target +=rconstants.movespindexer;
-                            pendingMove = false;
-                        }
-
-                        // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
-                            setPathState(9);
-                        }
-
-                        break;
-                    case 9:
-                        if(!follower.isBusy()) {
-                            //move to shooting position for balls 4,5,6
-                            follower.followPath(Path5);
-                            setPathState(10);
-                        }
-                        break;
-                    case 10:
-                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                            intake.setPower(1);
-                            transfer.setPower(1);
-                            transfermover.setPosition(rconstants.transfermoverscore);
-                            target =16*rconstants.movespindexer;
-                        }
-                        if(spindexer.getCurrentPosition()>= (16*rconstants.movespindexer-1000)){
-                            transfermover.setPosition(rconstants.transfermoverfull);
-                            setPathState(11);
-
-                        }
-                        break;
-                    case 11:
-                        if(pathTimer.getElapsedTimeSeconds()>0.15) {
-                            ballCount=0;
-                            follower.followPath(Path6);
-
-                            transfermover.setPosition(rconstants.transfermoveridle);
-                            intake.setPower(1);
-
-                            setPathState(12);
-                        }
-                        break;
-                    case 12:
-                        // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
-
-                        // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
-
-                            // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
-
-                            ballCount++;
-                            colorPreviouslyDetected = true;
-
-                            // schedule ONE move after short delay (no sleep in OpMode)
-                            actionTimer.resetTimer();
-                            pendingMove = true;
-                        }
-
-                        // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
-                            colorPreviouslyDetected = false;
-                        }
-
-                        // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .15 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
-                            // absolute target based on count (never grows indefinitely)
-                            target +=rconstants.movespindexer;
-                            pendingMove = false;
-                        }
-
-                        // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
-                            setPathState(13);
-                        }
-
-                        break;
-                    case 13:
-                        if(!follower.isBusy()) {
-                            //move to shooting position for balls 4,5,6
-                            follower.followPath(Path7);
-                            setPathState(14);
-                        }
-                        break;
-                    case 14:
-                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                            intake.setPower(1);
-                            transfer.setPower(1);
-                            transfermover.setPosition(rconstants.transfermoverscore);
-                            target =22*rconstants.movespindexer;
-                        }
-                        if(spindexer.getCurrentPosition()>= (22*rconstants.movespindexer-1200)){
-                            transfermover.setPosition(rconstants.transfermoverfull);
-                            setPathState(15);
-
-                        }
-                        break;
-                    case 15:
-                        if(pathTimer.getElapsedTimeSeconds()>0.15) {
-                            follower.followPath(Path8);
-                            transfermover.setPosition(rconstants.transfermoveridle);
-                            //shoot ball 6
-                            setPathState(-1);
-                        }
-                        break;
-                    case 16:
-                        if(!follower.isBusy()) {
-                            //picks up balls 4,5,6
-                            transfer.setPower(0);
-                            follower.setMaxPower(0.5);
-                            follower.followPath(Path9);
-                            setPathState(17);
-                        }
-                        break;
-                    case 17:
-
-                        // READ COLOR (same hue method as teleop)
-                        colorSensor.getNormalizedColors();
-                        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-                        hue = hsv[0];
-                        isPurple = (hue >= 195 && hue <= 220);
-                        isGreen = (hue >= 150 && hue <= 170);
-                        colorDetected = (isPurple || isGreen);
-
-                        // New ball enters
-                        if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
-
-                            // record color into slot memory
-                            if (isPurple) ballSlots[ballCount] = 1;
-                            if (isGreen)  ballSlots[ballCount] = 2;
-
-                            ballCount++;
-                            colorPreviouslyDetected = true;
-
-                            // schedule ONE move after short delay (no sleep in OpMode)
-                            actionTimer.resetTimer();
-                            pendingMove = true;
-                        }
-
-                        // reset detection when sensor no longer sees a ball
-                        if (!colorDetected) {
-                            colorPreviouslyDetected = false;
-                        }
-
-                        // Execute the scheduled move exactly once
-                        if (pendingMove && actionTimer.getElapsedTimeSeconds() > .1 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
-                            // absolute target based on count (never grows indefinitely)
-                            target +=rconstants.movespindexer;
-                            pendingMove = false;
-                        }
-
-                        // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
-                            setPathState(18);
-                        }
-
-                        break;
-                    case 18:
-                        //spindexer.setPower(0.5);
-                        if(!follower.isBusy())
-                        {
-                            follower.setMaxPower(1);
-                            follower.followPath(Path10);
-                            setPathState(19);
-                        }
-                        break;
-                    case 19:
-                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                            intake.setPower(1);
-                            transfer.setPower(1);
-                            transfermover.setPosition(rconstants.transfermoverscore);
-                            target =22*rconstants.movespindexer;
-                        }
-                        if(spindexer.getCurrentPosition()>= (22*rconstants.movespindexer-800)){
-                            transfermover.setPosition(rconstants.transfermoverfull);
-                            setPathState(20);
-
-                        }
-                        break;
-                    case 20:
-                        if(!follower.isBusy()){
-                            follower.followPath(Path12);
-                            setPathState(-1);
-                        }
-                    case -1:
-                        stop();
-
-                }
 
         }
     }
@@ -1707,28 +1303,6 @@ public class twelveballsorted extends OpMode {
         pathTimer.resetTimer();
     }
 
-    @Override
-    public void loop() {
-        follower.update();
-        colorSensor.getNormalizedColors();
-        Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-
-        autonomousPathUpdate();
-        KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
-        cs1.setGoal(new KineticState(target));
-        spindexer.setPower(0.85*(-cs1.calculate(current2)));
-        cs.setGoal(new KineticState(0,targetTicksPerSecond));
-        KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
-        flywheel.setPower(cs.calculate(current1));
-        telemetry.addData("sped", flywheel.getVelocity());
-        telemetry.addData("power of spindexer", cs1.calculate(current2));
-        telemetry.addData("Hue", hsv[0]);
-        telemetry.addData("Ball Count", ballCount);
-        telemetry.addData("position of spindexer",spindexer.getCurrentPosition());
-        telemetry.addData("target",target);
-        telemetry.addData("Distance", distance.getDistance(DistanceUnit.CM));
-        telemetry.addData("path state", pathState);
-        telemetry.update();
 
 
 
@@ -1834,4 +1408,4 @@ public class twelveballsorted extends OpMode {
 
  */
     }
-}
+
