@@ -108,8 +108,8 @@ public class tele_w_TURRET extends LinearOpMode {
     public static double maxHoldPower = 0.3;
     public static double maxTrackPower = 0.25;
 
-    public static double maxTurretDeg = 90.0;
-    public static double minTurretDeg = -90.0;
+    public static double maxTurretDeg = 80;
+    public static double minTurretDeg = -80;
 
     public static int pipelineIndex = 2;
     public static double powerSlewPerSec = 1.2;
@@ -473,7 +473,7 @@ public class tele_w_TURRET extends LinearOpMode {
 
             // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
-                if (distance.getDistance(DistanceUnit.CM) > 4.5 && distance.getDistance(DistanceUnit.CM) < 6) {
+                if (distance.getDistance(DistanceUnit.CM) > 3 && distance.getDistance(DistanceUnit.CM) < 6) {
                     target += rconstants.movespindexer;
 
                     if (isPurple) ballSlots[ballCount] = 1;

@@ -249,7 +249,7 @@ public class multithreadteleop extends LinearOpMode {
 
             // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
-                if(distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<7) {
+                if(distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<7) {
                     //sleep(200);
                     target += rconstants.movespindexer;
 

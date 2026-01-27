@@ -473,7 +473,7 @@ public class telewturretblue extends LinearOpMode {
 
             // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
-                if (distance.getDistance(DistanceUnit.CM) > 4.5 && distance.getDistance(DistanceUnit.CM) < 6) {
+                if (distance.getDistance(DistanceUnit.CM) > 3 && distance.getDistance(DistanceUnit.CM) < 6) {
                     target += rconstants.movespindexer;
 
                     if (isPurple) ballSlots[ballCount] = 1;
