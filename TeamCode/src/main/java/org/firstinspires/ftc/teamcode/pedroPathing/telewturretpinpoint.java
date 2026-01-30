@@ -120,7 +120,7 @@ public class telewturretpinpoint extends LinearOpMode {
             pinpoint.update();
             Pose2D pose = pinpoint.getPosition();
             robotHeadingDeg = pose.getHeading(AngleUnit.DEGREES);
-
+            Math.atan2(pose.getY(DistanceUnit.INCH)-138,pose.getX(DistanceUnit.INCH)-6);
             // ---------- Turret ----------
             turretRelDeg = turretEnc.getCurrentPosition() / ticksPerDeg;
 

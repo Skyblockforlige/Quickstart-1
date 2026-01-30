@@ -3,124 +3,135 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
-import com.pedropathing.util.Timer;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.pedropathing.follower.Follower;
+
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-
-import java.util.List;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 
-@Configurable
 @Config
 @TeleOp
 public class turrettest extends LinearOpMode {
-    Timer goonTimer;
-    DcMotorEx lf;
-    ControlSystem cs1;
-    CRServo turretL;
-    public static double p=0.00035,i=0.0000000005,d=0.0000000002;
-    public static double gearratio = 50.0/9.0;
-    public static double tickstodegree = (50.0/9.0) *(8192.0/360.0);
-    public static double ticksperdegree = 126.42;
-    //target=12500
 
-    //-5000
-    public static int target = 0;
-    private Limelight3A limelight;
+    // ===== HARDWARE =====
+    DcMotorEx turretEnc;
+    CRServo turretServo;
 
+    // ===== PEDRO =====
+    Follower follower;
+
+    // ===== CONTROL =====
+    ControlSystem turretPID;
+
+    // ===== CONSTANTS =====
+    public static double START_X = 136;
+    public static double START_Y = 8.75;
+    public static double START_HEADING_DEG = 90;
+
+    public static double p = 0.00035;
+    public static double i = 0.0000000005;
+    public static double d = 0.0000000002;
+
+    public static double ticksPerDegree = 126.42;
+
+    // field target (same as your code)
+    public static double TARGET_X = 6;
+    public static double TARGET_Y = 138;
+
+    double targetTicks = 0;
 
     @Override
-    public void runOpMode(){
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry());
-        lf=hardwareMap.get(DcMotorEx.class,"turret_enc");
-        turretL=hardwareMap.crservo.get("turretL");
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(3);
-        lf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        int detected = 0;
-        int actual= 0;
-        limelight.start();
+    public void runOpMode() {
+
+        telemetry = new MultipleTelemetry(
+                telemetry,
+                FtcDashboard.getInstance().getTelemetry(),
+                PanelsTelemetry.INSTANCE.getFtcTelemetry()
+        );
+
+        // ===== HARDWARE INIT =====
+        turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
+        turretServo = hardwareMap.crservo.get("turretL");
+
+        turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        // ===== PEDRO INIT =====
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(new Pose(START_X, START_Y, Math.toRadians(START_HEADING_DEG)));
+
+        // ===== PID INIT (ONCE) =====
+
 
         waitForStart();
-        while(opModeIsActive()){
-            LLResult llResult = limelight.getLatestResult();
-            if (llResult.isValid()) {
-                List<LLResultTypes.FiducialResult> fiducialResults = llResult.getFiducialResults();
-                detected=fiducialResults.get(0).getFiducialId();
-                for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                    telemetry.addData("ID:", fr.getFiducialId());
-                    if(detected==23){
-                        actual=22;
-                    } else if(detected==22){
-                        actual=21;
-                    } else if(detected==21){
-                        actual=23;
-                    }
-                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
-                }
 
-            }
-            switch(actual){
-                case 21:
-
-                    //fake intakes PGP, case 21 is GPP,
-
-                    break;
-
-                case 22:
-
-
-
-                    break;
-
-                case 23:
-
-
-                    break;
-
-            }
-            KineticState current2 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
-            cs1 = ControlSystem.builder()
-                    .posPid(p,i,d)
+        while (opModeIsActive()) {
+            turretPID = ControlSystem.builder()
+                    .posPid(p, i, d)
                     .build();
-            cs1.setGoal(new KineticState(target));
-            if(gamepad2.dpad_right){
-                target+=5*ticksperdegree;
-                sleep(300);
-            }
-            if(gamepad2.dpad_left){
-                target-=5*ticksperdegree;
-                sleep(300);
-            }
-            if(Math.abs(gamepad2.left_stick_x)==0) {
-                turretL.setPower(-cs1.calculate(current2));
-            } else{
-                turretL.setPower(-gamepad2.left_stick_x);
-                target=lf.getCurrentPosition();
+            // update Pedro
+            follower.update();
+            Pose pose = follower.getPose();
 
+            double robotX = pose.getX();
+            double robotY = pose.getY();
+            double robotHeading = pose.getHeading();
+
+            double turretAngleRad =
+                    Math.atan2(
+                            TARGET_Y - robotY,
+                            TARGET_X - robotX
+                    ) - (robotHeading - Math.PI / 2);
+
+
+
+            targetTicks = ticksPerDegree * Math.toDegrees(turretAngleRad);
+
+            // manual trim
+            if (gamepad2.dpad_right) {
+                targetTicks += 5 * ticksPerDegree;
+                sleep(200);
+            }
+            if (gamepad2.dpad_left) {
+                targetTicks -= 5 * ticksPerDegree;
+                sleep(200);
             }
 
-            telemetry.addData("Turret Power", -cs1.calculate(current2));
+            // PID update
+            KineticState current =
+                    new KineticState(
+                            turretEnc.getCurrentPosition(),
+                            turretEnc.getVelocity()
+                    );
 
-            telemetry.addData("Turret Current Position: " , lf.getCurrentPosition());
-            telemetry.addData("Turret Target Position: ", target);
-            telemetry.addData("April Tag:", actual);
-            telemetry.addData("Detected:" , detected);
+            turretPID.setGoal(new KineticState(targetTicks));
+
+            if (Math.abs(gamepad2.left_stick_x) < 0.05) {
+                turretServo.setPower(-turretPID.calculate(current));
+            } else {
+                turretServo.setPower(-gamepad2.left_stick_x);
+                targetTicks = turretEnc.getCurrentPosition();
+            }
+
+            // ===== TELEMETRY =====
+            telemetry.addData("Pedro X", robotX);
+            telemetry.addData("Pedro Y", robotY);
+            telemetry.addData("Pedro Heading (deg)", Math.toDegrees(robotHeading));
+            telemetry.addData("Turret Pos", turretEnc.getCurrentPosition());
+            telemetry.addData("Turret Target", targetTicks);
+            telemetry.addData("Turret Error", targetTicks - turretEnc.getCurrentPosition());
             telemetry.update();
         }
     }
-
 }
