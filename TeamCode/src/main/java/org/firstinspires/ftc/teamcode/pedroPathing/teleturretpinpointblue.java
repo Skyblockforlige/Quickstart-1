@@ -407,7 +407,7 @@ public class teleturretpinpointblue extends LinearOpMode {
             telemetry.addData("Turret Angle", Math.toDegrees(
                     Math.atan2(
                             144-pinpoint.getPosY(DistanceUnit.INCH),
-                            144-pinpoint.getPosX(DistanceUnit.INCH)
+                            0-pinpoint.getPosX(DistanceUnit.INCH)
                     )) - (pinpoint.getHeading(AngleUnit.DEGREES)));
             telemetry.update();
         }
