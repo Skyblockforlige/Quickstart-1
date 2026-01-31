@@ -134,7 +134,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Pose(24.500, 59.293),
-                                new Pose(33.88347457627118, 64.03078265204387),
+                                new Pose(47.20386292578574, 59.83660789476232),
                                 new Pose(29.000, 68.500)
                         )
                 )

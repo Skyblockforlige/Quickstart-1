@@ -154,7 +154,7 @@ public class new9ballred extends OpMode {
                                 new Pose(blueToRedX(33.345), 110.100),
                                 new Pose(blueToRedX(75.652), 82.128),
                                 new Pose(blueToRedX(72.823), 56.850),
-                                new Pose(blueToRedX(24.500-xoffset-7), 57.293+yoffset)
+                                new Pose(blueToRedX(24.500-xoffset-2), 57.293+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
@@ -164,9 +164,9 @@ public class new9ballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(24.500-xoffset-7), 57.293+yoffset),
+                                new Pose(blueToRedX(24.500-xoffset-2), 57.293+yoffset),
                                 new Pose(blueToRedX(45.88347457627118), 64.03078265204387),
-                                new Pose(blueToRedX(29.000-15.5), 65.500+yoffset)
+                                new Pose(blueToRedX(29.000-10), 66.500+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
@@ -176,7 +176,7 @@ public class new9ballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(24.500-xoffset-7), 57.293+yoffset),
+                                new Pose(blueToRedX(24.500-xoffset-2), 57.293+yoffset),
                                 new Pose(blueToRedX(79.400), 67.600),
                                 new Pose(blueToRedX(33.345), 110.100)
                         )
@@ -190,7 +190,7 @@ public class new9ballred extends OpMode {
                         new BezierCurve(
                                 new Pose(blueToRedX(33.345), 110.100),
                                 new Pose(blueToRedX(82.678), 80.485),
-                                new Pose(blueToRedX(29.000-xoffset-3), 83.293+yoffset)
+                                new Pose(blueToRedX(29.000-xoffset-1), 83.293+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
@@ -200,7 +200,7 @@ public class new9ballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(blueToRedX(29.000-xoffset-3), 83.293+yoffset),
+                                new Pose(blueToRedX(29.000-xoffset-1), 83.293+yoffset),
                                 new Pose(blueToRedX(33.345), 110.100)
                         )
                 )
@@ -213,7 +213,7 @@ public class new9ballred extends OpMode {
                         new BezierCurve(
                                 new Pose(blueToRedX(33.345), 110.100),
                                 new Pose(blueToRedX(94.5), 29.1),
-                                new Pose(blueToRedX(26.000-xoffset-8), 35.293+yoffset+3)
+                                new Pose(blueToRedX(26.000-xoffset-1), 35.293+yoffset+1)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
@@ -223,7 +223,7 @@ public class new9ballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(blueToRedX(26.000-xoffset-8), 35.293+yoffset+3),
+                                new Pose(blueToRedX(26.000-xoffset-1), 35.293+yoffset+1),
                                 new Pose(blueToRedX(59.59063156939212), 30.568553737535026),
                                 new Pose(blueToRedX(33.345), 110.100)
                         )

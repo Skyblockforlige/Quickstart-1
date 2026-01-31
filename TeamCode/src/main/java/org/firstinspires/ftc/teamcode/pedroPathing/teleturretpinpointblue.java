@@ -70,6 +70,11 @@ public class teleturretpinpointblue extends LinearOpMode {
     public static double v=0.000372,a=0.7,s=0.0000005;
     public static double p1=0.0009,i1=0,d1=0;
     public static double llturretspeed = 0.2;
+    private static final double FIELD_WIDTH = 144.0;     // inches
+    private static final double FIELD_MID_X = FIELD_WIDTH / 2.0; // 72
+    private static double blueToRedX(double x) {
+        return FIELD_MID_X + (FIELD_MID_X - x);
+    }
 
     float[] hsv = new float[3];
 
@@ -90,6 +95,7 @@ public class teleturretpinpointblue extends LinearOpMode {
     DistanceSensor distance;
     private boolean movedoffsetspindexer;
     private Servo hood;
+    public static double ticks;
 
 
     public double distancefromll(double ta)
@@ -161,11 +167,31 @@ public class teleturretpinpointblue extends LinearOpMode {
         distance = (DistanceSensor) colorSensor;
 
         int target = 0;
+        pinpoint.setEncoderResolution(
+                GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
+        );
+        pinpoint.setEncoderDirections(
+                GoBildaPinpointDriver.EncoderDirection.FORWARD,
+                GoBildaPinpointDriver.EncoderDirection.REVERSED
+        );
+        pinpoint.setPosX(START_X, DistanceUnit.INCH);
+        pinpoint.setPosY(START_Y, DistanceUnit.INCH);
+        pinpoint.setHeading(START_HEADING_DEG, AngleUnit.DEGREES);
 
         // ---------------------- DRIVE THREAD ----------------------
         Thread g1 = new Thread(() -> {
             while (opModeIsActive()) {
+                pinpoint.update();
 
+
+                // -------- Turret Target Math --------
+
+
+                if(gamepad2.options){
+                    pinpoint.setPosX(136,DistanceUnit.INCH);
+                    pinpoint.setPosY(8.75,DistanceUnit.INCH);
+                    pinpoint.setHeading(180,AngleUnit.DEGREES);
+                }
                 double y = -gamepad1.left_stick_y;
                 double x = gamepad1.left_stick_x * 1.1;
                 double rx = gamepad1.right_stick_x;
@@ -188,22 +214,43 @@ public class teleturretpinpointblue extends LinearOpMode {
                     transfermover.setPosition(rconstants.transfermoveridle);
                     transfer.setPower(0);
                 }
+                ticks = ticksPerDegree * (Math.toDegrees(
+                        Math.atan2(
+                                144-pinpoint.getPosY(DistanceUnit.INCH),
+                                0-pinpoint.getPosX(DistanceUnit.INCH)
+                        ))- (pinpoint.getHeading(AngleUnit.DEGREES)));
                 intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+                KineticState current3 =
+                        new KineticState(
+                                turretEnc.getCurrentPosition(),
+                                turretEnc.getVelocity()
+                        );
+                if(ticks/ticksPerDegree < 90 && ticks/ticksPerDegree > -90){
+                    targetTicks=ticks;
+                } else if(ticks/ticksPerDegree > 90){
+                    targetTicks = ticksPerDegree *90;
+                } else if(ticks/ticksPerDegree <-90){
+                    targetTicks=ticksPerDegree*-90;
+                }
+                if (Math.abs(gamepad2.right_stick_x) < 0.05/*
+                        && turretEnc.getCurrentPosition() < 13000
+                        && turretEnc.getCurrentPosition() > -13000*/) {
+                    turretPID = ControlSystem.builder()
+                            .posPid(p2, i2, d2)
+                            .build();
+                    turretPID.setGoal(new KineticState(targetTicks));
+                    turretServo.setPower(-turretPID.calculate(current3));
+                } else {
+                    turretServo.setPower(gamepad2.right_stick_x);
+                    targetTicks = turretEnc.getCurrentPosition();
+                }
+
             }
         });
 
         waitForStart();
         g1.start();
-        pinpoint.setEncoderResolution(
-                GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
-        );
-        pinpoint.setEncoderDirections(
-                GoBildaPinpointDriver.EncoderDirection.FORWARD,
-                GoBildaPinpointDriver.EncoderDirection.REVERSED
-        );
-        pinpoint.setPosX(START_X, DistanceUnit.INCH);
-        pinpoint.setPosY(START_Y, DistanceUnit.INCH);
-        pinpoint.setHeading(START_HEADING_DEG, AngleUnit.DEGREES);
+
 
         // ============================================================
         //                     MAIN LOOP
@@ -211,24 +258,7 @@ public class teleturretpinpointblue extends LinearOpMode {
         while (opModeIsActive()) {
             LLResult llResult = limelight.getLatestResult();
 
-            pinpoint.update();
-            turretPID = ControlSystem.builder()
-                    .posPid(p2, i2, d2)
-                    .build();
 
-            // -------- Turret Target Math --------
-            targetTicks = ticksPerDegree * (Math.toDegrees(
-                    Math.atan2(
-                            144-pinpoint.getPosY(DistanceUnit.INCH),
-                            0-pinpoint.getPosX(DistanceUnit.INCH)
-                    ))- (pinpoint.getHeading(AngleUnit.DEGREES)));
-
-            if(gamepad2.options){
-                pinpoint.setPosX(136,DistanceUnit.INCH);
-                pinpoint.setPosY(8.75,DistanceUnit.INCH);
-                pinpoint.setHeading(180,AngleUnit.DEGREES);
-                sleep(200);
-            }
             if(gamepad2.ps){
                 spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 target=0;
@@ -239,32 +269,12 @@ public class teleturretpinpointblue extends LinearOpMode {
                 sleep(300);
             }
             if(ballCount==3&&!movedoffsetspindexer){
-                sleep(100);
-                target+=movespindexer/2;
-                target-=750;
-                movedoffsetspindexer=true;
+
             }
             if(gamepad2.left_trigger >0.1){
                 target+=movespindexer/2;
             }
-            KineticState current3 =
-                    new KineticState(
-                            turretEnc.getCurrentPosition(),
-                            turretEnc.getVelocity()
-                    );
 
-            turretPID.setGoal(new KineticState(targetTicks));
-
-            if (Math.abs(gamepad2.left_stick_x) < 0.05
-                    && turretEnc.getCurrentPosition() < 13000
-                    && turretEnc.getCurrentPosition() > -13000) {
-
-                turretServo.setPower(-turretPID.calculate(current3));
-
-            } else {
-                turretServo.setPower(-gamepad2.left_stick_x);
-                target = turretEnc.getCurrentPosition();
-            }
             // ---------- INTAKE ----------
             boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
 
@@ -396,9 +406,7 @@ public class teleturretpinpointblue extends LinearOpMode {
             telemetry.addData("Target", target);
             telemetry.addData("Autoalign:", autoalign);
             telemetry.addData("spindexer_pos", spindexer.getCurrentPosition());
-            telemetry.addData("distance", distancefromll(llResult.getTa()));
             telemetry.addData("distance of spindexer", distance.getDistance(DistanceUnit.CM));
-            telemetry.addData("Turret Power", -turretPID.calculate(current3));
             telemetry.addData("Pinpoint X", pinpoint.getPosX(DistanceUnit.INCH));
             telemetry.addData("Pinpoint Y", pinpoint.getPosY(DistanceUnit.INCH));
             telemetry.addData("Heading", pinpoint.getHeading(AngleUnit.DEGREES));
@@ -407,7 +415,7 @@ public class teleturretpinpointblue extends LinearOpMode {
             telemetry.addData("Turret Angle", Math.toDegrees(
                     Math.atan2(
                             144-pinpoint.getPosY(DistanceUnit.INCH),
-                            0-pinpoint.getPosX(DistanceUnit.INCH)
+                            144-pinpoint.getPosX(DistanceUnit.INCH)
                     )) - (pinpoint.getHeading(AngleUnit.DEGREES)));
             telemetry.update();
         }
