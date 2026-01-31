@@ -25,7 +25,7 @@ import dev.nextftc.control.ControlSystem;
 @Config
 public class rconstants {
 
-    public static double transfermoveridle = 0.6;
+    public static double transfermoveridle = 0.59;
     public static Limelight3A limelight;
     public static NormalizedColorSensor colorSensor;
     public static double transfermoverscore = 0.73;

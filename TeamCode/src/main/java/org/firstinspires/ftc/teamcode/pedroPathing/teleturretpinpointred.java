@@ -216,8 +216,8 @@ public class teleturretpinpointred extends LinearOpMode {
                 }
                 ticks = ticksPerDegree * (Math.toDegrees(
                         Math.atan2(
-                                141.40381558028616-pinpoint.getPosY(DistanceUnit.INCH),
-                                120.9220985691574-pinpoint.getPosX(DistanceUnit.INCH)
+                                144-pinpoint.getPosY(DistanceUnit.INCH),
+                                144-pinpoint.getPosX(DistanceUnit.INCH)
                         ))- (pinpoint.getHeading(AngleUnit.DEGREES)));
                 intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
                 KineticState current3 =

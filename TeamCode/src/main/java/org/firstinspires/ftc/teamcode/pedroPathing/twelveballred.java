@@ -166,7 +166,7 @@ public class twelveballred extends OpMode {
                         new BezierCurve(
                                 new Pose(blueToRedX(24.500-xoffset-2), 57.293+yoffset),
                                 new Pose(blueToRedX(45.88347457627118), 64.03078265204387),
-                                new Pose(blueToRedX(29.000-10), 66.500+yoffset)
+                                new Pose(blueToRedX(29.000-12), 66.500+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
@@ -190,7 +190,7 @@ public class twelveballred extends OpMode {
                         new BezierCurve(
                                 new Pose(blueToRedX(33.345), 110.100),
                                 new Pose(blueToRedX(82.678), 80.485),
-                                new Pose(blueToRedX(29.000-xoffset-1), 83.293+yoffset)
+                                new Pose(blueToRedX(29.000-xoffset-3), 83.293+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(46.5), Math.toRadians(0))
@@ -200,7 +200,7 @@ public class twelveballred extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(blueToRedX(29.000-xoffset-1), 83.293+yoffset),
+                                new Pose(blueToRedX(29.000-xoffset-3), 83.293+yoffset),
                                 new Pose(blueToRedX(33.345), 110.100)
                         )
                 )
