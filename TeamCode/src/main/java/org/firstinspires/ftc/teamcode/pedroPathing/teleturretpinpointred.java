@@ -125,7 +125,7 @@ public class teleturretpinpointred extends LinearOpMode {
 
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
+        turretEnc = hardwareMap.get(DcMotorEx.class, "lf");
         turretServo = hardwareMap.crservo.get("turretL");
 
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

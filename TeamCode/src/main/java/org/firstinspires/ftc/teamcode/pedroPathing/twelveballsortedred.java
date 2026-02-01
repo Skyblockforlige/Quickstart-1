@@ -275,7 +275,7 @@ public class twelveballsortedred extends LinearOpMode {
         rconstants.initHardware(hardwareMap);
         colorSensor=rconstants.colorSensor;
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry());
-        lf=hardwareMap.get(DcMotorEx.class,"turret_enc");
+        lf=hardwareMap.get(DcMotorEx.class,"lf");
         lf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretL=hardwareMap.crservo.get("turretL");
         hood= hardwareMap.servo.get("hood");
@@ -310,7 +310,18 @@ public class twelveballsortedred extends LinearOpMode {
             turretL.setPower(-cs2.calculate(current3));
             telemetry.update();
         }
+        Thread turretThread = new Thread(() -> {
+            while (opModeIsActive()) {
+                cs2 = ControlSystem.builder()
+                        .posPid(p3,i3,d3)
+                        .build();
+                cs2.setGoal(new KineticState(0));
 
+                KineticState current4 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
+                turretL.setPower(-cs2.calculate(current4));
+
+            }
+        });
 
 
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
@@ -328,19 +339,10 @@ public class twelveballsortedred extends LinearOpMode {
                 .posPid(p1)
                 .build();
         waitForStart();
+        turretThread.start();
         opmodeTimer.resetTimer();
         while(opModeIsActive()){
-            cs2 = ControlSystem.builder()
-                    .posPid(p3,i3,d3)
-                    .build();
-            cs2.setGoal(new KineticState(0));
 
-            KineticState current4 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
-            if(opmodeTimer.getElapsedTimeSeconds()>1){
-                turretL.setPower(0);
-            }else{
-                turretL.setPower(-cs2.calculate(current4));
-            }
 
             follower.update();
             colorSensor.getNormalizedColors();
