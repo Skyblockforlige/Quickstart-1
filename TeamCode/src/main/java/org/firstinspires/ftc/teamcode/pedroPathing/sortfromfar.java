@@ -43,8 +43,8 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Autonomous(name = "12 Ball Sort- Blue")
-public class twelveballsortedlinearopmode extends LinearOpMode {
+@Autonomous(name = "12 Ball Sort- Blue Far")
+public class sortfromfar extends LinearOpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
@@ -55,13 +55,14 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
     private DcMotorEx intake;
     int ballCount = 0;
     DcMotorEx turretEnc;
+    public static int yoffset= -13;
 
     boolean colorPreviouslyDetected = false;
     private Limelight3A limelight;
+    public static double spindexerspeed;
     public static int pattern;
     private DcMotorEx rb;
     private ControlSystem cs;
-    private ControlSystem turretPID;
 
     public double targetx;
 
@@ -100,7 +101,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(145));
+    private final Pose startPose = new Pose(56, 8, Math.toRadians(90));
 
     public PathChain firstpath;
     public PathChain Path1;
@@ -132,19 +133,19 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
         firstpath = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(27.463, 131.821), new Pose(33.345, 114.100))
+                        new BezierLine(new Pose(56, 8), new Pose(59.14324693042292, 83.93451568894955+yoffset))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(133.5))
+                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(133.5))
                 .build();
 
         Path1 = follower
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(33.345, 114.100),
-                                new Pose(75.652, 82.128),
-                                new Pose(72.823, 56.850),
-                                new Pose(21.500, 59.293)
+                                new Pose(59.14324693042292, 83.93451568894955+yoffset),
+                                new Pose(66.41871214188268 , 88.41449386084582+yoffset),
+                                new Pose(70.26911186903136, 53.31384720327419+yoffset),
+                                new Pose(21.500, 59.293+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
@@ -153,9 +154,9 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(21.500, 59.293),
-                                new Pose(33.88347457627118, 64.03078265204387),
-                                new Pose(29.000, 68.500)
+                                new Pose(21.500, 59.293+yoffset),
+                                new Pose(33.88347457627118, 64.03078265204387+yoffset),
+                                new Pose(29.000, 68.500+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
@@ -164,9 +165,9 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(29.000, 68.5),
-                                new Pose(79.400, 67.600),
-                                new Pose(33.345, 114.100)
+                                new Pose(29.000, 68.5+yoffset),
+                                new Pose(71.14897680763984, 66.61773533424282+yoffset),
+                                new Pose(59.14324693042292, 83.93451568894955+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
@@ -175,9 +176,9 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(33.345, 114.100),
-                                new Pose(82.678, 80.485),
-                                new Pose(29.000, 83.293)
+                                new Pose(59.14324693042292, 83.93451568894955+yoffset),
+                                new Pose(83.29877536163842, 82.25307639836286+yoffset),
+                                new Pose(29.000, 83.293+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
@@ -185,7 +186,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
         Path5 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(29.000, 83.293), new Pose(33.345, 114.100))
+                        new BezierLine(new Pose(29.000, 83.293+yoffset), new Pose(59.14324693042292, 83.93451568894955+yoffset))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
@@ -193,9 +194,9 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(33.345, 114.100),
-                                new Pose(91.5, 29.1),
-                                new Pose(23.000, 35.293)
+                                new Pose(59.14324693042292, 83.93451568894955+yoffset),
+                                new Pose(91.5, 29.1+yoffset),
+                                new Pose(23.000, 35.293+yoffset)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
@@ -203,14 +204,14 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
         Path7 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierCurve(new Pose(23.000, 35.293),new Pose(59.59063156939212,30.568553737535026), new Pose(33.345, 114.100))
+                        new BezierCurve(new Pose(23.000, 35.293+yoffset),new Pose(59.59063156939212,30.568553737535026+yoffset), new Pose(59.14324693042292, 83.93451568894955+yoffset))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
         Path8 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(33.345, 114.100), new Pose(35.285, 77.683))
+                        new BezierLine(new Pose(59.14324693042292, 83.93451568894955+yoffset), new Pose(35.285, 77.683+yoffset))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(133.5))
                 .build();
@@ -223,7 +224,6 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
         telemetry.setMsTransmissionInterval(1);
         limelight.pipelineSwitch(3);
         limelight.start();
-        target3=-5000;
         buildPaths();
         //colorSensor1 = hardwareMap.get(NormalizedColorSensor.class, "cs1");
         //colorSensor2 = hardwareMap.get(NormalizedColorSensor.class, "cs2");
@@ -268,20 +268,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                 }
                 telemetry.addData("Detected: ",detected);
             }
-            turretPID = ControlSystem.builder()
-                    .posPid(turretp,turreti,turretd)
-                    .build();
-            turretPID.setGoal(new KineticState(-13000));
-            KineticState current3 = new KineticState(turretEnc.getCurrentPosition());
-
-            if (Math.abs(gamepad2.left_stick_x) < 0.05) {
-
-                turretServo.setPower(-turretPID.calculate(current3));
-
-            } else {
-                turretServo.setPower(-gamepad2.left_stick_x);
-                target = turretEnc.getCurrentPosition();
-            }
+            turretL.setPower(0);
             telemetry.update();
         }
 
@@ -301,20 +288,13 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
         cs1 = ControlSystem.builder()
                 .posPid(p1)
                 .build();
+        hood.setPosition(rconstants.hoodtop);
         waitForStart();
         opmodeTimer.resetTimer();
         while(opModeIsActive()){
-            turretPID = ControlSystem.builder()
-                    .posPid(turretp,turreti,turretd)
-                    .build();
-            turretPID.setGoal(new KineticState(0));
 
-            KineticState current4 = new KineticState(turretEnc.getCurrentPosition(),turretEnc.getVelocity());
-            if(opmodeTimer.getElapsedTimeSeconds()>1.5){
-                turretL.setPower(0);
-            }else{
-                turretL.setPower(-turretPID.calculate(current4));
-            }
+
+            turretL.setPower(0);
 
             follower.update();
             colorSensor.getNormalizedColors();
@@ -323,7 +303,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
             autonomousPathUpdate();
             KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
             cs1.setGoal(new KineticState(target));
-            spindexer.setPower(0.85*(-cs1.calculate(current2)));
+            spindexer.setPower(spindexerspeed*(-cs1.calculate(current2)));
             cs.setGoal(new KineticState(0,targetTicksPerSecond));
             KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
             flywheel.setPower(cs.calculate(current1));
@@ -350,7 +330,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 0:
                         transfer.setPower(1);
                         follower.followPath(firstpath);
-                        targetTicksPerSecond = 1025;
+                        targetTicksPerSecond = 1370;
                         target3=0;
                         setPathState(1);
 
@@ -360,7 +340,8 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
 
                     case 1:
                         follower.turnTo(Math.toRadians(133.5));
-                        if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 970) {
+                        if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 1340) {
+                            spindexerspeed=0.25;
                             intake.setPower(1);
                             transfermover.setPosition(rconstants.transfermoverscore);
                             target = 4 * rconstants.movespindexer;
@@ -376,6 +357,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 2:
                         //move to begening of 1,2,3
                         if (pathTimer.getElapsedTimeSeconds() > 0.15) {
+                            spindexerspeed=1;
                             follower.followPath(Path1);
                             transfermover.setPosition(rconstants.transfermoveridle);
                             intake.setPower(1);
@@ -412,7 +394,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>10.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5) && !follower.isBusy()) {
                             setPathState(4);
                         }
 
@@ -436,6 +418,8 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
                         break;
                     case 6:
+                        spindexerspeed=0.25;
+
                         if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore)) {
                             intake.setPower(1);
                             transfer.setPower(1);
@@ -451,6 +435,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 7:
                         if (pathTimer.getElapsedTimeSeconds() > 0.15) {
                             ballCount = 0;
+                            spindexerspeed=1;
                             follower.followPath(Path4);
 
                             transfermover.setPosition(rconstants.transfermoveridle);
@@ -462,7 +447,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
 
                         break;
                     case 8:
-                         distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
                         // New ball enters
                         if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
@@ -504,6 +489,8 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
                         break;
                     case 10:
+                        spindexerspeed=0.25;
+
                         if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore)) {
                             intake.setPower(1);
                             transfer.setPower(1);
@@ -519,6 +506,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 11:
                         if (pathTimer.getElapsedTimeSeconds() > 0.15) {
                             ballCount = 0;
+                            spindexerspeed=1;
                             follower.followPath(Path6);
 
                             transfermover.setPosition(rconstants.transfermoveridle);
@@ -571,11 +559,12 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
                         break;
                     case 14:
+                        spindexerspeed=0.25;
                         if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore)) {
                             intake.setPower(1);
                             transfer.setPower(1);
                             transfermover.setPosition(rconstants.transfermoverscore);
-                            target = 28   * rconstants.movespindexer;
+                            target = 28 * rconstants.movespindexer;
                         }
                         if (spindexer.getCurrentPosition() >= (28 * rconstants.movespindexer - 1200)) {
                             transfermover.setPosition(rconstants.transfermoverfull);
@@ -671,7 +660,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 0:
                         transfer.setPower(1);
                         follower.followPath(firstpath);
-                        targetTicksPerSecond = 1025;
+                        targetTicksPerSecond = 1370;
                         target3=0;
                         setPathState(1);
 
@@ -680,7 +669,8 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         break;
 
                     case 1:
-                        if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 970) {
+                        spindexerspeed=0.25;
+                        if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 1340) {
                             intake.setPower(1);
                             transfermover.setPosition(rconstants.transfermoverscore);
                             target = 4 * rconstants.movespindexer;
@@ -696,6 +686,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 2:
                         //move to begening of 1,2,3
                         if(pathTimer.getElapsedTimeSeconds()>0.15) {
+                            spindexerspeed=1;
                             follower.followPath(Path1);
                             transfermover.setPosition(rconstants.transfermoveridle);
                             intake.setPower(1);
@@ -732,7 +723,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>10.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5) && !follower.isBusy()) {
                             setPathState(4);
                         }
                         break;
@@ -754,6 +745,8 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
                         break;
                     case 6:
+                        spindexerspeed=0.25;
+
                         if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                             intake.setPower(1);
                             transfer.setPower(1);
@@ -769,6 +762,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 7:
                         if(pathTimer.getElapsedTimeSeconds()>0.15) {
                             ballCount=0;
+                            spindexerspeed=1;
                             follower.followPath(Path4);
 
                             transfermover.setPosition(rconstants.transfermoveridle);
@@ -823,6 +817,8 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
                         break;
                     case 10:
+                        spindexerspeed=0.25;
+
                         if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                             intake.setPower(1);
                             transfer.setPower(1);
@@ -838,6 +834,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 11:
                         if(pathTimer.getElapsedTimeSeconds()>0.15) {
                             ballCount=0;
+                            spindexerspeed=1;
                             follower.followPath(Path6);
 
                             transfermover.setPosition(rconstants.transfermoveridle);
@@ -890,6 +887,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
                         break;
                     case 14:
+                        spindexerspeed=0.25;
                         if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                             intake.setPower(1);
                             transfer.setPower(1);
@@ -993,7 +991,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 0:
                         transfer.setPower(1);
                         follower.followPath(firstpath);
-                        targetTicksPerSecond = 1025;
+                        targetTicksPerSecond = 1375;
                         target3=0;
                         setPathState(1);
 
@@ -1002,7 +1000,8 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         break;
 
                     case 1:
-                        if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 970) {
+                        spindexerspeed=0.25;
+                        if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 1340) {
                             intake.setPower(1);
                             transfermover.setPosition(rconstants.transfermoverscore);
                             target = 4 * rconstants.movespindexer;
@@ -1019,6 +1018,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         //move to begening of 1,2,3
                         if(pathTimer.getElapsedTimeSeconds()>0.15) {
                             follower.followPath(Path1);
+                            spindexerspeed=1;
                             transfermover.setPosition(rconstants.transfermoveridle);
                             intake.setPower(1);
                             setPathState(3);
@@ -1054,7 +1054,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>10.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5) && !follower.isBusy()) {
                             setPathState(4);
                         }
                         break;
@@ -1075,6 +1075,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
                         break;
                     case 6:
+                        spindexerspeed=0.25;
                         if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                             intake.setPower(1);
                             transfer.setPower(1);
@@ -1090,6 +1091,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 7:
                         if(pathTimer.getElapsedTimeSeconds()>0.15) {
                             ballCount=0;
+                            spindexerspeed=1;
                             follower.followPath(Path4);
 
                             transfermover.setPosition(rconstants.transfermoveridle);
@@ -1144,6 +1146,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
                         break;
                     case 10:
+                        spindexerspeed=0.25;
                         if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                             intake.setPower(1);
                             transfer.setPower(1);
@@ -1159,6 +1162,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     case 11:
                         if(pathTimer.getElapsedTimeSeconds()>0.15) {
                             ballCount=0;
+                            spindexerspeed=1;
                             follower.followPath(Path6);
 
                             transfermover.setPosition(rconstants.transfermoveridle);
@@ -1212,6 +1216,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
                         break;
                     case 14:
+                        spindexerspeed=0.25;
                         if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                             intake.setPower(1);
                             transfer.setPower(1);
@@ -1421,5 +1426,5 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
 
 
  */
-    }
+}
 

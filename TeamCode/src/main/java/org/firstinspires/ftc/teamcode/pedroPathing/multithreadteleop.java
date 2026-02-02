@@ -69,6 +69,7 @@ public class multithreadteleop extends LinearOpMode {
     DistanceSensor distance;
     private boolean movedoffsetspindexer;
     private Servo hood;
+    public static boolean farmode = false;
 
 
     public double distancefromll(double ta)
@@ -269,14 +270,17 @@ public class multithreadteleop extends LinearOpMode {
             if (gamepad2.y) {
                 targetTicksPerSecond = rconstants.shootfar;
                 hood.setPosition(rconstants.hoodtop);
+                farmode=true;
             }
             if (gamepad2.b){
                 targetTicksPerSecond = rconstants.shootclose;
-                hood.setPosition(rconstants.hoodbottom);
+                hood.setPosition(rconstants.hoodtop);
+                farmode=false;
             }
             if (gamepad2.a) {
                 targetTicksPerSecond = rconstants.shooteridle;
                 hood.setPosition(rconstants.hoodbottom);
+                farmode=false;
             }
 
             // Reset only ballCount (not slots)
@@ -327,7 +331,10 @@ public class multithreadteleop extends LinearOpMode {
 
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
                 spindexer.setPower(-cs1.calculate(current2));
-            } else {
+            } else if(farmode){
+                spindexer.setPower(0.5*gamepad2.left_stick_y);
+                target = spindexer.getCurrentPosition();
+            } else{
                 spindexer.setPower(gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             }

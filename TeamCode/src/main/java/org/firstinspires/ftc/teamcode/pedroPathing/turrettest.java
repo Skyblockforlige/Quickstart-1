@@ -82,7 +82,7 @@ public class turrettest extends LinearOpMode {
         // =====================
         // Hardware Init
         // =====================
-        turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
+        turretEnc = hardwareMap.get(DcMotorEx.class, "lf");
         turretServo = hardwareMap.crservo.get("turretL");
 
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -146,12 +146,12 @@ public class turrettest extends LinearOpMode {
                     .build();
 
             // -------- Turret Target Math --------
-            target = ticksPerDegree * (Math.toDegrees(
+            /*target = ticksPerDegree * (Math.toDegrees(
                     Math.atan2(
                             144-pinpoint.getPosY(DistanceUnit.INCH),
                             144-pinpoint.getPosX(DistanceUnit.INCH)
                     ))- (pinpoint.getHeading(AngleUnit.DEGREES)));
-
+*/
             // -------- Manual Adjust --------
             if (gamepad2.dpad_right) {
                 target += 5 * ticksPerDegree;
@@ -171,9 +171,7 @@ public class turrettest extends LinearOpMode {
 
             turretPID.setGoal(new KineticState(target));
 
-            if (Math.abs(gamepad2.left_stick_x) < 0.05
-                    && turretEnc.getCurrentPosition() < 13000
-                    && turretEnc.getCurrentPosition() > -13000) {
+            if (Math.abs(gamepad2.left_stick_x) < 0.05) {
 
                 turretServo.setPower(-turretPID.calculate(current));
 

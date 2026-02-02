@@ -126,7 +126,7 @@ public class farautonblue extends OpMode {
         firstpath=follower.pathBuilder().addPath(
                 new BezierLine(
                         new Pose(56,8),
-                        new Pose(56, 23)
+                        new Pose(56, 19)
                 )
         ).setConstantHeadingInterpolation(Math.toRadians(90))
                 .build();
@@ -238,7 +238,7 @@ public class farautonblue extends OpMode {
         cs1 = ControlSystem.builder()
                 .posPid(p1)
                 .build();
-        hood.setPosition(0.4);
+        hood.setPosition(rconstants.hoodtop);
     }
 
     public void autonomousPathUpdate() {
@@ -249,7 +249,7 @@ public class farautonblue extends OpMode {
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
                 follower.followPath(firstpath);
-                targetTicksPerSecond=1650;
+                targetTicksPerSecond=rconstants.shootfar;
 
                 setPathState(1);
 
@@ -275,14 +275,14 @@ public class farautonblue extends OpMode {
                     third_1=true;
                     setPathState(2);
                 }*/
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1620){
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =3*rconstants.movespindexer;
+                    target =4*rconstants.movespindexer;
                 }
-                if(spindexer.getCurrentPosition()>= (3*rconstants.movespindexer-400)&&flywheel.getVelocity()>=1620){
+                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-400)&&flywheel.getVelocity()>=1500){
                     transfermover.setPosition(rconstants.transfermoverfull);
-                    setPathState(67);
+                    setPathState(-1);
 
                 }
 
@@ -726,6 +726,7 @@ public class farautonblue extends OpMode {
     @Override
     public void loop() {
         follower.update();
+        turretL.setPower(0);
         /*YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         limelight.updateRobotOrientation(orientation.getYaw());
         LLResult llResult = limelight.getLatestResult();
@@ -790,7 +791,7 @@ public class farautonblue extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(0.08*(-cs1.calculate(current2)));
+        spindexer.setPower(0.1*(-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));

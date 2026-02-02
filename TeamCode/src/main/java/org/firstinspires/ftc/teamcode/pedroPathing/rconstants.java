@@ -46,7 +46,7 @@ public class rconstants {
     public static DcMotorEx intake;
     public static DcMotorEx rb;
     public static double targetTicksPerSecond=200;
-    public static double shootclose = 1250;
+    public static double shootclose = 1370;
     public static double shootfar=1550;
     public static double shooteridle = 1050;
     public static double hoodtop = 0.32;

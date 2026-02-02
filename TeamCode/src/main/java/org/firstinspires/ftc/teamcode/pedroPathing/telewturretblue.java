@@ -203,7 +203,7 @@ public class telewturretblue extends LinearOpMode {
         limelight.start();
 
         // turret encoder (your new config name)
-        turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
+        turretEnc = hardwareMap.get(DcMotorEx.class, "lf");
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 

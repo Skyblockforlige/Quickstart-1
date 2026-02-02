@@ -61,6 +61,8 @@ public class teleturretpinpointblue extends LinearOpMode {
     private CRServo turretR;
     private double targetx;
 
+    public static boolean farmode = false;
+
     public static NormalizedColorSensor colorSensor;
 
     ControlSystem cs, cs1;
@@ -125,7 +127,7 @@ public class teleturretpinpointblue extends LinearOpMode {
 
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
+        turretEnc = hardwareMap.get(DcMotorEx.class, "lf");
         turretServo = hardwareMap.crservo.get("turretL");
 
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -313,14 +315,17 @@ public class teleturretpinpointblue extends LinearOpMode {
             if (gamepad2.y) {
                 targetTicksPerSecond = rconstants.shootfar;
                 hood.setPosition(rconstants.hoodtop);
+                farmode=true;
             }
             if (gamepad2.b){
                 targetTicksPerSecond = rconstants.shootclose;
-                hood.setPosition(rconstants.hoodbottom);
+                hood.setPosition(rconstants.hoodtop);
+                farmode=false;
             }
             if (gamepad2.a) {
                 targetTicksPerSecond = rconstants.shooteridle;
                 hood.setPosition(rconstants.hoodbottom);
+                farmode=false;
             }
 
             // Reset only ballCount (not slots)
@@ -371,7 +376,10 @@ public class teleturretpinpointblue extends LinearOpMode {
 
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
                 spindexer.setPower(-cs1.calculate(current2));
-            } else {
+            } else if(farmode){
+                spindexer.setPower(0.5*gamepad2.left_stick_y);
+                target = spindexer.getCurrentPosition();
+            } else{
                 spindexer.setPower(gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             }
