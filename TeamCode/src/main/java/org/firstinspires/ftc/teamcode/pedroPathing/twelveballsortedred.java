@@ -68,6 +68,9 @@ public class twelveballsortedred extends LinearOpMode {
     public static double transfermoverscore = 0.73;
     public static double transfermoverfull = 1;
     public static double p=0.0039,i=0,d=0.0000005;
+    public static double turretp = 0.00035;
+    public static double turreti = 0.0000000005;
+    public static double turretd = 0.0000000002;
     public static double v=0.000372,a=0.7,s=0.0000005;
     private static int targetpos;
     private CRServo turretL;
@@ -301,17 +304,34 @@ public class twelveballsortedred extends LinearOpMode {
                 }
                 telemetry.addData("Detected: ",detected);
             }
+            if(detected==21){
+                actual=23;
+            } else if(detected==22){
+                actual=21;
+            } else{
+                actual=22;
+            }
             cs2 = ControlSystem.builder()
-                    .posPid(p3,i3,d3)
+                    .posPid(turretp,turreti,turretd)
                     .build();
-            cs2.setGoal(new KineticState(13700));
+            cs2.setGoal(new KineticState(12700));
             KineticState current3 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
 
             turretL.setPower(-cs2.calculate(current3));
             telemetry.update();
         }
+        Thread g1 = new Thread(() -> {
+            while (opModeIsActive()) {
+                cs2 = ControlSystem.builder()
+                        .posPid(turretp,turreti,turretd)
+                        .build();
+                cs2.setGoal(new KineticState(0));
 
+                KineticState current4 = new KineticState(lf.getCurrentPosition(),lf.getVelocity());
+                turretL.setPower(-cs2.calculate(current4));
 
+            }
+        });
 
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP);
@@ -328,9 +348,10 @@ public class twelveballsortedred extends LinearOpMode {
                 .posPid(p1)
                 .build();
         waitForStart();
+        g1.start();
         opmodeTimer.resetTimer();
         while(opModeIsActive()){
-            cs2 = ControlSystem.builder()
+            /*cs2 = ControlSystem.builder()
                     .posPid(p3,i3,d3)
                     .build();
             cs2.setGoal(new KineticState(0));
@@ -340,7 +361,7 @@ public class twelveballsortedred extends LinearOpMode {
                 turretL.setPower(0);
             }else{
                 turretL.setPower(-cs2.calculate(current4));
-            }
+            }*/
 
             follower.update();
             colorSensor.getNormalizedColors();

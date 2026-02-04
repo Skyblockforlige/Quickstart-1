@@ -238,7 +238,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
         rconstants.initHardware(hardwareMap);
         colorSensor=rconstants.colorSensor;
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry());
-        turretEnc = hardwareMap.get(DcMotorEx.class, "lf");
+        turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
         turretServo = hardwareMap.crservo.get("turretL");
 
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -267,6 +267,13 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                     telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
                 }
                 telemetry.addData("Detected: ",detected);
+            }
+            if(detected==23){
+                actual=21;
+            } else if(detected==22){
+                actual=23;
+            } else {
+                actual = 22;
             }
             turretPID = ControlSystem.builder()
                     .posPid(turretp,turreti,turretd)
@@ -301,20 +308,23 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
         cs1 = ControlSystem.builder()
                 .posPid(p1)
                 .build();
+        Thread g1 = new Thread(() -> {
+            while (opModeIsActive()) {
+                turretPID = ControlSystem.builder()
+                        .posPid(turretp,turreti,turretd)
+                        .build();
+                turretPID.setGoal(new KineticState(0));
+
+                KineticState current4 = new KineticState(turretEnc.getCurrentPosition(),turretEnc.getVelocity());
+                turretL.setPower(-turretPID.calculate(current4));
+
+            }
+        });
         waitForStart();
+        g1.start();
         opmodeTimer.resetTimer();
         while(opModeIsActive()){
-            turretPID = ControlSystem.builder()
-                    .posPid(turretp,turreti,turretd)
-                    .build();
-            turretPID.setGoal(new KineticState(0));
 
-            KineticState current4 = new KineticState(turretEnc.getCurrentPosition(),turretEnc.getVelocity());
-            if(opmodeTimer.getElapsedTimeSeconds()>1.5){
-                turretL.setPower(0);
-            }else{
-                turretL.setPower(-turretPID.calculate(current4));
-            }
 
             follower.update();
             colorSensor.getNormalizedColors();
@@ -343,7 +353,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
 
     public void autonomousPathUpdate() {
         int pos = spindexer.getCurrentPosition();
-        switch (detected){
+        switch (actual){
             case 21:
                 //GPP
                 switch (pathState) {
