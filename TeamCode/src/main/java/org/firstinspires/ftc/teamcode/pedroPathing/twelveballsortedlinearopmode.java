@@ -275,6 +275,8 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
             } else {
                 actual = 22;
             }
+            telemetry.addData("Actual: ", actual);
+
             turretPID = ControlSystem.builder()
                     .posPid(turretp,turreti,turretd)
                     .build();

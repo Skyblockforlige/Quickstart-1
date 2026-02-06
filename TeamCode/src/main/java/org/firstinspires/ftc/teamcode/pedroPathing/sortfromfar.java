@@ -1321,7 +1321,339 @@ public class sortfromfar extends LinearOpMode {
                         stop();
 
                 }
+            default:
+//PGP
+                switch (pathState) {
+                    case 0:
+                        transfer.setPower(1);
+                        follower.followPath(firstpath);
+                        targetTicksPerSecond = 1370;
+                        turretL.setPower(0);
+                        target3=0;
+                        setPathState(1);
 
+
+                        //shoot 2 balls
+                        break;
+
+                    case 1:
+                        spindexerspeed=0.2;
+                        if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 1340) {
+                            intake.setPower(1);
+                            transfermover.setPosition(rconstants.transfermoverscore);
+                            target = 4 * rconstants.movespindexer;
+                        }
+                        if (spindexer.getCurrentPosition() >= (4 * rconstants.movespindexer - 600)) {
+                            transfermover.setPosition(rconstants.transfermoverfull);
+                            spindexerspeed=1;
+                            setPathState(2);
+
+                        }
+
+                        //shoot third ball
+                        break;
+                    case 2:
+                        //move to begening of 1,2,3
+                        if(pathTimer.getElapsedTimeSeconds()>0.15) {
+                            follower.followPath(Path1);
+                            transfermover.setPosition(rconstants.transfermoveridle);
+                            intake.setPower(1);
+                            setPathState(3);
+                        }
+                        break;
+                    case 3:
+                        // READ COLOR (same hue method as teleop)
+                        boolean distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
+
+                        // New ball enters
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                            // record color into slot memory
+
+                            ballCount++;
+                            colorPreviouslyDetected = true;
+
+                            // schedule ONE move after short delay (no sleep in OpMode)
+                            actionTimer.resetTimer();
+                            pendingMove = true;
+                        }
+
+                        // reset detection when sensor no longer sees a ball
+                        if (!distanceDetected) {
+                            colorPreviouslyDetected = false;
+                        }
+
+                        // Execute the scheduled move exactly once
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
+                            // absolute target based on count (never grows indefinitely)
+                            target +=rconstants.movespindexer;
+                            pendingMove = false;
+                        }
+
+                        // after 3 balls, move to next path state once follower done
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5) && !follower.isBusy()) {
+                            setPathState(4);
+                        }
+                        break;
+                    case 4:
+                        if(!follower.isBusy()) {
+                            follower.setMaxPower(1);
+                            follower.followPath(Path2);
+                            setPathState(5);
+                            //move to shoot position
+                        }
+                        break;
+                    case 5:
+                        if(!follower.isBusy()) {
+                            follower.setMaxPower(1);
+                            follower.followPath(Path3);
+                            target=8*rconstants.movespindexer;
+                            setPathState(6);
+                            //move to shoot position
+                        }
+                        break;
+                    case 6:
+                        spindexerspeed=0.2;
+
+                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
+                            intake.setPower(1);
+                            transfer.setPower(1);
+                            transfermover.setPosition(rconstants.transfermoverscore);
+                            target =11*rconstants.movespindexer;
+                        }
+                        if(spindexer.getCurrentPosition()>= (11*rconstants.movespindexer-800)){
+                            transfermover.setPosition(rconstants.transfermoverfull);
+                            spindexerspeed=1;
+                            setPathState(7);
+
+                        }
+                        break;
+                    case 7:
+                        if(pathTimer.getElapsedTimeSeconds()>0.15) {
+                            ballCount=0;
+                            follower.followPath(Path4);
+
+                            transfermover.setPosition(rconstants.transfermoveridle);
+                            intake.setPower(1);
+
+                            setPathState(8);
+                        }
+
+
+                        break;
+                    case 8:
+                        // READ COLOR (same hue method as teleop)
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
+
+                        // New ball enters
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                            // record color into slot memory
+
+                            ballCount++;
+                            colorPreviouslyDetected = true;
+
+                            // schedule ONE move after short delay (no sleep in OpMode)
+                            actionTimer.resetTimer();
+                            pendingMove = true;
+                        }
+
+                        // reset detection when sensor no longer sees a ball
+                        if (!distanceDetected) {
+                            colorPreviouslyDetected = false;
+                        }
+
+                        // Execute the scheduled move exactly once
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
+                            // absolute target based on count (never grows indefinitely)
+                            target +=rconstants.movespindexer;
+                            pendingMove = false;
+                        }
+
+                        // after 3 balls, move to next path state once follower done
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                            setPathState(9);
+                        }
+
+                        break;
+                    case 9:
+                        if(!follower.isBusy()) {
+                            //move to shooting position for balls 4,5,6
+                            target=16*rconstants.movespindexer;
+                            follower.followPath(Path5);
+                            setPathState(10);
+                        }
+                        break;
+                    case 10:
+                        spindexerspeed=0.2;
+
+                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
+                            intake.setPower(1);
+                            transfer.setPower(1);
+                            transfermover.setPosition(rconstants.transfermoverscore);
+                            target =19*rconstants.movespindexer;
+                        }
+                        if(spindexer.getCurrentPosition()>= (19*rconstants.movespindexer-1000)){
+                            transfermover.setPosition(rconstants.transfermoverfull);
+                            spindexerspeed=1;
+                            setPathState(11);
+
+                        }
+                        break;
+                    case 11:
+                        if(pathTimer.getElapsedTimeSeconds()>0.15) {
+                            ballCount=0;
+                            follower.followPath(Path6);
+
+                            transfermover.setPosition(rconstants.transfermoveridle);
+                            intake.setPower(1);
+
+                            setPathState(12);
+                        }
+                        break;
+                    case 12:
+                        // READ COLOR (same hue method as teleop)
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
+
+                        // New ball enters
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                            // record color into slot memory
+
+                            ballCount++;
+                            colorPreviouslyDetected = true;
+
+                            // schedule ONE move after short delay (no sleep in OpMode)
+                            actionTimer.resetTimer();
+                            pendingMove = true;
+                        }
+
+                        // reset detection when sensor no longer sees a ball
+                        if (!distanceDetected) {
+                            colorPreviouslyDetected = false;
+                        }
+
+                        // Execute the scheduled move exactly once
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
+                            // absolute target based on count (never grows indefinitely)
+                            target +=rconstants.movespindexer;
+                            pendingMove = false;
+                        }
+
+                        // after 3 balls, move to next path state once follower done
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                            setPathState(13);
+                        }
+
+
+                        break;
+                    case 13:
+                        if(!follower.isBusy()) {
+                            //move to shooting position for balls 4,5,6
+                            follower.followPath(Path7);
+                            setPathState(14);
+                        }
+                        break;
+                    case 14:
+                        spindexerspeed=0.2;
+                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
+                            intake.setPower(1);
+                            transfer.setPower(1);
+                            transfermover.setPosition(rconstants.transfermoverscore);
+                            target =25*rconstants.movespindexer;
+                        }
+                        if(spindexer.getCurrentPosition()>= (25*rconstants.movespindexer-1200)){
+                            transfermover.setPosition(rconstants.transfermoverfull);
+                            spindexerspeed=1;
+                            setPathState(15);
+
+                        }
+                        break;
+                    case 15:
+                        if(pathTimer.getElapsedTimeSeconds()>0.15) {
+                            follower.followPath(Path8);
+                            transfermover.setPosition(rconstants.transfermoveridle);
+                            //shoot ball 6
+                            setPathState(-1);
+                        }
+                        break;
+                    case 16:
+                        if(!follower.isBusy()) {
+                            //picks up balls 4,5,6
+                            transfer.setPower(0);
+                            follower.setMaxPower(0.5);
+                            follower.followPath(Path9);
+                            setPathState(17);
+                        }
+                        break;
+                    case 17:
+
+                        // READ COLOR (same hue method as teleop)
+                        distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
+
+                        // New ball enters
+                        if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                            // record color into slot memory
+
+                            ballCount++;
+                            colorPreviouslyDetected = true;
+
+                            // schedule ONE move after short delay (no sleep in OpMode)
+                            actionTimer.resetTimer();
+                            pendingMove = true;
+                        }
+
+                        // reset detection when sensor no longer sees a ball
+                        if (!distanceDetected) {
+                            colorPreviouslyDetected = false;
+                        }
+
+                        // Execute the scheduled move exactly once
+                        if (pendingMove && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
+                            // absolute target based on count (never grows indefinitely)
+                            target +=rconstants.movespindexer;
+                            pendingMove = false;
+                        }
+
+                        // after 3 balls, move to next path state once follower done
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                            setPathState(18);
+                        }
+
+
+                        break;
+                    case 18:
+                        //spindexer.setPower(0.5);
+                        if(!follower.isBusy())
+                        {
+                            follower.setMaxPower(1);
+                            follower.followPath(Path10);
+                            setPathState(19);
+                        }
+                        break;
+                    case 19:
+                        if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
+                            intake.setPower(1);
+                            transfer.setPower(1);
+                            transfermover.setPosition(rconstants.transfermoverscore);
+                            target =22*rconstants.movespindexer;
+                        }
+                        if(spindexer.getCurrentPosition()>= (22*rconstants.movespindexer-800)){
+                            transfermover.setPosition(rconstants.transfermoverfull);
+                            setPathState(20);
+
+                        }
+                        break;
+                    case 20:
+                        if(!follower.isBusy()){
+                            follower.followPath(Path12);
+                            setPathState(-1);
+                        }
+                    case -1:
+                        stop();
+
+                }
 
         }
     }
