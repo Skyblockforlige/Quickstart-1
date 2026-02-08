@@ -372,7 +372,7 @@ public class tele_w_TURRET extends LinearOpMode {
                 turretMode = next;
 
                 // Command power
-                double cmdPower = 0.0;
+                double cmdPower;
 
                 if (turretMode == TurretMode.TRACK) {
                     // drive TY to 0
@@ -385,7 +385,12 @@ public class tele_w_TURRET extends LinearOpMode {
                 } else if (turretMode == TurretMode.HOLD) {
                     cmdPower = kP_hold * holdErrDeg;
                     cmdPower = clamp(cmdPower, -maxHoldPower, +maxHoldPower);
-                } else if (turretMode == TurretMode.EDGE_SEARCH) {
+                } else {
+                    cmdPower = 0.0;
+                    edgePauseTimer = 0.0;
+                    sweepTargetDeg = Double.NaN;
+                }
+                /*else if (turretMode == TurretMode.EDGE_SEARCH) {
 
                     double desiredEdge = (relUnclampedNeeded >= 0) ? maxTurretDeg : minTurretDeg;
 
@@ -409,13 +414,9 @@ public class tele_w_TURRET extends LinearOpMode {
                     } else {
                         edgePauseTimer = 0.0;
                         cmdPower = sweepDir * searchPower;
-                    }
+                    }*/
 
-                } else {
-                    cmdPower = 0.0;
-                    edgePauseTimer = 0.0;
-                    sweepTargetDeg = Double.NaN;
-                }
+
 
                 // Soft limits
                 if (turretRelDeg <= minTurretDeg && cmdPower < 0) cmdPower = 0.0;
@@ -553,7 +554,7 @@ public class tele_w_TURRET extends LinearOpMode {
                 }
             }
 
-            hood.setPosition(hoodpos);
+            //hood.setPosition(hoodpos);
             if (gamepad2.x) {
                 ballCount = 0;
                 ballshot=0;

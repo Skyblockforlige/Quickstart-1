@@ -144,7 +144,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                                 new Pose(33.345, 114.100),
                                 new Pose(75.652, 82.128),
                                 new Pose(72.823, 56.850),
-                                new Pose(21.500, 59.293)
+                                new Pose(24.500, 59.293)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
@@ -153,9 +153,9 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(21.500, 59.293),
-                                new Pose(33.88347457627118, 64.03078265204387),
-                                new Pose(29.000, 68.500)
+                                new Pose(24.500, 59.293),
+                                new Pose(47.20386292578574, 59.83660789476232),
+                                new Pose(26.000, 68.500)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
@@ -164,7 +164,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(29.000, 68.5),
+                                new Pose(26.000, 68.5),
                                 new Pose(79.400, 67.600),
                                 new Pose(33.345, 114.100)
                         )
@@ -195,7 +195,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         new BezierCurve(
                                 new Pose(33.345, 114.100),
                                 new Pose(91.5, 29.1),
-                                new Pose(23.000, 35.293)
+                                new Pose(24.000, 35.293)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(133.5), Math.toRadians(180))
@@ -203,7 +203,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
         Path7 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierCurve(new Pose(23.000, 35.293),new Pose(59.59063156939212,30.568553737535026), new Pose(33.345, 114.100))
+                        new BezierCurve(new Pose(24.000, 35.293),new Pose(59.59063156939212,30.568553737535026), new Pose(33.345, 114.100))
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(133.5))
                 .build();
@@ -424,7 +424,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>10.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5) && !follower.isBusy()) {
                             setPathState(4);
                         }
 
@@ -744,7 +744,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>10.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5) && !follower.isBusy()) {
                             setPathState(4);
                         }
                         break;
@@ -1066,7 +1066,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         }
 
                         // after 3 balls, move to next path state once follower done
-                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>10.5) && !follower.isBusy()) {
+                        if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5) && !follower.isBusy()) {
                             setPathState(4);
                         }
                         break;

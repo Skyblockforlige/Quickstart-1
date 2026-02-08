@@ -20,7 +20,6 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -29,18 +28,47 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp
-public class multithreadteleop extends LinearOpMode {
+@TeleOp(name = "TELE W TURRET FINAL RED", group = "0")
+public class teleFINALwturret extends LinearOpMode {
 
+    // ================= DRIVE =================
     private DcMotor lf, lb, rf, rb;
+
+    // ================= SUBSYSTEMS =================
     private DcMotorEx flywheel, intake, spindexer;
     private CRServoImplEx transfer;
     private ServoImplEx transfermover;
-    private CRServo turretL;
-    private CRServo turretR;
-    private double targetx;
+    private Servo hood;
 
+    // ================= TURRET =================
+    private CRServo turretL, turretR;
+    private DcMotorEx turretEnc;
+    private Limelight3A limelight;
+
+    private enum TurretMode { TRACK, HOLD, MANUAL, IDLE }
+    private volatile TurretMode turretMode = TurretMode.IDLE;
+
+    public static double ticksPerDeg = 126.42;
+    public static double minTurretDeg = -80;
+    public static double maxTurretDeg = 80;
+
+    public static double kP_track = 0.015;
+    public static double kP_hold  = 0.02;
+
+    public static double maxTrackPower = 0.25;
+    public static double maxHoldPower  = 0.3;
+
+    public static double deadbandDeg = 2.0;
+    public static double tyOffsetDeg = -3.5;
+    public static double manualDeadband = 0.08;
+    public static int servoDir = -1;
+
+    private volatile boolean haveLastKnown = false;
+    private volatile double lastKnownTurretDeg = 0;
+
+    // ================= OTHER =================
     public static NormalizedColorSensor colorSensor;
+    DistanceSensor distance;
 
     ControlSystem cs, cs1;
 
@@ -48,47 +76,35 @@ public class multithreadteleop extends LinearOpMode {
     public static double p=0.0039,i=0,d=0.0000005;
     public static double v=0.000372,a=0.7,s=0.0000005;
     public static double p1=0.0009,i1=0,d1=0;
-    public static double llturretspeed = 0.2;
-
-    float[] hsv = new float[3];
-
-    int ballCount = 0;
-    boolean colorPreviouslyDetected = false;
-
-    // Slot tracking
-    int[] ballSlots = new int[]{0,0,0}; // 0 empty, 1 purple, 2 green
-    boolean sorting = false;
-    int[] sortTarget = new int[]{0,0,0};
 
     public static double targetTicksPerSecond=200;
     public static double shootclose = 1000;
     public static double shootfar=1600;
     public static double shooteridle = 200;
+
     public static boolean autoalign = false;
-    private Limelight3A limelight;
-    DistanceSensor distance;
-    private boolean movedoffsetspindexer;
-    private Servo hood;
     public static boolean farmode = false;
 
+    float[] hsv = new float[3];
+    int ballCount = 0;
+    boolean colorPreviouslyDetected = false;
+    int[] ballSlots = new int[]{0,0,0};
+    boolean sorting = false;
+    int[] sortTarget = new int[]{0,0,0};
+    private boolean movedoffsetspindexer;
 
-    public double distancefromll(double ta)
-    {
+    public double distancefromll(double ta) {
+        return 71.7321 * Math.pow(ta, -0.4550);
+    }
 
-        double dis = (71.7321*(Math.pow(ta,-0.4550)));
-        return dis;
-    }
-    public double targetvolfromll(double dis)
-    {
-        double vol = (7.1572*(Math.pow(dis,2.5726)));
-        return vol;
-    }
     @Override
-    public void runOpMode(){
+    public void runOpMode() {
 
-
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry());
-        int turretOscillationDirection = 0; // 0=left, 1=righ
+        telemetry = new MultipleTelemetry(
+                telemetry,
+                FtcDashboard.getInstance().getTelemetry(),
+                PanelsTelemetry.INSTANCE.getFtcTelemetry()
+        );
 
         rconstants.initHardware(hardwareMap);
 
@@ -99,16 +115,23 @@ public class multithreadteleop extends LinearOpMode {
 
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
-        turretL=rconstants.turretL;
-        turretR=rconstants.turretR;
-        limelight=rconstants.limelight;
+
+        turretL = rconstants.turretL;
+        turretR = rconstants.turretR;
+
+        turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
+        turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        limelight = rconstants.limelight;
         limelight.pipelineSwitch(1);
+        limelight.start();
+
         flywheel = rconstants.flywheel;
-        hood=rconstants.hood;
+        hood = rconstants.hood;
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         intake = rconstants.intake;
-
         spindexer = rconstants.spindexer;
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -119,23 +142,16 @@ public class multithreadteleop extends LinearOpMode {
 
         colorSensor = rconstants.colorSensor;
         colorSensor.setGain(rconstants.csgain);
-
-        cs1 = ControlSystem.builder()
-                .posPid(p1,i1,d1)
-                .build();
-        cs = ControlSystem.builder()
-                .velPid(p,i,d)
-                .basicFF(v,a,s)
-                .build();
-        limelight.start();
         distance = (DistanceSensor) colorSensor;
+
+        cs1 = ControlSystem.builder().posPid(p1,i1,d1).build();
+        cs = ControlSystem.builder().velPid(p,i,d).basicFF(v,a,s).build();
 
         int target = 0;
 
-        // ---------------------- DRIVE THREAD ----------------------
-        Thread g1 = new Thread(() -> {
+        // ================= DRIVE THREAD =================
+        Thread driveThread = new Thread(() -> {
             while (opModeIsActive()) {
-
                 double y = -gamepad1.left_stick_y;
                 double x = gamepad1.left_stick_x * 1.1;
                 double rx = gamepad1.right_stick_x;
@@ -146,29 +162,83 @@ public class multithreadteleop extends LinearOpMode {
                 rf.setPower((y-x-rx)/denom);
                 rb.setPower((y+x-rx)/denom);
 
-                if(gamepad2.right_trigger>0 && !gamepad2.right_bumper){
-                    transfermover.setPosition(rconstants.transfermoverscore);
-                    transfer.setPower(gamepad2.right_trigger);
-                }
-                if(gamepad2.right_trigger>0 && gamepad2.right_bumper){
-                    transfermover.setPosition(rconstants.transfermoverfull);
-                    transfer.setPower(gamepad2.right_trigger);
-                }
-                if(gamepad2.right_trigger==0){
-                    transfermover.setPosition(rconstants.transfermoveridle);
-                    transfer.setPower(0);
-                }
                 intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
             }
         });
 
-        waitForStart();
-        g1.start();
+        // ================= TURRET THREAD =================
+        Thread turretThread = new Thread(() -> {
+            while (opModeIsActive()) {
 
-        // ============================================================
-        //                     MAIN LOOP
-        // ============================================================
+                LLResult res = limelight.getLatestResult();
+                boolean hasTarget = res != null && res.isValid();
+
+                double turretDeg = turretEnc.getCurrentPosition() / ticksPerDeg;
+                double manual = gamepad2.right_stick_x;
+
+                // MANUAL
+                if (Math.abs(manual) > manualDeadband) {
+                    turretMode = TurretMode.MANUAL;
+
+                    double cmd = clamp(manual, -1, 1);
+                    if (turretDeg <= minTurretDeg && cmd < 0) cmd = 0;
+                    if (turretDeg >= maxTurretDeg && cmd > 0) cmd = 0;
+
+                    turretL.setPower(servoDir * cmd);
+                    turretR.setPower(servoDir * cmd);
+
+                    lastKnownTurretDeg = turretDeg;
+                    haveLastKnown = true;
+                }
+
+                // TRACK
+                else if (autoalign && hasTarget) {
+                    turretMode = TurretMode.TRACK;
+
+                    double ty = res.getTy() + tyOffsetDeg;
+
+                    if (Math.abs(ty) <= deadbandDeg) {
+                        turretL.setPower(0);
+                        turretR.setPower(0);
+                    } else {
+                        double cmd = clamp(-kP_track * ty,
+                                -maxTrackPower, maxTrackPower);
+                        turretL.setPower(servoDir * cmd);
+                        turretR.setPower(servoDir * cmd);
+                    }
+
+                    lastKnownTurretDeg = turretDeg;
+                    haveLastKnown = true;
+                }
+
+                // HOLD
+                else if (autoalign && haveLastKnown) {
+                    turretMode = TurretMode.HOLD;
+
+                    double err = lastKnownTurretDeg - turretDeg;
+                    double cmd = clamp(kP_hold * err,
+                            -maxHoldPower, maxHoldPower);
+
+                    turretL.setPower(servoDir * cmd);
+                    turretR.setPower(servoDir * cmd);
+                }
+
+                // IDLE
+                else {
+                    turretMode = TurretMode.IDLE;
+                    turretL.setPower(0);
+                    turretR.setPower(0);
+                }
+            }
+        });
+
+        waitForStart();
+        driveThread.start();
+        turretThread.start();
+
+        // ================= MAIN LOOP =================
         while (opModeIsActive()) {
+
             LLResult llResult = limelight.getLatestResult();
 
 
@@ -191,48 +261,6 @@ public class multithreadteleop extends LinearOpMode {
             if(gamepad2.left_trigger >0.1){
                 target+=movespindexer/2;
             }
-            if(autoalign) {
-                if (Math.abs(gamepad2.left_stick_x) == 0) {
-                    if (llResult != null) {
-                        targetx = llResult.getTy();
-                        telemetry.addData("targetx", llResult.getTy());
-
-                        if (targetx >= 2.5) {
-                            // not necesary but makes it move exactly one degree
-                            turretL.setPower(llturretspeed);
-                            turretR.setPower(llturretspeed);
-                            turretOscillationDirection = 0;
-                            //switch to negative and make other postive if goes wrong direction
-                        } else if (targetx <= -2.5) {
-                            turretL.setPower(-llturretspeed);
-                            turretR.setPower(-llturretspeed);
-                            turretOscillationDirection = 1;
-                        } else if (targetx >= -5.5 && targetx <= 5.5) {
-                            turretR.setPower(0);
-                            turretL.setPower(0);
-                        }
-                    } else {
-                        if (turretOscillationDirection == 0) {
-                            turretL.setPower(-0.1);
-                            turretR.setPower(-0.1);
-                            sleep(500);
-                            turretOscillationDirection = 1;
-                        } else {
-                            turretL.setPower(0.1);
-                            turretR.setPower(0.1);
-                            sleep(500);
-                            turretOscillationDirection = 0;
-                        }
-                    }
-                } else{
-                    turretL.setPower(gamepad2.right_stick_x);
-                    turretR.setPower(gamepad2.right_stick_x);
-                }
-            } else{
-                turretL.setPower(gamepad2.right_stick_x);
-                turretR.setPower(gamepad2.right_stick_x);
-            }
-            // ---------- INTAKE ----------
             boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
 
             // ---------- READ COLOR ----------
@@ -373,5 +401,9 @@ public class multithreadteleop extends LinearOpMode {
             telemetry.addData("distance of spindexer", distance.getDistance(DistanceUnit.CM));
             telemetry.update();
         }
+    }
+
+    private static double clamp(double v, double lo, double hi) {
+        return Math.max(lo, Math.min(hi, v));
     }
 }

@@ -15,6 +15,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.follower.Follower;
@@ -43,6 +44,7 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
+@Disabled
 @Autonomous(name = "12 Ball Sort- Red Far")
 public class sortfromfarred extends LinearOpMode {
     private Follower follower;

@@ -51,6 +51,7 @@ public class farautonblue extends OpMode {
     private IMU imu;
     private DcMotorEx flywheel;
     private DcMotorEx intake;
+    public static double spindexerspeed = 0.1;
     int ballCount = 0;
     boolean colorPreviouslyDetected = false;
     private Limelight3A limelight;
@@ -90,6 +91,7 @@ public class farautonblue extends OpMode {
     public PathChain Path3;
     public PathChain Path4;
     public PathChain Path5;
+    public PathChain Path6;
     int[] ballSlots = new int[]{0,0,0}; // 0 empty, 1 purple, 2 green
     boolean sorting = false;
     int[] sortTarget = new int[]{0,0,0};
@@ -130,59 +132,49 @@ public class farautonblue extends OpMode {
                 )
         ).setConstantHeadingInterpolation(Math.toRadians(90))
                 .build();
-        Path5 = follower.pathBuilder().addPath(
-                new BezierLine(
-                        new Pose(56,23),
-                        new Pose(56,38)
-                )
-        ).setConstantHeadingInterpolation(Math.toRadians(90)).build();
-        Path1 = follower.pathBuilder().addPath(
-                        new BezierCurve(
-                                new Pose(56.000, 23),
-                                new Pose(43.386, 20.000),
-                                new Pose(26.771, 5.371)
-                        )
-                ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
-                .build();
 
+        Path1 = follower.pathBuilder().addPath(
+                        new BezierLine(
+                                new Pose(56.000, 19.000),
+                                new Pose(56,28)
+                        )
+                ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(90))
+                .build();
+        Path5= follower.pathBuilder().addPath(
+                new BezierLine(
+                        new Pose(28.304087736789633,8.570289132602205),
+                        new Pose(8,0)
+                )
+        ).setConstantHeadingInterpolation(Math.toRadians(180)).build();
+        Path6=follower.pathBuilder().addPath(
+                new BezierLine(
+                        new Pose(18,0),
+                        new Pose(8,0)
+                )
+        ).setConstantHeadingInterpolation(Math.toRadians(180)).build();
+        Path4=follower.pathBuilder().addPath(
+                new BezierLine(
+                        new Pose(8,0),
+                        new Pose(18,0)
+                )
+        ).setConstantHeadingInterpolation(Math.toRadians(180)).build();
         Path2 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(26.771, 5.371),
-
-                                new Pose(21.433, 5.949)
+                                new Pose(8, 0),
+                                new Pose(56, 19)
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(180))
+                ).setLinearHeadingInterpolation(Math.toRadians(180),Math.toRadians(90))
                 .build();
-
         Path3 = follower.pathBuilder().addPath(
-                        new BezierCurve(
-                                new Pose(21.433, 5.949),
-                                new Pose(33.291, 10.458),
-                                new Pose(21.644, 5.034)
+                        new BezierLine(
+                                new Pose(56, 19),
+                                new Pose(56, 38)
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(180))
+                ).setConstantHeadingInterpolation(Math.toRadians(90))
 
                 .build();
 
-        Path4 = follower.pathBuilder().addPath(
-                        new BezierCurve(
-                                new Pose(21.644, 8.034),
-                                new Pose(31.322, 19.017),
-                                new Pose(21.644, 5.166)
-                        )
-                ).setConstantHeadingInterpolation(Math.toRadians(180))
 
-                .build();
-
-        Path5 = follower.pathBuilder().addPath(
-                        new BezierCurve(
-                                new Pose(21.644, 5.166),
-                                new Pose(38.436, 22.876),
-                                new Pose(56.000, 8.000)
-                        )
-                ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
-
-                .build();
     }
 
 
@@ -249,6 +241,7 @@ public class farautonblue extends OpMode {
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
                 follower.followPath(firstpath);
+                spindexerspeed=0.1;
                 targetTicksPerSecond=rconstants.shootfar;
 
                 setPathState(1);
@@ -279,33 +272,30 @@ public class farautonblue extends OpMode {
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
+                    spindexerspeed=0.3;
                 }
                 if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-400)&&flywheel.getVelocity()>=1500){
+                    spindexerspeed=0.3;
                     transfermover.setPosition(rconstants.transfermoverfull);
-                    setPathState(-1);
-
+                    setPathState(2);
                 }
-
-
-
-                //shoot third ball
-                break;
-            case 67:
-                if(pathTimer.getElapsedTimeSeconds()>0.3){
-                    transfermover.setPosition(transfermoveridle);
-                    follower.followPath(Path5);
-                    setPathState(-1);
-                }
+                //shoot third bal
                 break;
             case 2:
                 //move to begening of 1,2,3
-                if(pathTimer.getElapsedTimeSeconds()>0.25) {
+                if(pathTimer.getElapsedTimeSeconds()>0.5) {
+                    spindexerspeed=1;
                     follower.followPath(Path1);
                     transfermover.setPosition(rconstants.transfermoveridle);
-                    setPathState(3);
+                    setPathState(100000);
 
                 }
                 break;
+            case 23:
+                if(!follower.isBusy()){
+                    follower.followPath(Path5);
+                    setPathState(3);
+                }
             case 3:
                 // READ COLOR (same hue method as teleop)
                 colorSensor.getNormalizedColors();
@@ -344,67 +334,40 @@ public class farautonblue extends OpMode {
                 }
 
                 // after 3 balls, move to next path state once follower done
-                if ((ballCount >=1||pathTimer.getElapsedTimeSeconds()>2) && !follower.isBusy()) {
+                if ((ballCount >=2||pathTimer.getElapsedTimeSeconds()>7.5) && !follower.isBusy()) {
                     setPathState(4);
                 }
 
                 break;
             case 4:
                 if(!follower.isBusy()) {
-                    follower.setMaxPower(0.5);
                     follower.followPath(Path2);
+                    spindexerspeed=0.1;
                     setPathState(5);
                     //move to shoot position
                 }
                 break;
             case 5:
                 // READ COLOR (same hue method as teleop)
-                colorSensor.getNormalizedColors();
-                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
+                    intake.setPower(1);
+                    transfermover.setPosition(rconstants.transfermoverscore);
+                    target =8*rconstants.movespindexer;
+                    spindexerspeed=0.5;
 
-                 hue = hsv[0];
-                 isPurple = (hue > 200 && hue < 300);
-                 isGreen  = (hue > 95  && hue < 200);
-                 colorDetected = (isPurple || isGreen);
-
-                // New ball enters
-                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
-
-                    // record color into slot memory
-                    if (isPurple) ballSlots[ballCount] = 1;
-                    if (isGreen)  ballSlots[ballCount] = 2;
-
-                    ballCount++;
-                    colorPreviouslyDetected = true;
-
-                    // schedule ONE move after short delay (no sleep in OpMode)
-                    actionTimer.resetTimer();
-                    pendingMove = true;
                 }
-
-                // reset detection when sensor no longer sees a ball
-                if (!colorDetected) {
-                    colorPreviouslyDetected = false;
-                }
-
-                // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
-                    // absolute target based on count (never grows indefinitely)
-                    target +=rconstants.movespindexer;
-                    pendingMove = false;
-                }
-
-                // after 3 balls, move to next path state once follower done
-                if ((ballCount >=1||pathTimer.getElapsedTimeSeconds()>2) && !follower.isBusy()) {
+                if(spindexer.getCurrentPosition()>= (8*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
+                    transfermover.setPosition(rconstants.transfermoverfull);
+                    spindexerspeed=1;
                     setPathState(6);
+
                 }
 
                 break;
             case 6:
                 if(!follower.isBusy()) {
-                    follower.setMaxPower(0.5);
                     follower.followPath(Path3);
-                    setPathState(7);
+                    setPathState(-1);
                     //move to shoot position
                 }
                 break;
@@ -791,7 +754,7 @@ public class farautonblue extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(0.1*(-cs1.calculate(current2)));
+        spindexer.setPower(spindexerspeed*(-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
