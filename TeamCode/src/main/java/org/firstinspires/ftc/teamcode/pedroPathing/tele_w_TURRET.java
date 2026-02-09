@@ -108,8 +108,8 @@ public class tele_w_TURRET extends LinearOpMode {
     public static double maxHoldPower = 0.3;
     public static double maxTrackPower = 0.25;
 
-    public static double maxTurretDeg = 80;
-    public static double minTurretDeg = -80;
+    public static double maxTurretDeg = 60;
+    public static double minTurretDeg = -60;
 
     public static int pipelineIndex = 2;
     public static double powerSlewPerSec = 1.2;
@@ -446,35 +446,42 @@ public class tele_w_TURRET extends LinearOpMode {
         while (opModeIsActive()) {
             LLResult llResult = limelight.getLatestResult();
 
-            if (gamepad2.ps) {
+
+
+            if(gamepad2.ps){
                 spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                target = 0;
+                target=0;
                 spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             }
 
-            if (ballCount == 3 && !movedoffsetspindexer) {
+            if(ballCount==3&&!movedoffsetspindexer){
                 sleep(100);
-                movedoffsetspindexer = true;
+                target+=movespindexer/2;
+                target-=750;
+                movedoffsetspindexer=true;
             }
-
-            // ---------- INTAKE ----------
+            if(gamepad2.left_trigger >0.1){
+                target+=movespindexer/2;
+            }
             boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
 
             // ---------- READ COLOR ----------
-            colorSensor.getNormalizedColors();
-            Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+            if(spindexer.getCurrentPosition()%rconstants.movespindexer <= 100 || spindexer.getCurrentPosition()%rconstants.movespindexer >= rconstants.movespindexer-100) {
+                colorSensor.getNormalizedColors();
+                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+            }
 
             float hue = hsv[0];
-            //purple=195-220
-            //green- 150-170
-            boolean isPurple = (hue >= 195 && hue <= 220);
-            boolean isGreen = (hue >= 150 && hue <= 170);
+
+            boolean isPurple = (hue > 195 && hue < 220);
+            boolean isGreen = (hue > 150 && hue < 170);
 
             boolean colorDetected = (isPurple || isGreen);
 
             // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
-                if (distance.getDistance(DistanceUnit.CM) > 3 && distance.getDistance(DistanceUnit.CM) < 6) {
+                if(distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<7) {
+                    //sleep(200);
                     target += rconstants.movespindexer;
 
                     if (isPurple) ballSlots[ballCount] = 1;
@@ -492,83 +499,48 @@ public class tele_w_TURRET extends LinearOpMode {
             // ---------- SHOOTER ----------
             if (gamepad2.y) {
                 targetTicksPerSecond = rconstants.shootfar;
+                hood.setPosition(rconstants.hoodtop);
                 farmode=true;
-                hoodpos=rconstants.hoodtop;
             }
             if (gamepad2.b){
                 targetTicksPerSecond = rconstants.shootclose;
+                hood.setPosition(rconstants.hoodtop);
                 farmode=false;
-                hoodpos=rconstants.hoodbottom;
             }
             if (gamepad2.a) {
-                farmode=false;
                 targetTicksPerSecond = rconstants.shooteridle;
-                hoodpos=rconstants.hoodbottom;
-            }
-            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
-
-            /*if(farmode) {
-                if(cs.calculate(current1)>1.4&&shots){
-                    shottimer=new Timer();
-                    shots=false;
-                }
-                if(!shots){
-                    ballshot++;
-                    shots=true;
-                    sleep(200);
-                }
-                if(ballshot==0) {
-                    hoodpos=rconstants.hoodtop;
-                } else if(ballshot==1){
-                    hoodpos=rconstants.hoodtop+0.04;
-                } else if(ballshot==2){
-                    hoodpos=rconstants.hoodtop+0.08;
-                }
-            }*/
-            final double SHOT_THRESHOLD = 1.4;
-            final double RESET_THRESHOLD = 1.0; // must fall below this before next shot
-
-
-            if (farmode) {
-
-                double current = cs.calculate(current1);
-
-                // Shot detected → advance hood instantly
-                if (!shotLatched && current > SHOT_THRESHOLD) {
-                    ballshot++;            // NEXT shot
-                    shotLatched = true;    // lock until system settles
-                }
-
-                // Re-arm only after current drops
-                if (shotLatched && current < RESET_THRESHOLD) {
-                    shotLatched = false;
-                }
-
-                // Hood position based on number of shots
-                if (ballshot == 0) {
-                    hoodpos = rconstants.hoodtop;
-                } else if (ballshot == 1) {
-                    hoodpos = rconstants.hoodtop + 0.02;
-                } else if (ballshot == 2) {
-                    hoodpos = rconstants.hoodtop + 0.04;
-                }
+                hood.setPosition(rconstants.hoodbottom);
+                farmode=false;
             }
 
-            //hood.setPosition(hoodpos);
+            // Reset only ballCount (not slots)
             if (gamepad2.x) {
                 ballCount = 0;
-                ballshot=0;
-                movedoffsetspindexer = false;
+                movedoffsetspindexer=false;
             }
 
             // ---------- SORT BUTTONS ----------
-            if (gamepad2.dpad_right && ballCount == 3 && !sorting) { sortTarget = new int[]{1, 2, 1}; sorting = true; }
-            if (gamepad2.dpad_up && ballCount == 3 && !sorting)    { sortTarget = new int[]{2, 1, 1}; sorting = true; }
-            if (gamepad2.dpad_left && ballCount == 3 && !sorting)  { sortTarget = new int[]{1, 1, 2}; sorting = true; }
+            if (gamepad2.dpad_right && ballCount == 3 && !sorting) {
+                //PPG
+                sortTarget = new int[]{1,2,1};
+                sorting = true;
+            }
+            if (gamepad2.dpad_up && ballCount == 3 && !sorting) {
+                //PGP
+                sortTarget = new int[]{2,1,1};
+                sorting = true;
+            }
+            if (gamepad2.dpad_left && ballCount == 3 && !sorting) {
+                //GPP
+                sortTarget = new int[]{1,1,2};
+                sorting = true;
+            }
 
             // ---------- FORWARD-ONLY SORTING ----------
             if (sorting) {
-                if (!(ballSlots[0] == sortTarget[0] && ballSlots[1] == sortTarget[1] && ballSlots[2] == sortTarget[2])) {
+
+                if (!(ballSlots[0] == sortTarget[0] &&ballSlots[1]==sortTarget[1]&& ballSlots[2]==sortTarget[2])) {
+
                     target += rconstants.movespindexer;
 
                     int temp = ballSlots[0];
@@ -577,6 +549,7 @@ public class tele_w_TURRET extends LinearOpMode {
                     ballSlots[2] = temp;
 
                     sleep(250);
+
                 } else {
                     sorting = false;
                 }
@@ -589,54 +562,47 @@ public class tele_w_TURRET extends LinearOpMode {
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
                 spindexer.setPower(-cs1.calculate(current2));
             } else if(farmode){
-                spindexer.setPower(gamepad2.left_stick_y);
+                spindexer.setPower(0.6*gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
-            } else {
+            } else{
                 spindexer.setPower(gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             }
 
-            // ---------- SHOOTER CONTROL ----------
-            cs.setGoal(new KineticState(0, targetTicksPerSecond));
+            // ---------- SHOOTER ----------
+            cs.setGoal(new KineticState(0,targetTicksPerSecond));
+            KineticState current1 = new KineticState(flywheel.getCurrentPosition(),flywheel.getVelocity());
             flywheel.setPower(cs.calculate(current1));
-
-            if (gamepad2.left_bumper) {
-                int moveamount = rconstants.movespindexer - (target % rconstants.movespindexer);
-                target += moveamount;
+            if(gamepad2.left_bumper){
+                int moveamount = rconstants.movespindexer-(target%rconstants.movespindexer);
+                target+=moveamount;
                 sleep(300);
+
+
             }
+
+            while(gamepad1.left_trigger>0){
+                if(ballCount==3&&!isGreen){
+                    target+=rconstants.movespindexer;
+                    sleep(300);
+                }
+            }
+
+
 
             // ---------- TELEMETRY ----------
-            telemetry.addData("power", cs.calculate(current1));
             telemetry.addData("Hue", hue);
             telemetry.addData("Ball Count", ballCount);
             telemetry.addData("Slots", ballSlots[0] + "," + ballSlots[1] + "," + ballSlots[2]);
             telemetry.addData("Sorting", sorting);
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
             telemetry.addData("Target", target);
-            telemetry.addData("balls shot", ballshot);
-            telemetry.addData("T_MODE", turretMode);
-            telemetry.addData("hasTarget", hasTarget);
-            telemetry.addData("tyRaw(deg)", tyRaw);
-            telemetry.addData("tyFilt(deg)", tyFilt);
-            telemetry.addData("tyOffsetDeg", tyOffsetDeg);
-            telemetry.addData("robotHeadingDeg", robotHeadingDeg);
-            telemetry.addData("turretRelDeg", turretRelDeg);
-            telemetry.addData("haveLastKnown", haveLastKnown);
-            telemetry.addData("lastKnownAbsDeg", lastKnownAbsDeg);
-            telemetry.addData("relUnclampedNeeded", relUnclampedNeeded);
-            telemetry.addData("turretRelNeededDeg", turretRelNeededDeg);
-            telemetry.addData("holdErrDeg", holdErrDeg);
-            telemetry.addData("turretOut", turretOut);
-            telemetry.addData("velocity", flywheel.getVelocity());
-            telemetry.addData("Target Ticks Per Second", targetTicksPerSecond);
-            if (llResult != null && llResult.isValid()) {
-                telemetry.addData("distance(ll ta)", distancefromll(llResult.getTa()));
-            } else {
-                telemetry.addData("distance(ll ta)", "n/a");
-            }
-            telemetry.addData("distance of spindexer (cm)", distance.getDistance(DistanceUnit.CM));
+            telemetry.addData("spindexer_pos", spindexer.getCurrentPosition());
+            telemetry.addData("distance", distancefromll(llResult.getTa()));
+            telemetry.addData("distance of spindexer", distance.getDistance(DistanceUnit.CM));
             telemetry.update();
+
+
         }
     }
 

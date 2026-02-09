@@ -41,8 +41,8 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Autonomous(name = "farautonblue", group = "Examples")
-public class farautonblue extends OpMode {
+@Autonomous(name = "farautonred", group = "Examples")
+public class faruatonred extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
@@ -104,7 +104,7 @@ public class farautonblue extends OpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    private final Pose startPose = new Pose(56.000, 8, Math.toRadians(90));
+    private final Pose startPose = new Pose(56.000, 8, Math.toRadians(90)).mirror();
 
     public PathChain firstpath;
     public PathChain go_first_back;
@@ -127,9 +127,9 @@ public class farautonblue extends OpMode {
     public void buildPaths() {
         Path1 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(56.000, 8.000),
+                                new Pose(56.000, 8.000).mirror(),
 
-                                new Pose(56.000, 19.000)
+                                new Pose(56.000, 19.000).mirror()
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(90))
 
@@ -137,48 +137,48 @@ public class farautonblue extends OpMode {
 
         Path2 = follower.pathBuilder().addPath(
                         new BezierCurve(
-                                new Pose(56.000, 19.000),
-                                new Pose(52.72646657571624, 27.77070017777499),
-                                new Pose(20.128, 23.839)
+                                new Pose(56.000, 19.000).mirror(),
+                                new Pose(98.59890995499178, 21.80617084626066).mirror(),
+                                new Pose(20.128, 22.839).mirror()
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(90),Math.toRadians(180))
+                ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
 
                 .build();
 
         Path3 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(16.128, 23.839),
+                                new Pose(16.128, 22.839).mirror(),
 
-                                new Pose(56.000, 19.000)
+                                new Pose(56.000, 19.000).mirror()
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
 
                 .build();
 
         Path4 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(56.000, 9.000),
+                                new Pose(56.000, 19.000).mirror(),
 
-                                new Pose(17, 1)
+                                new Pose(13.119, 15.732).mirror()
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(180))
+                ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
 
                 .build();
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(17, 1),
+                                new Pose(13.119, 15.732).mirror(),
 
-                                new Pose(56.000, 19.000)
+                                new Pose(56.000, 19.000).mirror()
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
 
                 .build();
         Path6 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(56.000, 19.000),
+                                new Pose(56.000, 19.000).mirror(),
 
-                                new Pose(31.014, 14.421)
+                                new Pose(31.014, 14.421).mirror()
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(90))
 
@@ -339,7 +339,7 @@ public class farautonblue extends OpMode {
                 }
 
                 // after 3 balls, move to next path state once follower done
-                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>5.5) && !follower.isBusy()) {
                     setPathState(4);
                 }
 
@@ -375,7 +375,6 @@ public class farautonblue extends OpMode {
             case 6:
                 if(!follower.isBusy()) {
                     follower.followPath(Path4);
-                    transfermover.setPosition(rconstants.transfermoveridle);
                     setPathState(7);
                     //move to shoot position
                 }
@@ -423,7 +422,7 @@ public class farautonblue extends OpMode {
                 }
                 break;
             case 8:
-                if(!follower.isBusy()) {
+                if(!follower.isBusy()&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-400 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=400) {
                     follower.followPath(Path5);
                     spindexerspeed=0.5;
                     spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -441,20 +440,18 @@ public class farautonblue extends OpMode {
                     spindexerspeed=0.5;
 
                 }
-                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1500){
+                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     if(opmodeTimer.getElapsedTimeSeconds()>=27.5) {
                         setPathState(10);
                     } else{
                         setPathState(6);
-
                     }
                 }
                 break;
             case 10:
                 if(!follower.isBusy()){
-                    transfermover.setPosition(rconstants.transfermoveridle);
                     follower.followPath(Path6);
                     setPathState(-1);
                 }
