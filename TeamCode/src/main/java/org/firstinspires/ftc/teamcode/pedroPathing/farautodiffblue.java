@@ -41,8 +41,8 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Autonomous(name = "farautonblue", group = "Examples")
-public class farautonblue extends OpMode {
+@Autonomous(name = "farautodiffblue", group = "Examples")
+public class farautodiffblue extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
@@ -59,7 +59,8 @@ public class farautonblue extends OpMode {
     private ControlSystem cs;
 
     public double targetx;
-    public static double turrettarget=272.6;
+    public static double turrettarget=290;
+
     public static double turretp = 0.002;
     public static double turreti = 0;
     public static double turretd = 0.00000005;
@@ -167,19 +168,19 @@ public class farautonblue extends OpMode {
                         new BezierLine(
                                 new Pose(56.000, 9.000),
 
-                                new Pose(17, 1)
+                                new Pose(20, 1)
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(180))
+                ).setConstantHeadingInterpolation(Math.toRadians(200))
 
                 .build();
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(17, 1),
+                                new Pose(20, 1),
 
                                 new Pose(56.000, 19.000)
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(200), Math.toRadians(90))
 
                 .build();
         Path6 = follower.pathBuilder().addPath(
@@ -270,7 +271,7 @@ public class farautonblue extends OpMode {
                 transfer.setPower(1);
                 follower.followPath(Path1);
                 spindexerspeed=0.1;
-                targetTicksPerSecond=rconstants.shootfar;
+                targetTicksPerSecond=rconstants.shootfar-10;
 
                 setPathState(1);
 
@@ -300,10 +301,10 @@ public class farautonblue extends OpMode {
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
-                    spindexerspeed=0.3;
+                    spindexerspeed=0.5;
                 }
                 if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-400)&&flywheel.getVelocity()>=1500){
-                    spindexerspeed=0.3;
+                    spindexerspeed=1;
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(2);
                 }
@@ -363,9 +364,9 @@ public class farautonblue extends OpMode {
 
                 break;
             case 4:
-                if(!follower.isBusy()&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-400 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=400) {
+                if(!follower.isBusy()&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500) {
                     follower.followPath(Path3);
-                    spindexerspeed=0.5;
+                    spindexerspeed=0.2;
                     spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     target=0;
@@ -379,7 +380,7 @@ public class farautonblue extends OpMode {
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
-                    spindexerspeed=0.5;
+                    spindexerspeed=1;
 
                 }
                 if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
@@ -443,7 +444,7 @@ public class farautonblue extends OpMode {
             case 8:
                 if(!follower.isBusy()) {
                     follower.followPath(Path5);
-                    spindexerspeed=0.5;
+                    spindexerspeed=0.2;
                     spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     target=0;
@@ -456,7 +457,7 @@ public class farautonblue extends OpMode {
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
-                    spindexerspeed=0.5;
+                    spindexerspeed=1;
 
                 }
                 if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1500){

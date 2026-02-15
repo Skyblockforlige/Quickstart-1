@@ -56,11 +56,13 @@ public class turrettest extends LinearOpMode {
     public static double START_Y = 8.75;
     public static double START_HEADING_DEG = 0;
 
-    public static double p = 0.00035;
-    public static double i = 0.0000000005;
-    public static double d = 0.0000000002;
-
-    public static double ticksPerDegree = 126.42;
+    public static double p = 0.0015;
+    public static double i = 0;
+    public static double d = 0.000000005;
+    public static double v = 0.0000372;
+    public static double a = 0.007;
+    public static double s= 0.005;
+    public static double ticksPerDegree = 126.42/10.0;
 
     // =====================
     // State
@@ -143,6 +145,7 @@ public class turrettest extends LinearOpMode {
             pinpoint.update();
             turretPID = ControlSystem.builder()
                     .posPid(p, i, d)
+                    .basicFF(v,a,s)
                     .build();
 
             // -------- Turret Target Math --------
@@ -165,7 +168,7 @@ public class turrettest extends LinearOpMode {
             // -------- PID Control --------
             KineticState current =
                     new KineticState(
-                            turretEnc.getCurrentPosition(),
+                            turretEnc.getCurrentPosition()/10.0,
                             turretEnc.getVelocity()
                     );
 
@@ -185,7 +188,7 @@ public class turrettest extends LinearOpMode {
             telemetry.addData("Pinpoint X", pinpoint.getPosX(DistanceUnit.INCH));
             telemetry.addData("Pinpoint Y", pinpoint.getPosY(DistanceUnit.INCH));
             telemetry.addData("Heading", pinpoint.getHeading(AngleUnit.DEGREES));
-            telemetry.addData("Turret Pos", turretEnc.getCurrentPosition());
+            telemetry.addData("Turret Pos", turretEnc.getCurrentPosition()/10.0);
             telemetry.addData("Turret Target", target);
             telemetry.addData("Detected Tag", detected);
             telemetry.addData("Mapped Tag", actual);

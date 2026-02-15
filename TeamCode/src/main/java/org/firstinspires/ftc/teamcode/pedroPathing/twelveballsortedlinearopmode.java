@@ -13,6 +13,7 @@ import com.pedropathing.geometry.BezierCurve;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -49,7 +50,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
-
+    List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
     private IMU imu;
     private DcMotorEx flywheel;
     private DcMotorEx intake;
@@ -88,9 +89,15 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
     boolean sorting = false;
     int[] sortTarget = new int[]{0,0,0};
     private CRServo turretServo;
-    public static double turretp = 0.00035;
-    public static double turreti = 0.0000000005;
-    public static double turretd = 0.0000000002;
+    public static double turretp = 0.002;
+    public static double turreti = 0;
+    public static double turretd = 0.00000005;
+    public static double turretv = 0.0000372;
+    public static double turreta = 0.007;
+    public static double turrets = 0.05;
+    public static double ticksPerDegree = 126.42/10.0;
+    public static double turrettarget = 0;
+
     public static NormalizedColorSensor colorSensor;
     ControlSystem cs1;
     int intakeBaseTarget = 0;
@@ -126,8 +133,6 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
     DistanceSensor distance;
     int target3=0;
 
-
-
     public void buildPaths() {
         firstpath = follower
                 .pathBuilder()
@@ -154,7 +159,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                 .addPath(
                         new BezierCurve(
                                 new Pose(24.500, 59.293),
-                                new Pose(47.20386292578574, 59.83660789476232),
+                                new Pose(60.70656562848845, 58.085256543410964),
                                 new Pose(26.000, 68.500)
                         )
                 )
@@ -279,9 +284,10 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
 
             turretPID = ControlSystem.builder()
                     .posPid(turretp,turreti,turretd)
+                    .basicFF(turretv,turreta,turrets)
                     .build();
-            turretPID.setGoal(new KineticState(-13000));
-            KineticState current3 = new KineticState(turretEnc.getCurrentPosition());
+            turretPID.setGoal(new KineticState(-1300));
+            KineticState current3 = new KineticState(turretEnc.getCurrentPosition()/10.0);
 
             if (Math.abs(gamepad2.left_stick_x) < 0.05) {
 
@@ -289,7 +295,7 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
 
             } else {
                 turretServo.setPower(-gamepad2.left_stick_x);
-                target = turretEnc.getCurrentPosition();
+                turrettarget = turretEnc.getCurrentPosition()/10.0;
             }
             telemetry.update();
         }
@@ -310,23 +316,20 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
         cs1 = ControlSystem.builder()
                 .posPid(p1)
                 .build();
-        Thread g1 = new Thread(() -> {
-            while (opModeIsActive()) {
-                turretPID = ControlSystem.builder()
-                        .posPid(turretp,turreti,turretd)
-                        .build();
-                turretPID.setGoal(new KineticState(0));
 
-                KineticState current4 = new KineticState(turretEnc.getCurrentPosition(),turretEnc.getVelocity());
-                turretL.setPower(-turretPID.calculate(current4));
-
-            }
-        });
         waitForStart();
-        g1.start();
         opmodeTimer.resetTimer();
-        while(opModeIsActive()){
 
+
+        while(opModeIsActive()){
+            turretPID = ControlSystem.builder()
+                    .posPid(turretp,turreti,turretd)
+                    .basicFF(turretv,turreta,turrets)
+                    .build();
+            turretPID.setGoal(new KineticState(0));
+
+            KineticState current4 = new KineticState(turretEnc.getCurrentPosition()/10.0,turretEnc.getVelocity());
+            turretL.setPower(-turretPID.calculate(current4));
 
             follower.update();
             colorSensor.getNormalizedColors();
@@ -363,7 +366,6 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         transfer.setPower(1);
                         follower.followPath(firstpath);
                         targetTicksPerSecond = 1025;
-                        target3=0;
                         setPathState(1);
 
 
@@ -371,7 +373,6 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         break;
 
                     case 1:
-                        follower.turnTo(Math.toRadians(133.5));
                         if (!follower.isBusy() && (transfermover.getPosition() != rconstants.transfermoverfull || transfermover.getPosition() == rconstants.transfermoverscore) && flywheel.getVelocity() >= 970) {
                             intake.setPower(1);
                             transfermover.setPosition(rconstants.transfermoverscore);
@@ -684,7 +685,6 @@ public class twelveballsortedlinearopmode extends LinearOpMode {
                         transfer.setPower(1);
                         follower.followPath(firstpath);
                         targetTicksPerSecond = 1025;
-                        target3=0;
                         setPathState(1);
 
 

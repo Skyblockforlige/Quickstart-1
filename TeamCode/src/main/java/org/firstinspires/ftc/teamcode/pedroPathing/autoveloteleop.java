@@ -32,8 +32,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp(name="Turret Tele - RED")
-public class tele_w_TURRET extends LinearOpMode {
+@TeleOp(name="Auto Velo Tele - RED")
+public class autoveloteleop extends LinearOpMode {
 
     // ===================== DRIVE =====================
     private DcMotor lf, lb, rf, rb;
@@ -167,6 +167,9 @@ public class tele_w_TURRET extends LinearOpMode {
     // ===================== HELPERS =====================
     public double distancefromll(double ta) {
         return (71.7321 * (Math.pow(ta, -0.4550)));
+    }
+    public double velocityfromdistance(double distance){
+        return 562.47005* Math.pow(distance,0.202468);
     }
     public static double hoodpos;
 
@@ -445,7 +448,37 @@ public class tele_w_TURRET extends LinearOpMode {
         // ============================================================
         while (opModeIsActive()) {
             LLResult llResult = limelight.getLatestResult();
-
+            if(llResult.isValid()){
+                if(distancefromll(llResult.getTa())>110){
+                    farmode=true;
+                } else{
+                    farmode=false;
+                }
+                if(distancefromll(llResult.getTa())>=60){
+                    targetTicksPerSecond = velocityfromdistance(distancefromll(llResult.getTa()));
+                    hood.setPosition(rconstants.hoodtop);
+                } else{
+                    if (gamepad2.y) {
+                        targetTicksPerSecond = rconstants.shootfar;
+                        hood.setPosition(rconstants.hoodtop);
+                        farmode=true;
+                    }
+                    else if (gamepad2.b){
+                        targetTicksPerSecond = rconstants.shootclose;
+                        hood.setPosition(rconstants.hoodtop);
+                        farmode=false;
+                    }
+                    else if (gamepad2.a) {
+                        targetTicksPerSecond = rconstants.shooteridle;
+                        hood.setPosition(rconstants.hoodbottom);
+                        farmode=false;
+                    } else{
+                        hood.setPosition(rconstants.hoodbottom);
+                        targetTicksPerSecond=rconstants.shooteridle;
+                        farmode=false;
+                    }
+                }
+            }
 
 
             if(gamepad2.ps){
@@ -497,21 +530,7 @@ public class tele_w_TURRET extends LinearOpMode {
             }
 
             // ---------- SHOOTER ----------
-            if (gamepad2.y) {
-                targetTicksPerSecond = rconstants.shootfar;
-                hood.setPosition(rconstants.hoodtop);
-                farmode=true;
-            }
-            if (gamepad2.b){
-                targetTicksPerSecond = rconstants.shootclose;
-                hood.setPosition(rconstants.hoodtop);
-                farmode=false;
-            }
-            if (gamepad2.a) {
-                targetTicksPerSecond = rconstants.shooteridle;
-                hood.setPosition(rconstants.hoodbottom);
-                farmode=false;
-            }
+
 
             // Reset only ballCount (not slots)
             if (gamepad2.x) {
@@ -598,9 +617,9 @@ public class tele_w_TURRET extends LinearOpMode {
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
             telemetry.addData("Target", target);
             telemetry.addData("spindexer_pos", spindexer.getCurrentPosition());
-           /*if(llResult.isValid()){
-                telemetry.addData("TA: ", llResult.getTa())
-            }*/
+           if(llResult.isValid()){
+                telemetry.addData("TA: ", llResult.getTa());
+            }
             telemetry.addData("distance", distancefromll(llResult.getTa()));
             telemetry.addData("distance of spindexer", distance.getDistance(DistanceUnit.CM));
             telemetry.update();
