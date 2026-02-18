@@ -308,7 +308,7 @@ public class autoveloteleop extends LinearOpMode {
                 tyFilt = (1.0 - alpha) * tyFilt + alpha * tyRaw;
 
                 // Manual override only while stick is moved; release -> go back to auto
-                double manualStick = gamepad2.right_stick_x;
+                double manualStick = -0.7*gamepad2.right_stick_x;
                 boolean manualNow = Math.abs(manualStick) > manualDeadband;
 
                 // Update lastKnownAbs direction when tag is well-centered
@@ -367,10 +367,11 @@ public class autoveloteleop extends LinearOpMode {
                                     (relUnclampedNeeded > (minTurretDeg + edgeExitMarginDeg));
 
                     if (turretMode == TurretMode.EDGE_SEARCH) {
-                        next = insideExit ? TurretMode.HOLD : TurretMode.EDGE_SEARCH;
+                        next = insideExit ? TurretMode.IDLE : TurretMode.EDGE_SEARCH;
                     } else {
-                        next = outsideEnter ? TurretMode.EDGE_SEARCH : TurretMode.HOLD;
+                        next = outsideEnter ? TurretMode.EDGE_SEARCH : TurretMode.IDLE;
                     }
+
                 }
                 turretMode = next;
 
@@ -385,9 +386,9 @@ public class autoveloteleop extends LinearOpMode {
                         cmdPower = -kP_track * tyFilt;
                         cmdPower = clamp(cmdPower, -maxTrackPower, +maxTrackPower);
                     }
-                } else if (turretMode == TurretMode.HOLD) {
+               /* } else if (turretMode == TurretMode.HOLD) {
                     cmdPower = kP_hold * holdErrDeg;
-                    cmdPower = clamp(cmdPower, -maxHoldPower, +maxHoldPower);
+                    cmdPower = clamp(cmdPower, -maxHoldPower, +maxHoldPower);*/
                 } else {
                     cmdPower = 0.0;
                     edgePauseTimer = 0.0;

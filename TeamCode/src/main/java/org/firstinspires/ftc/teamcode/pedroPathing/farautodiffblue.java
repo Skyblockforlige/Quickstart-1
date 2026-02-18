@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.geometry.BezierCurve;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -31,7 +32,9 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
@@ -47,7 +50,12 @@ public class farautodiffblue extends OpMode {
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
+    public static double errAlpha = 1.5;
+    public static double deadbandDeg = 2.0;
 
+
+    public static double forwardPodY = -5.46;
+    public static double strafePodX = -1.693;
     private IMU imu;
     private DcMotorEx flywheel;
     private DcMotorEx intake;
@@ -132,7 +140,65 @@ public class farautodiffblue extends OpMode {
     public static boolean spindexermoved=false;
     DistanceSensor distance;
 
+    public static double kP_hold = 0.02;
+    public static double kP_track = 0.015;
 
+    public static double maxHoldPower = 0.3;
+    public static double maxTrackPower = 0.25;
+
+    public static double maxTurretDeg = 60;
+    public static double minTurretDeg = -60;
+
+    public static int pipelineIndex = 1;
+    public static double powerSlewPerSec = 1.2;
+    public static double searchPower = 0.18;
+
+    // IMPORTANT: applies to BOTH turretL and turretR output
+    public static int servoDir = -1;
+
+    public static double ticksPerDeg = 126.42;
+
+    // Save last-known ONLY when TY within ±4°
+    public static double lastKnownSaveWindowDeg = 4.0;
+
+    // Stop HOLD<->EDGE chatter around edges
+    public static double edgeEnterMarginDeg = 2.0;
+    public static double edgeExitMarginDeg = 6.0;
+
+    // Manual turret override behavior
+    public static double manualDeadband = 0.08;
+
+    // ===================== LIMELIGHT AIM OFFSET (FIX) =====================
+    // + = shift aim left, - = shift aim right
+    public static double tyOffsetDeg = -5;
+    private boolean farmode = false;
+
+    // ===================== TURRET STATE =====================
+    private enum TurretMode { TRACK, HOLD, EDGE_SEARCH, IDLE, MANUAL }
+    private volatile TurretMode turretMode = TurretMode.IDLE;
+
+    private volatile boolean haveLastKnown = false;
+    private volatile double lastKnownAbsDeg = 0.0; // FIELD-ABS direction when tag was centered
+    private volatile double tyFilt = 0.0;
+
+    private volatile double lastTurretCmdPower = 0.0;
+
+    private boolean movedoffsetspindexer;
+
+    // EDGE SEARCH sweep state
+    private volatile double edgePauseTimer = 0.0;
+    private volatile int sweepDir = +1;
+    private volatile double sweepTargetDeg = 0.0;
+
+    // For telemetry/debug
+    private volatile double robotHeadingDeg = 0.0;
+    private volatile double turretRelDeg = 0.0;
+    private volatile double tyRaw = 0.0;
+    private volatile boolean hasTarget = false;
+    private volatile double relUnclampedNeeded = 0.0;
+    private volatile double turretRelNeededDeg = 0.0;
+    private volatile double holdErrDeg = 0.0;
+    private volatile double turretOut = 0.0;
     public void buildPaths() {
         Path1 = follower.pathBuilder().addPath(
                         new BezierLine(
@@ -195,7 +261,6 @@ public class farautodiffblue extends OpMode {
     }
 
 
-
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
@@ -249,14 +314,22 @@ public class farautodiffblue extends OpMode {
                 .posPid(p1)
                 .build();
         hood.setPosition(rconstants.hoodtop);
+        limelight = rconstants.limelight;
+        limelight.pipelineSwitch(pipelineIndex);
+        limelight.setPollRateHz(100);
+        limelight.start();
+
+
+    }
+    @Override
+    public void init_loop(){
         turretPID = ControlSystem.builder()
                 .posPid(turretp,turreti,turretd)
                 .basicFF(turretv,turreta,turrets)
                 .build();
         turretPID.setGoal(new KineticState(turrettarget));
-        KineticState current3 = new KineticState(turretEnc.getCurrentPosition()/10.0);
-        //turretL.setPower(-turretPID.calculate(current3));
-
+        KineticState current4 = new KineticState(turretEnc.getCurrentPosition()/10.0);
+        turretL.setPower(-turretPID.calculate(current4));
     }
     public void start(){
         opmodeTimer.resetTimer();
@@ -367,8 +440,8 @@ public class farautodiffblue extends OpMode {
                 if(!follower.isBusy()&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500) {
                     follower.followPath(Path3);
                     spindexerspeed=0.2;
-                    spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    /*spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);*/
                     target=0;
                     setPathState(5);
                     //move to shoot position
@@ -379,11 +452,11 @@ public class farautodiffblue extends OpMode {
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =4*rconstants.movespindexer;
+                    target =8*rconstants.movespindexer;
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
+                if(spindexer.getCurrentPosition()>= (8*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     setPathState(6);
@@ -703,7 +776,159 @@ public class farautodiffblue extends OpMode {
                 .build();
         turretPID.setGoal(new KineticState(turrettarget));
         KineticState current3 = new KineticState(turretEnc.getCurrentPosition()/10.0);
-        turretL.setPower(-turretPID.calculate(current3));
+        //turretL.setPower(-turretPID.calculate(current3));
+        long lastNanos = System.nanoTime();
+        // start in AUTO (not manual)
+        turretMode = TurretMode.IDLE;
+
+
+            long now = System.nanoTime();
+            double dt = (now - lastNanos) / 1e9;
+            lastNanos = now;
+            if (dt <= 0) dt = 0.02;
+
+            // Always update pinpoint + heading
+
+
+            // Turret relative angle from encoder
+            turretRelDeg = turretEnc.getCurrentPosition() / ticksPerDeg;
+
+            // Limelight read
+            LLResult res = limelight.getLatestResult();
+            hasTarget = (res != null) && res.isValid();
+
+            // ===================== FIX: APPLY TY OFFSET HERE =====================
+            tyRaw = hasTarget ? (res.getTy() + tyOffsetDeg) : 0.0;
+
+            // Filter TY
+            double alpha = clamp(errAlpha, 0.0, 1.0);
+            tyFilt = (1.0 - alpha) * tyFilt + alpha * tyRaw;
+
+            // Manual override only while stick is moved; release -> go back to auto
+            double manualStick = -gamepad2.right_stick_x;
+            boolean manualNow = Math.abs(manualStick) > manualDeadband;
+
+            // Update lastKnownAbs direction when tag is well-centered
+            if (hasTarget && Math.abs(tyFilt) <= lastKnownSaveWindowDeg) {
+                lastKnownAbsDeg = angleWrapDeg(robotHeadingDeg + turretRelDeg);
+                haveLastKnown = true;
+            }
+
+            // If manual: drive turret directly, but ALSO keep lastKnownAbs tracking turret direction
+            if (manualNow) {
+                turretMode = TurretMode.MANUAL;
+
+                lastKnownAbsDeg = angleWrapDeg(robotHeadingDeg + turretRelDeg);
+                haveLastKnown = true;
+
+                double cmd = clamp(manualStick, -1.0, +1.0);
+
+                // soft limits in manual too
+                if (turretRelDeg <= minTurretDeg && cmd < 0) cmd = 0;
+                if (turretRelDeg >= maxTurretDeg && cmd > 0) cmd = 0;
+
+                setTurretPower(servoDir * cmd);
+                lastTurretCmdPower = cmd;
+
+                // reset edge-search state so it doesn't resume mid-sweep
+                edgePauseTimer = 0.0;
+                sweepTargetDeg = 0.0;
+
+            }
+
+            // Not manual => AUTO
+            relUnclampedNeeded = 0.0;
+            turretRelNeededDeg = 0.0;
+            holdErrDeg = 0.0;
+
+            if (haveLastKnown) {
+                relUnclampedNeeded = angleWrapDeg(lastKnownAbsDeg - robotHeadingDeg);
+                turretRelNeededDeg = clamp(relUnclampedNeeded, minTurretDeg, maxTurretDeg);
+                holdErrDeg = angleWrapDeg(turretRelNeededDeg - turretRelDeg);
+            }
+
+            // Mode selection (with hysteresis)
+            TurretMode next;
+            if (hasTarget) {
+                next = TurretMode.TRACK;
+            } else if (!haveLastKnown) {
+                next = TurretMode.IDLE;
+            } else {
+                boolean outsideEnter =
+                        (relUnclampedNeeded > (maxTurretDeg + edgeEnterMarginDeg)) ||
+                                (relUnclampedNeeded < (minTurretDeg - edgeEnterMarginDeg));
+
+                boolean insideExit =
+                        (relUnclampedNeeded < (maxTurretDeg - edgeExitMarginDeg)) &&
+                                (relUnclampedNeeded > (minTurretDeg + edgeExitMarginDeg));
+
+                if (turretMode == TurretMode.EDGE_SEARCH) {
+                    next = insideExit ? TurretMode.IDLE : TurretMode.EDGE_SEARCH;
+                } else {
+                    next = outsideEnter ? TurretMode.EDGE_SEARCH : TurretMode.IDLE;
+                }
+            }
+            turretMode = next;
+
+            // Command power
+            double cmdPower;
+
+            if (turretMode == TurretMode.TRACK) {
+                // drive TY to 0
+                if (Math.abs(tyFilt) <= deadbandDeg) {
+                    cmdPower = 0.0;
+                } else {
+                    cmdPower = -kP_track * tyFilt;
+                    cmdPower = clamp(cmdPower, -maxTrackPower, +maxTrackPower);
+                }
+            } /*else if (turretMode == TurretMode.HOLD) {
+                    cmdPower = kP_hold * holdErrDeg;
+                    cmdPower = clamp(cmdPower, -maxHoldPower, +maxHoldPower);*/
+            else {
+                cmdPower = 0.0;
+                edgePauseTimer = 0.0;
+                sweepTargetDeg = Double.NaN;
+            }
+                /*else if (turretMode == TurretMode.EDGE_SEARCH) {
+
+                    double desiredEdge = (relUnclampedNeeded >= 0) ? maxTurretDeg : minTurretDeg;
+
+                    if (Double.isNaN(sweepTargetDeg)) {
+                        sweepTargetDeg = desiredEdge;
+                        sweepDir = (sweepTargetDeg > turretRelDeg) ? +1 : -1;
+                        edgePauseTimer = 0.0;
+                    }
+
+                    boolean atEdge = Math.abs(turretRelDeg - sweepTargetDeg) <= 2.0;
+
+                    if (atEdge) {
+                        edgePauseTimer += dt;
+
+                        if (edgePauseTimer >= edgePauseSec) {
+                            sweepTargetDeg = (sweepTargetDeg > 0) ? minTurretDeg : maxTurretDeg;
+                            sweepDir = (sweepTargetDeg > turretRelDeg) ? +1 : -1;
+                            edgePauseTimer = 0.0;
+                        }
+                        cmdPower = 0.0;
+                    } else {
+                        edgePauseTimer = 0.0;
+                        cmdPower = sweepDir * searchPower;
+                    }*/
+
+
+
+            // Soft limits
+            if (turretRelDeg <= minTurretDeg && cmdPower < 0) cmdPower = 0.0;
+            if (turretRelDeg >= maxTurretDeg && cmdPower > 0) cmdPower = 0.0;
+
+            // Slew limit (smooth)
+            double maxDelta = powerSlewPerSec * dt;
+            cmdPower = clamp(cmdPower, lastTurretCmdPower - maxDelta, lastTurretCmdPower + maxDelta);
+            lastTurretCmdPower = cmdPower;
+
+            turretOut = servoDir * cmdPower;
+            setTurretPower(turretOut);
+
 
         /*YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         limelight.updateRobotOrientation(orientation.getYaw());
@@ -886,5 +1111,22 @@ public class farautodiffblue extends OpMode {
 
 
  */
+    }
+
+
+    // ===================== Turret power helper =====================
+    private void setTurretPower(double pwr) {
+        turretL.setPower(pwr);
+    }
+
+    // Wrap degrees to [-180, +180]
+    private static double angleWrapDeg(double deg) {
+        while (deg > 180) deg -= 360;
+        while (deg < -180) deg += 360;
+        return deg;
+    }
+
+    private static double clamp(double v, double lo, double hi) {
+        return Math.max(lo, Math.min(hi, v));
     }
 }

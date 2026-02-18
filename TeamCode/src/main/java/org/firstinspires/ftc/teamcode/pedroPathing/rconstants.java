@@ -28,7 +28,7 @@ public class rconstants {
     public static double transfermoveridle = 0.59;
     public static Limelight3A limelight;
     public static NormalizedColorSensor colorSensor;
-    public static double transfermoverscore = 0.73;
+    public static double transfermoverscore = 0.72 ;
     public static double transfermoverfull = 1;
     public static int movespindexer = 2731;
     public static float csgain = 15f;
