@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -29,6 +30,7 @@ import dev.nextftc.control.KineticState;
  * - Set TARGET_X / TARGET_Y (or adjust with gamepad2 dpad to nudge)
  */
 @Config
+@Disabled
 @TeleOp(name = "Arctan Turret Align (Your PID)", group = "Test")
 public class acrtanbasedturretalignment extends LinearOpMode {
 

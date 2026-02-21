@@ -15,6 +15,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -43,6 +44,7 @@ import dev.nextftc.control.KineticState;
 @Configurable
 @Config
 @Autonomous
+@Disabled
 public class twelveballsorted extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;

@@ -135,7 +135,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                         new BezierCurve(
                                 new Pose(24.500, 59.293),
                                 new Pose(47.20386292578574, 59.83660789476232),
-                                new Pose(26.000, 68.500)
+                                new Pose(28.000, 68.500)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
@@ -144,7 +144,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(26.000, 68.5),
+                                new Pose(28.000, 68.5),
                                 new Pose(79.400, 67.600),
                                 new Pose(33.345, 114.100)
                         )

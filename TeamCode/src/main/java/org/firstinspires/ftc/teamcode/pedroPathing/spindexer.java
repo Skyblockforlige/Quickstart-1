@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
@@ -34,6 +35,7 @@ import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @TeleOp
+@Disabled
 public class spindexer extends LinearOpMode {
     private DcMotorEx spindexer;
     private NormalizedColorSensor colorSensor1;

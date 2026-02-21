@@ -431,21 +431,21 @@ public class farautodiffblue extends OpMode {
                 }
 
                 // after 3 balls, move to next path state once follower done
-                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5)) {
                     setPathState(4);
                 }
 
                 break;
             case 4:
-                if(!follower.isBusy()&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500) {
+               /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
                     follower.followPath(Path3);
                     spindexerspeed=0.2;
                     /*spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);*/
-                    target=0;
+                    spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                   target=0;*/
                     setPathState(5);
                     //move to shoot position
-                }
+
                 break;
             case 5:
                 // READ COLOR (same hue method as teleop)
@@ -510,12 +510,11 @@ public class farautodiffblue extends OpMode {
                 }
 
                 // after 3 balls, move to next path state once follower done
-                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5) && !follower.isBusy()) {
+                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5)) {
                     setPathState(8);
                 }
                 break;
             case 8:
-                if(!follower.isBusy()) {
                     follower.followPath(Path5);
                     spindexerspeed=0.2;
                     spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -523,7 +522,7 @@ public class farautodiffblue extends OpMode {
                     target=0;
                     setPathState(9);
                     //move to shoot position
-                }
+
                 break;
             case 9:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
@@ -776,8 +775,8 @@ public class farautodiffblue extends OpMode {
                 .build();
         turretPID.setGoal(new KineticState(turrettarget));
         KineticState current3 = new KineticState(turretEnc.getCurrentPosition()/10.0);
-        //turretL.setPower(-turretPID.calculate(current3));
-        long lastNanos = System.nanoTime();
+        turretL.setPower(-turretPID.calculate(current3));
+       /* long lastNanos = System.nanoTime();
         // start in AUTO (not manual)
         turretMode = TurretMode.IDLE;
 
@@ -802,8 +801,8 @@ public class farautodiffblue extends OpMode {
 
             // Filter TY
             double alpha = clamp(errAlpha, 0.0, 1.0);
-            tyFilt = (1.0 - alpha) * tyFilt + alpha * tyRaw;
-
+            //tyFilt = (1.0 - alpha) * tyFilt + alpha * tyRaw;
+            tyFilt = tyRaw;
             // Manual override only while stick is moved; release -> go back to auto
             double manualStick = -gamepad2.right_stick_x;
             boolean manualNow = Math.abs(manualStick) > manualDeadband;
@@ -812,10 +811,10 @@ public class farautodiffblue extends OpMode {
             if (hasTarget && Math.abs(tyFilt) <= lastKnownSaveWindowDeg) {
                 lastKnownAbsDeg = angleWrapDeg(robotHeadingDeg + turretRelDeg);
                 haveLastKnown = true;
-            }
+            }*/
 
             // If manual: drive turret directly, but ALSO keep lastKnownAbs tracking turret direction
-            if (manualNow) {
+           /* if (manualNow) {
                 turretMode = TurretMode.MANUAL;
 
                 lastKnownAbsDeg = angleWrapDeg(robotHeadingDeg + turretRelDeg);
@@ -834,10 +833,10 @@ public class farautodiffblue extends OpMode {
                 edgePauseTimer = 0.0;
                 sweepTargetDeg = 0.0;
 
-            }
+            }*/
 
             // Not manual => AUTO
-            relUnclampedNeeded = 0.0;
+            /*relUnclampedNeeded = 0.0;
             turretRelNeededDeg = 0.0;
             holdErrDeg = 0.0;
 
@@ -869,9 +868,9 @@ public class farautodiffblue extends OpMode {
                 }
             }
             turretMode = next;
-
+*/
             // Command power
-            double cmdPower;
+            /*double cmdPower;
 
             if (turretMode == TurretMode.TRACK) {
                 // drive TY to 0
@@ -881,14 +880,14 @@ public class farautodiffblue extends OpMode {
                     cmdPower = -kP_track * tyFilt;
                     cmdPower = clamp(cmdPower, -maxTrackPower, +maxTrackPower);
                 }
-            } /*else if (turretMode == TurretMode.HOLD) {
+            }*/ /*else if (turretMode == TurretMode.HOLD) {
                     cmdPower = kP_hold * holdErrDeg;
                     cmdPower = clamp(cmdPower, -maxHoldPower, +maxHoldPower);*/
-            else {
+            /*else {
                 cmdPower = 0.0;
                 edgePauseTimer = 0.0;
                 sweepTargetDeg = Double.NaN;
-            }
+            }*/
                 /*else if (turretMode == TurretMode.EDGE_SEARCH) {
 
                     double desiredEdge = (relUnclampedNeeded >= 0) ? maxTurretDeg : minTurretDeg;
@@ -918,7 +917,7 @@ public class farautodiffblue extends OpMode {
 
 
             // Soft limits
-            if (turretRelDeg <= minTurretDeg && cmdPower < 0) cmdPower = 0.0;
+           /* if (turretRelDeg <= minTurretDeg && cmdPower < 0) cmdPower = 0.0;
             if (turretRelDeg >= maxTurretDeg && cmdPower > 0) cmdPower = 0.0;
 
             // Slew limit (smooth)
@@ -927,7 +926,7 @@ public class farautodiffblue extends OpMode {
             lastTurretCmdPower = cmdPower;
 
             turretOut = servoDir * cmdPower;
-            setTurretPower(turretOut);
+            setTurretPower(turretOut);*/
 
 
         /*YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();

@@ -106,7 +106,7 @@ public class telewturretblue extends LinearOpMode {
     public static double kP_track = 0.015;
 
     public static double maxHoldPower = 0.3;
-    public static double maxTrackPower = 0.25;
+    public static double maxTrackPower = 0.15;
 
     public static double maxTurretDeg = 60;
     public static double minTurretDeg = -60;
@@ -132,7 +132,7 @@ public class telewturretblue extends LinearOpMode {
 
     // ===================== LIMELIGHT AIM OFFSET (FIX) =====================
     // + = shift aim left, - = shift aim right
-    public static double tyOffsetDeg = -5;
+    public static double tyOffsetDeg = -5.75;
     private boolean farmode = false;
 
     // ===================== TURRET STATE =====================

@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -31,6 +32,7 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 
 @TeleOp
+@Disabled
 public class teleop extends LinearOpMode {
     public static double p=0.019,i=0,d=3;
     public static double v=0.4,a=0.1,s=0.3;

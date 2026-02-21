@@ -19,6 +19,7 @@ import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import java.util.ArrayList;
 import java.util.List;
 @TeleOp(name = "Artifact Locator green+purple")
+@Disabled
 public class colorlocator extends LinearOpMode {
     private int[] classifier = new int[9];
 

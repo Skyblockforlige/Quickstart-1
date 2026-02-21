@@ -4,6 +4,7 @@ import android.graphics.Color;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -15,6 +16,7 @@ import dev.nextftc.control.KineticState;
 @Configurable
 @Config
 @TeleOp
+@Disabled
 public class spindexerwonecolorsensor extends LinearOpMode {
 
     ControlSystem cs1;

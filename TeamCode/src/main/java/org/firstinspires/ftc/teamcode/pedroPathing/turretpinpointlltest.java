@@ -10,6 +10,7 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -32,6 +33,7 @@ import dev.nextftc.control.KineticState;
 @Configurable
 @Config
 @TeleOp
+@Disabled
 public class turretpinpointlltest extends LinearOpMode {
 
     private DcMotor lf, lb, rf, rb;

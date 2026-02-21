@@ -2,9 +2,11 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 @Autonomous
+@Disabled
 public class pattern_recog extends OpMode{
     private Limelight3A limelight3a;
 

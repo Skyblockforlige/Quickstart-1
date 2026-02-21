@@ -106,7 +106,8 @@ public class tele_w_TURRET extends LinearOpMode {
     public static double kP_track = 0.015;
 
     public static double maxHoldPower = 0.3;
-    public static double maxTrackPower = 0.25;
+    public static double maxTrackPower = 0.15;
+    //
 
     public static double maxTurretDeg = 60;
     public static double minTurretDeg = -60;

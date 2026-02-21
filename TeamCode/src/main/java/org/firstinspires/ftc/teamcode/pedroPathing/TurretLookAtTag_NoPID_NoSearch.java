@@ -8,6 +8,7 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -36,6 +37,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
  */
 @Configurable
 @Config
+@Disabled
 @TeleOp(name = "TurretFused (TY + Pinpoint Hold + EdgeSearch)", group = "TeleOp")
 public class TurretLookAtTag_NoPID_NoSearch extends LinearOpMode {
 

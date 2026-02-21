@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import android.graphics.Color;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -11,6 +12,7 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 
 @TeleOp
+@Disabled
 public class intakewithcolorsensor extends LinearOpMode {
 
     ControlSystem cs1;
