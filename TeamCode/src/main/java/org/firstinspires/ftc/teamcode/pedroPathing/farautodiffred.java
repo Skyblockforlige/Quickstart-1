@@ -1,26 +1,19 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
-
 import android.graphics.Color;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.PanelsTelemetry;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.PathChain;
+import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathChain;
-import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -28,24 +21,18 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-
-import java.util.List;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
+
 @Configurable
 @Config
-@Autonomous(name = "farautodiffblue", group = "Examples")
-public class farautodiffblue extends OpMode {
+@Autonomous(name = "farautodiffred", group = "Examples")
+public class farautodiffred extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
@@ -67,7 +54,7 @@ public class farautodiffblue extends OpMode {
     private ControlSystem cs;
 
     public double targetx;
-    public static double turrettarget=220;
+    public static double turrettarget=-260;
 
     public static double turretp = 0.002;
     public static double turreti = 0;
@@ -121,7 +108,7 @@ public class farautodiffblue extends OpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    private final Pose startPose = new Pose(56.000, 8, Math.toRadians(90));
+    private final Pose startPose = new Pose(87.0, 8, Math.toRadians(90));
 
     public PathChain firstpath;
     public PathChain go_first_back;
@@ -202,9 +189,9 @@ public class farautodiffblue extends OpMode {
     public void buildPaths() {
         Path1 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(56.000, 8.000),
+                                new Pose(87, 8.000),
 
-                                new Pose(56.000, 19.000)
+                                new Pose(87, 19.000)
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(90))
 
@@ -212,48 +199,47 @@ public class farautodiffblue extends OpMode {
 
         Path2 = follower.pathBuilder().addPath(
                         new BezierCurve(
-                                new Pose(56.000, 19.000),
-                                new Pose(52.72646657571624, 27.77070017777499),
-                                new Pose(20.128, 23.839)
+                                new Pose(87, 19.000),
+                                new Pose(85, 35),
+                                new Pose(143, 45.27)
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(90),Math.toRadians(180))
+                ).setLinearHeadingInterpolation(Math.toRadians(90),Math.toRadians(0))
 
                 .build();
 
         Path3 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(16.128, 23.839),
+                                new Pose(143, 45.27),
 
-                                new Pose(56.000, 19.000)
+                                new Pose(87, 19.000)
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
 
                 .build();
 
         Path4 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(56.000, 19.000),
-
-                                new Pose(20, 1)
+                                new Pose(87, 19.000),
+                                new Pose(143, 25)
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(200))
+                ).setConstantHeadingInterpolation(Math.toRadians(-20))
 
                 .build();
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(20, 1),
+                                new Pose(143, 25),
 
-                                new Pose(56.000, 19.000)
+                                new Pose(87, 19.000)
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(200), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(-20), Math.toRadians(90))
 
                 .build();
         Path6 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(56.000, 19.000),
+                                new Pose(87, 19.000),
 
-                                new Pose(31.014, 14.421)
+                                new Pose(100, 24.421)
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(90))
 
@@ -456,7 +442,7 @@ public class farautodiffblue extends OpMode {
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (8*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
+                if(spindexer.getCurrentPosition()>= (8*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1450){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     setPathState(6);
@@ -465,12 +451,13 @@ public class farautodiffblue extends OpMode {
 
                 break;
             case 6:
-                if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.15) {
+                ballCount=0;
+                if(!follower.isBusy()) {
                     follower.followPath(Path4);
                     transfermover.setPosition(rconstants.transfermoveridle);
                     setPathState(7);
-                    //move to shoot position
                 }
+                    //move to shoot position
                 break;
             case 7:
                 // READ COLOR (same hue method as teleop)
@@ -777,7 +764,7 @@ public class farautodiffblue extends OpMode {
         KineticState current3 = new KineticState(turretEnc.getCurrentPosition()/10.0);
         turretL.setPower(-turretPID.calculate(current3));
 
-       /* long lastNanos = System.nanoTime();
+        /* long lastNanos = System.nanoTime();
         // start in AUTO (not manual)
         turretMode = TurretMode.IDLE;
 
