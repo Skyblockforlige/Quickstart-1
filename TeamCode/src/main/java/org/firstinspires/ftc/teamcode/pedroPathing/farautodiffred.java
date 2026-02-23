@@ -201,7 +201,7 @@ public class farautodiffred extends OpMode {
                         new BezierCurve(
                                 new Pose(87, 19.000),
                                 new Pose(85, 35),
-                                new Pose(143, 45.27)
+                                new Pose(145, 45.27)
                         )
                 ).setLinearHeadingInterpolation(Math.toRadians(90),Math.toRadians(0))
 
@@ -209,7 +209,7 @@ public class farautodiffred extends OpMode {
 
         Path3 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(143, 45.27),
+                                new Pose(145, 45.27),
 
                                 new Pose(87, 19.000)
                         )
@@ -220,19 +220,19 @@ public class farautodiffred extends OpMode {
         Path4 = follower.pathBuilder().addPath(
                         new BezierLine(
                                 new Pose(87, 19.000),
-                                new Pose(143, 25)
+                                new Pose(145, 28)
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(-20))
+                ).setConstantHeadingInterpolation(Math.toRadians(-30))
 
                 .build();
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(143, 25),
+                                new Pose(145, 28),
 
                                 new Pose(87, 19.000)
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(-20), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(-30), Math.toRadians(90))
 
                 .build();
         Path6 = follower.pathBuilder().addPath(
@@ -423,14 +423,14 @@ public class farautodiffred extends OpMode {
 
                 break;
             case 4:
-               /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
-                    follower.followPath(Path3);
-                    spindexerspeed=0.2;
+                /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
+                follower.followPath(Path3);
+                spindexerspeed=0.2;
                     /*spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                    target=0;*/
-                    setPathState(5);
-                    //move to shoot position
+                setPathState(5);
+                //move to shoot position
 
                 break;
             case 5:
@@ -438,11 +438,11 @@ public class farautodiffred extends OpMode {
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =8*rconstants.movespindexer;
+                    target =9*rconstants.movespindexer;
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (8*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1450){
+                if(spindexer.getCurrentPosition()>= (9*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     setPathState(6);
@@ -451,13 +451,13 @@ public class farautodiffred extends OpMode {
 
                 break;
             case 6:
-                ballCount=0;
-                if(!follower.isBusy()) {
+                if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path4);
+                    ballCount=0;
                     transfermover.setPosition(rconstants.transfermoveridle);
                     setPathState(7);
-                }
                     //move to shoot position
+                }
                 break;
             case 7:
                 // READ COLOR (same hue method as teleop)
@@ -502,13 +502,14 @@ public class farautodiffred extends OpMode {
                 }
                 break;
             case 8:
-                    follower.followPath(Path5);
-                    spindexerspeed=0.2;
-                    spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                    target=0;
-                    setPathState(9);
-                    //move to shoot position
+                follower.followPath(Path5);
+                spindexerspeed = 0.2;
+                spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                target = 0;
+                setPathState(9);
+
+                //move to shoot position
 
                 break;
             case 9:
@@ -557,7 +558,7 @@ public class farautodiffred extends OpMode {
 
                 }
                 break;
-            /*case 8:
+                /*case 8:
                 ballCount=0;
                 setPathState(9);
 
@@ -981,7 +982,7 @@ public class farautodiffred extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(spindexerspeed*(-cs1.calculate(current2)));
+        spindexer.setPower(0.8*spindexerspeed*(-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));

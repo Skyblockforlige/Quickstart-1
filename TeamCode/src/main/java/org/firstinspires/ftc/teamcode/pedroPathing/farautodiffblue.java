@@ -67,7 +67,7 @@ public class farautodiffblue extends OpMode {
     private ControlSystem cs;
 
     public double targetx;
-    public static double turrettarget=220;
+    public static double turrettarget=335;
 
     public static double turretp = 0.002;
     public static double turreti = 0;
@@ -452,11 +452,11 @@ public class farautodiffblue extends OpMode {
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =8*rconstants.movespindexer;
+                    target =9*rconstants.movespindexer;
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (8*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
+                if(spindexer.getCurrentPosition()>= (9*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     setPathState(6);
@@ -467,6 +467,7 @@ public class farautodiffblue extends OpMode {
             case 6:
                 if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path4);
+                    ballCount=0;
                     transfermover.setPosition(rconstants.transfermoveridle);
                     setPathState(7);
                     //move to shoot position
@@ -516,11 +517,12 @@ public class farautodiffblue extends OpMode {
                 break;
             case 8:
                     follower.followPath(Path5);
-                    spindexerspeed=0.2;
+                    spindexerspeed = 0.2;
                     spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                    target=0;
+                    target = 0;
                     setPathState(9);
+
                     //move to shoot position
 
                 break;
@@ -994,7 +996,7 @@ public class farautodiffblue extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(spindexerspeed*(-cs1.calculate(current2)));
+        spindexer.setPower(0.8*spindexerspeed*(-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
