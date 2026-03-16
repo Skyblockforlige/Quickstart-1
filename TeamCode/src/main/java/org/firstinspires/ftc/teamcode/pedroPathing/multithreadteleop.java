@@ -22,6 +22,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import dev.nextftc.control.ControlSystem;
@@ -158,7 +159,11 @@ public class multithreadteleop extends LinearOpMode {
                     transfermover.setPosition(rconstants.transfermoveridle);
                     transfer.setPower(0);
                 }
-                intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+                if(intake.getCurrent(CurrentUnit.AMPS)<7.1) {
+                    intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+                } else{
+                    intake.setPower(-1);
+                }
             }
         });
 
@@ -171,7 +176,7 @@ public class multithreadteleop extends LinearOpMode {
         while (opModeIsActive()) {
             LLResult llResult = limelight.getLatestResult();
 
-
+            telemetry.addData("Intake Current: ", intake.getCurrent(CurrentUnit.AMPS));
 
             if(gamepad2.ps){
                 spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
