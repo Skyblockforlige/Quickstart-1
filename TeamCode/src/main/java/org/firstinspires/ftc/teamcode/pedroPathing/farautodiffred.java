@@ -24,6 +24,7 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import dev.nextftc.control.ControlSystem;
@@ -339,7 +340,7 @@ public class farautodiffred extends OpMode {
                 break;
             case 1:
                 /*if(!follower.isBusy()&&flywheel.getVelocity()>targetTicksPerSecond-20&!first){
-                    intake.setPower(1);
+                    
                     transfermover.setPosition(rconstants.transfermoverscore);
                     transfer.setPower(1);
                     target =2*rconstants.movespindexer;
@@ -357,7 +358,7 @@ public class farautodiffred extends OpMode {
                     setPathState(2);
                 }*/
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
-                    intake.setPower(1);
+                    
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
                     spindexerspeed=0.5;
@@ -436,7 +437,7 @@ public class farautodiffred extends OpMode {
             case 5:
                 // READ COLOR (same hue method as teleop)
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
-                    intake.setPower(1);
+                    
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =9*rconstants.movespindexer;
                     spindexerspeed=1;
@@ -514,7 +515,7 @@ public class farautodiffred extends OpMode {
                 break;
             case 9:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
-                    intake.setPower(1);
+                    
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
                     spindexerspeed=1;
@@ -540,7 +541,7 @@ public class farautodiffred extends OpMode {
                 break;
             case 11:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    intake.setPower(1);
+                    
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =10*rconstants.movespindexer;
@@ -552,6 +553,7 @@ public class farautodiffred extends OpMode {
                 }
                 break;
             case -1:
+                turrettarget=0;
                 if (pathTimer.getElapsedTimeSeconds() > 1) {
                     transfermover.setPosition(rconstants.transfermoveridle);
                     stop();
@@ -569,7 +571,7 @@ public class farautodiffred extends OpMode {
                     follower.followPath(Path5);
 
                     transfermover.setPosition(rconstants.transfermoveridle);
-                    intake.setPower(1);
+                    
 
                     setPathState(10);
                 }
@@ -645,7 +647,7 @@ public class farautodiffred extends OpMode {
                 break;
             case 14:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    intake.setPower(1);
+                    
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =16*rconstants.movespindexer;
@@ -728,7 +730,7 @@ public class farautodiffred extends OpMode {
                 break;
             case 19:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    intake.setPower(1);
+                    
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =22*rconstants.movespindexer;
@@ -757,6 +759,11 @@ public class farautodiffred extends OpMode {
     @Override
     public void loop() {
         follower.update();
+        if(intake.getCurrent(CurrentUnit.AMPS)<7.1) {
+            intake.setPower(1);
+        } else{
+            intake.setPower(-1);
+        }
         turretPID = ControlSystem.builder()
                 .posPid(turretp,turreti,turretd)
                 .basicFF(turretv,turreta,turrets)

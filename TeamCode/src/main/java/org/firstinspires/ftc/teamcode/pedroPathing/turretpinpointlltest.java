@@ -33,7 +33,6 @@ import dev.nextftc.control.KineticState;
 @Configurable
 @Config
 @TeleOp
-@Disabled
 public class turretpinpointlltest extends LinearOpMode {
 
     private DcMotor lf, lb, rf, rb;
@@ -54,11 +53,24 @@ public class turretpinpointlltest extends LinearOpMode {
     public static double START_HEADING_DEG = 133.5;
     public static double TARGET_X = 0;
     public static double TARGET_Y=144;
+    private static final double FIELD_WIDTH = 144.0;     // inches
+    private static final double FIELD_MID_X = FIELD_WIDTH / 2.0; // 72
+    private static final double HEADING_MID_RAD = Math.toRadians(90.0); // 90 deg
+
+    // X' = 72 + (72 - X) = 144 - X
+    private static double blueToRedX(double x) {
+        return FIELD_MID_X + (FIELD_MID_X - x);
+    }
 
     public static double p2 = 0.00035;
     public static double i2 = 0.0000000005;
     public static double d2 = 0.0000000002;
-
+    public static double turretp = 0.002;
+    public static double turreti = 0;
+    public static double turretd = 0.00000005;
+    public static double turretv = 0.0000372;
+    public static double turreta = 0.007;
+    public static double turrets = 0.05;
     public static double ticksPerDegree = 126.42;
 
     public static double llAngleScale = 1.0;
@@ -157,18 +169,18 @@ public class turretpinpointlltest extends LinearOpMode {
                                 )
                         ) - pinpoint.getHeading(AngleUnit.DEGREES);
 
-                ticks = fieldAngleDeg * ticksPerDegree;
+                ticks = fieldAngleDeg * (ticksPerDegree/10.0);
                 targetTicks = ticks;
 
                 KineticState current =
                         new KineticState(
-                                turretEnc.getCurrentPosition(),
-                                turretEnc.getVelocity()
+                                turretEnc.getCurrentPosition()/10.0
                         );
 
                 if (Math.abs(gamepad2.right_stick_x) < 0.05) {
                     turretPID = ControlSystem.builder()
-                            .posPid(p2, i2, d2)
+                            .posPid(turretp, turreti, turretd)
+                            .basicFF(turretv,turreta,turrets)
                             .build();
 
                     turretPID.setGoal(new KineticState(targetTicks));

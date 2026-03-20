@@ -32,8 +32,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp(name="Turret Tele - RED")
-public class tele_w_TURRET extends LinearOpMode {
+@TeleOp(name="Auto Pinpoint Velo Tele - BLUE")
+public class autovelowithpinpointblue extends LinearOpMode {
 
     // ===================== DRIVE =====================
     private DcMotor lf, lb, rf, rb;
@@ -116,10 +116,10 @@ public class tele_w_TURRET extends LinearOpMode {
     public static double maxTrackPower = 0.15;
     //
 
-    public static double maxTurretDeg = 60;
-    public static double minTurretDeg = -60;
+    public static double maxTurretDeg = 80;
+    public static double minTurretDeg = -80;
 
-    public static int pipelineIndex = 2;
+    public static int pipelineIndex = 1;
     public static double powerSlewPerSec = 1.2;
     public static double searchPower = 0.18;
 
@@ -154,10 +154,10 @@ public class tele_w_TURRET extends LinearOpMode {
     private volatile double lastTurretCmdPower = 0.0;
 
     private boolean movedoffsetspindexer;
-    public static double START_X = blueToRedX(35.285);
+    public static double START_X = 35.285;
     public static double START_Y = 77.683;
-    public static double START_HEADING_DEG = 46.5;
-    public static double TARGET_X = 144;
+    public static double START_HEADING_DEG = 133.5;
+    public static double TARGET_X = 0;
     public static double TARGET_Y=144;
     // EDGE SEARCH sweep state
     private volatile double edgePauseTimer = 0.0;
@@ -190,6 +190,9 @@ public class tele_w_TURRET extends LinearOpMode {
     // ===================== HELPERS =====================
     public double distancefromll(double ta) {
         return (71.7321 * (Math.pow(ta, -0.4550)));
+    }
+    public double velocityfromdistance(double distance){
+        return 562.47005* Math.pow(distance,0.202468);
     }
     public static double hoodpos;
 
@@ -349,9 +352,9 @@ public class tele_w_TURRET extends LinearOpMode {
                         targetTicks = turretEnc.getCurrentPosition();
                     }
                     if(gamepad2.options){
-                        pinpoint.setPosX(121.89830508474577,DistanceUnit.INCH);
+                        pinpoint.setPosX(23.234484380370116,DistanceUnit.INCH);
                         pinpoint.setPosY(125.15254237288136,DistanceUnit.INCH);
-                        pinpoint.setHeading(35,AngleUnit.DEGREES);
+                        pinpoint.setHeading(145,AngleUnit.DEGREES);
                         //*TARGET_Y=125.15254237288136;
                         //*TARGET_X=121.89830508474577;
                     }
@@ -505,7 +508,37 @@ public class tele_w_TURRET extends LinearOpMode {
         // ============================================================
         while (opModeIsActive()) {
             LLResult llResult = limelight.getLatestResult();
-
+            if(llResult.isValid()){
+                if(distancefromll(llResult.getTa())>110){
+                    farmode=true;
+                } else{
+                    farmode=false;
+                }
+                if(distancefromll(llResult.getTa())>=60){
+                    targetTicksPerSecond = velocityfromdistance(distancefromll(llResult.getTa()));
+                    hood.setPosition(rconstants.hoodtop);
+                } else{
+                    if (gamepad2.y) {
+                        targetTicksPerSecond = rconstants.shootfar;
+                        hood.setPosition(rconstants.hoodtop);
+                        farmode=true;
+                    }
+                    else if (gamepad2.b){
+                        targetTicksPerSecond = rconstants.shootclose;
+                        hood.setPosition(rconstants.hoodtop);
+                        farmode=false;
+                    }
+                    else if (gamepad2.a) {
+                        targetTicksPerSecond = rconstants.shooteridle;
+                        hood.setPosition(rconstants.hoodbottom);
+                        farmode=false;
+                    } else{
+                        hood.setPosition(rconstants.hoodbottom);
+                        targetTicksPerSecond=rconstants.shooteridle;
+                        farmode=false;
+                    }
+                }
+            }
 
 
             if(gamepad2.ps){
@@ -557,21 +590,7 @@ public class tele_w_TURRET extends LinearOpMode {
             }
 
             // ---------- SHOOTER ----------
-            if (gamepad2.y) {
-                targetTicksPerSecond = rconstants.shootfar;
-                hood.setPosition(rconstants.hoodtop);
-                farmode=true;
-            }
-            if (gamepad2.b){
-                targetTicksPerSecond = rconstants.shootclose;
-                hood.setPosition(rconstants.hoodtop);
-                farmode=false;
-            }
-            if (gamepad2.a) {
-                targetTicksPerSecond = rconstants.shooteridle;
-                hood.setPosition(rconstants.hoodbottom);
-                farmode=false;
-            }
+
 
             // Reset only ballCount (not slots)
             if (gamepad2.x) {
@@ -658,9 +677,9 @@ public class tele_w_TURRET extends LinearOpMode {
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
             telemetry.addData("Target", target);
             telemetry.addData("spindexer_pos", spindexer.getCurrentPosition());
-           /*if(llResult.isValid()){
-                telemetry.addData("TA: ", llResult.getTa())
-            }*/
+            if(llResult.isValid()){
+                telemetry.addData("TA: ", llResult.getTa());
+            }
             telemetry.addData("distance", distancefromll(llResult.getTa()));
             telemetry.addData("distance of spindexer", distance.getDistance(DistanceUnit.CM));
             telemetry.update();

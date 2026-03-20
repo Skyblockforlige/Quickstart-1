@@ -69,7 +69,18 @@ public class autoveloteleop extends LinearOpMode {
     public static double shootclose = 1000;
     public static double shootfar = 1600;
     public static double shooteridle = 200;
-
+    public static double turretp = 0.002;
+    public static double turreti = 0;
+    public static double turretd = 0.00000005;
+    public static double turretv = 0.0000372;
+    public static double turreta = 0.007;
+    public static double turrets = 0.05;
+    public static double ticksPerDegree = 126.42/10.0;
+    public static double START_X = blueToRedX(35.285);
+    public static double START_Y = 77.683;
+    public static double START_HEADING_DEG = 46.5;
+    public static double TARGET_X = 144;
+    public static double TARGET_Y=144;
     // ===================== LIMELIGHT + TURRET FUSED AUTOALIGN =====================
     private Limelight3A limelight;
 
@@ -81,7 +92,17 @@ public class autoveloteleop extends LinearOpMode {
 
     // Pinpoint
     private GoBildaPinpointDriver pinpoint;
+    public static double targetTicks = 0;
+    public static double ticks;
+    private ControlSystem turretPID;
+    private static final double FIELD_WIDTH = 144.0;     // inches
+    private static final double FIELD_MID_X = FIELD_WIDTH / 2.0; // 72
+    private static final double HEADING_MID_RAD = Math.toRadians(90.0); // 90 deg
 
+    // X' = 72 + (72 - X) = 144 - X
+    private static double blueToRedX(double x) {
+        return FIELD_MID_X + (FIELD_MID_X - x);
+    }
     // ---- your values ----
     public static String pp = "pp";
 
@@ -299,7 +320,33 @@ public class autoveloteleop extends LinearOpMode {
                 // Limelight read
                 LLResult res = limelight.getLatestResult();
                 hasTarget = (res != null) && res.isValid();
+                if(!res.isValid()){
+                    double fieldAngleDeg =
+                            Math.toDegrees(
+                                    Math.atan2(
+                                            TARGET_Y - pinpoint.getPosY(DistanceUnit.INCH),
+                                            TARGET_X - pinpoint.getPosX(DistanceUnit.INCH)
+                                    )
+                            ) - pinpoint.getHeading(AngleUnit.DEGREES);
 
+                    ticks = fieldAngleDeg * ticksPerDegree;
+                    targetTicks = ticks;
+
+                    KineticState current =
+                            new KineticState(
+                                    turretEnc.getCurrentPosition()/10.0
+                            );
+
+                    turretPID = ControlSystem.builder()
+                            .posPid(turretp, turreti, turretd)
+                            .basicFF(turretv,turreta,turrets)
+                            .build();
+
+                    turretPID.setGoal(new KineticState(targetTicks));
+                    turretL.setPower(-turretPID.calculate(current));
+
+
+                }
                 // ===================== FIX: APPLY TY OFFSET HERE =====================
                 tyRaw = hasTarget ? (res.getTy() + tyOffsetDeg) : 0.0;
 
@@ -377,6 +424,14 @@ public class autoveloteleop extends LinearOpMode {
 
                 // Command power
                 double cmdPower;
+
+                if(gamepad2.options){
+                    pinpoint.setPosX(121.89830508474577,DistanceUnit.INCH);
+                    pinpoint.setPosY(125.15254237288136,DistanceUnit.INCH);
+                    pinpoint.setHeading(35,AngleUnit.DEGREES);
+                    //*TARGET_Y=125.15254237288136;
+                    //*TARGET_X=121.89830508474577;
+                }
 
                 if (turretMode == TurretMode.TRACK) {
                     // drive TY to 0
@@ -618,7 +673,7 @@ public class autoveloteleop extends LinearOpMode {
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
             telemetry.addData("Target", target);
             telemetry.addData("spindexer_pos", spindexer.getCurrentPosition());
-           if(llResult.isValid()){
+            if(llResult.isValid()){
                 telemetry.addData("TA: ", llResult.getTa());
             }
             telemetry.addData("distance", distancefromll(llResult.getTa()));

@@ -581,6 +581,7 @@ public class farsideautobackandforth extends OpMode {
                 setPathState(-1);
                 break;
             case -1:
+                turrettarget=0;
                 if (pathTimer.getElapsedTimeSeconds() > 1) {
                     transfermover.setPosition(rconstants.transfermoveridle);
                     stop();

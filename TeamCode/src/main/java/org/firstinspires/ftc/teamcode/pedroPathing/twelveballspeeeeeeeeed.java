@@ -30,6 +30,7 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
@@ -261,7 +262,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 break;
             case 1:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=970){
-                    intake.setPower(1);
+                    
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
                 }
@@ -278,7 +279,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path1);
                     transfermover.setPosition(rconstants.transfermoveridle);
-                    intake.setPower(1);
+                    
                     setPathState(3);
                 }
                 break;
@@ -334,7 +335,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 break;
             case 6:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    intake.setPower(1);
+                    
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =10*rconstants.movespindexer;
@@ -351,7 +352,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                     follower.followPath(Path4);
 
                     transfermover.setPosition(rconstants.transfermoveridle);
-                    intake.setPower(1);
+                    
 
                     setPathState(8);
                 }
@@ -402,7 +403,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 break;
             case 10:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    intake.setPower(1);
+                    
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =16*rconstants.movespindexer;
@@ -419,7 +420,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                     follower.followPath(Path6);
 
                     transfermover.setPosition(rconstants.transfermoveridle);
-                    intake.setPower(1);
+                    
 
                     setPathState(12);
                 }
@@ -468,7 +469,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 break;
             case 14:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    intake.setPower(1);
+                    
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =22*rconstants.movespindexer;
@@ -543,7 +544,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 break;
             case 19:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    intake.setPower(1);
+                    
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =22*rconstants.movespindexer;
@@ -572,6 +573,11 @@ public class twelveballspeeeeeeeeed extends OpMode {
     @Override
     public void loop() {
         follower.update();
+        if(intake.getCurrent(CurrentUnit.AMPS)<7.1) {
+            intake.setPower(1);
+        } else{
+            intake.setPower(-1);
+        }
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
