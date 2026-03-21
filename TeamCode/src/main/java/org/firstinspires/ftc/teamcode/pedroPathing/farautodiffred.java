@@ -113,6 +113,7 @@ public class farautodiffred extends OpMode {
 
     public PathChain firstpath;
     public PathChain go_first_back;
+    private Timer currentTimer;
 
     public PathChain go_second;
     public PathChain shoot2_row;
@@ -221,19 +222,19 @@ public class farautodiffred extends OpMode {
         Path4 = follower.pathBuilder().addPath(
                         new BezierLine(
                                 new Pose(87, 19.000),
-                                new Pose(145, 28)
+                                new Pose(145, 24)
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(-30))
+                ).setConstantHeadingInterpolation(Math.toRadians(0))
 
                 .build();
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(145, 28),
+                                new Pose(145, 24),
 
                                 new Pose(87, 19.000)
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(-30), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
 
                 .build();
         Path6 = follower.pathBuilder().addPath(
@@ -260,6 +261,8 @@ public class farautodiffred extends OpMode {
         opmodeTimer = new Timer();
         actionTimer = new Timer();
         goonTimer=new Timer();
+        currentTimer=new Timer();
+
         imu = hardwareMap.get(IMU.class, "imu");
         turretOscillationDirection = 0;
         rconstants.initHardware(hardwareMap);
@@ -759,10 +762,13 @@ public class farautodiffred extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        if(intake.getCurrent(CurrentUnit.AMPS)<7.1) {
+        if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
             intake.setPower(1);
-        } else{
+            currentTimer.resetTimer();
+        } else if(currentTimer.getElapsedTimeSeconds()>1.2){
             intake.setPower(-1);
+        } else{
+            intake.setPower(1);
         }
         turretPID = ControlSystem.builder()
                 .posPid(turretp,turreti,turretd)

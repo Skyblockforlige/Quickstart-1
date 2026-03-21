@@ -7,6 +7,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
+import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -41,6 +42,7 @@ public class multithreadteleop extends LinearOpMode {
     private CRServo turretR;
     private double targetx;
 
+    private Timer currentTimer;
     public static NormalizedColorSensor colorSensor;
 
     ControlSystem cs, cs1;
@@ -86,7 +88,7 @@ public class multithreadteleop extends LinearOpMode {
     }
     @Override
     public void runOpMode(){
-
+        currentTimer=new Timer();
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry());
         int turretOscillationDirection = 0; // 0=left, 1=righ
@@ -159,10 +161,13 @@ public class multithreadteleop extends LinearOpMode {
                     transfermover.setPosition(rconstants.transfermoveridle);
                     transfer.setPower(0);
                 }
-                if(intake.getCurrent(CurrentUnit.AMPS)<7.1) {
+                if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
                     intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
-                } else{
+                    currentTimer.resetTimer();
+                } else if(currentTimer.getElapsedTimeSeconds()>1.2){
                     intake.setPower(-1);
+                } else{
+                    intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
                 }
             }
         });

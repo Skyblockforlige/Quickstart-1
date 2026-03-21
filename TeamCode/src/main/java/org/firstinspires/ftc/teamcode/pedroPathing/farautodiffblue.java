@@ -53,7 +53,7 @@ public class farautodiffblue extends OpMode {
     private CRServoImplEx transfer;
     public static double errAlpha = 1.5;
     public static double deadbandDeg = 2.0;
-
+    private Timer currentTimer;
 
     public static double forwardPodY = -5.46;
     public static double strafePodX = -1.693;
@@ -274,6 +274,8 @@ public class farautodiffblue extends OpMode {
         opmodeTimer = new Timer();
         actionTimer = new Timer();
         goonTimer=new Timer();
+        currentTimer=new Timer();
+
         imu = hardwareMap.get(IMU.class, "imu");
         turretOscillationDirection = 0;
         rconstants.initHardware(hardwareMap);
@@ -773,10 +775,13 @@ public class farautodiffblue extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        if(intake.getCurrent(CurrentUnit.AMPS)<7.1) {
+        if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
             intake.setPower(1);
-        } else{
+            currentTimer.resetTimer();
+        } else if(currentTimer.getElapsedTimeSeconds()>1.2){
             intake.setPower(-1);
+        } else{
+            intake.setPower(1);
         }
         turretPID = ControlSystem.builder()
                 .posPid(turretp,turreti,turretd)

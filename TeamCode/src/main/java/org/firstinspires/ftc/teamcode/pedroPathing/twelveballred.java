@@ -69,6 +69,7 @@ public class twelveballred extends OpMode {
     private CRServo turretL;
     private CRServo turretR;
     private Servo hood;
+    private Timer currentTimer;
     public static double targetTicksPerSecond=0;
 
     public static double p1=0.0009,i1=0,d1=0;
@@ -255,6 +256,7 @@ public class twelveballred extends OpMode {
         opmodeTimer = new Timer();
         actionTimer = new Timer();
         goonTimer=new Timer();
+        currentTimer=new Timer();
         opmodeTimer.resetTimer();
         imu = hardwareMap.get(IMU.class, "imu");
         turretOscillationDirection = 0;
@@ -620,10 +622,13 @@ public class twelveballred extends OpMode {
         follower.update();
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
-        if(intake.getCurrent(CurrentUnit.AMPS)<7.1) {
+        if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
             intake.setPower(1);
-        } else{
+            currentTimer.resetTimer();
+        } else if(currentTimer.getElapsedTimeSeconds()>1.2){
             intake.setPower(-1);
+        } else{
+            intake.setPower(1);
         }
         autonomousPathUpdate();
         turretL.setPower(0);

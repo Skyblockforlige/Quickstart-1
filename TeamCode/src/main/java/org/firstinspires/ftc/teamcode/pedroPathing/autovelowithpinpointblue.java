@@ -24,6 +24,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
@@ -37,6 +38,7 @@ public class autovelowithpinpointblue extends LinearOpMode {
 
     // ===================== DRIVE =====================
     private DcMotor lf, lb, rf, rb;
+    private Timer currentTimer;
 
     // ===================== OTHER SUBSYSTEMS =====================
     private DcMotorEx flywheel, intake, spindexer;
@@ -199,7 +201,7 @@ public class autovelowithpinpointblue extends LinearOpMode {
     @Override
     public void runOpMode() {
         shottimer= new Timer();
-
+        currentTimer = new Timer();
         telemetry = new MultipleTelemetry(
                 telemetry,
                 FtcDashboard.getInstance().getTelemetry(),
@@ -293,7 +295,14 @@ public class autovelowithpinpointblue extends LinearOpMode {
                     transfer.setPower(0);
                 }
 
-                intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+                if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
+                    intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+                    currentTimer.resetTimer();
+                } else if(currentTimer.getElapsedTimeSeconds()>1.2){
+                    intake.setPower(-1);
+                } else{
+                    intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+                }
             }
         });
 

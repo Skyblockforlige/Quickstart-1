@@ -101,6 +101,7 @@ public class autovelowithpinpoint extends LinearOpMode {
 
     public static double forwardPodY = -5.46;
     public static double strafePodX = -1.693;
+    private Timer currentTimer;
     public static DistanceUnit ppUnit = DistanceUnit.INCH;
 
     public static GoBildaPinpointDriver.GoBildaOdometryPods podType =
@@ -200,7 +201,7 @@ public class autovelowithpinpoint extends LinearOpMode {
     @Override
     public void runOpMode() {
         shottimer= new Timer();
-
+        currentTimer=new Timer();
         telemetry = new MultipleTelemetry(
                 telemetry,
                 FtcDashboard.getInstance().getTelemetry(),
@@ -294,10 +295,13 @@ public class autovelowithpinpoint extends LinearOpMode {
                     transfer.setPower(0);
                 }
 
-                if(intake.getCurrent(CurrentUnit.AMPS)<7.5) {
+                if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
                     intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
-                } else{
+                    currentTimer.resetTimer();
+                } else if(currentTimer.getElapsedTimeSeconds()>1.2){
                     intake.setPower(-1);
+                } else{
+                    intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
                 }
             }
         });

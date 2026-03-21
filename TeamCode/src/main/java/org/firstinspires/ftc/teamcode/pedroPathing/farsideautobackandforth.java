@@ -104,6 +104,7 @@ public class farsideautobackandforth extends OpMode {
     ControlSystem cs1;
     int intakeBaseTarget = 0;
     boolean intakeBaseSet = false;
+    private Timer currentTimer;
 
     boolean pendingMove = false;
 
@@ -229,6 +230,7 @@ public class farsideautobackandforth extends OpMode {
         opmodeTimer = new Timer();
         actionTimer = new Timer();
         goonTimer=new Timer();
+        currentTimer=new Timer();
         imu = hardwareMap.get(IMU.class, "imu");
         turretOscillationDirection = 0;
         rconstants.initHardware(hardwareMap);
@@ -787,10 +789,13 @@ public class farsideautobackandforth extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        if(intake.getCurrent(CurrentUnit.AMPS)<7.1) {
+        if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
             intake.setPower(1);
-        } else{
+            currentTimer.resetTimer();
+        } else if(currentTimer.getElapsedTimeSeconds()>1.2){
             intake.setPower(-1);
+        } else{
+            intake.setPower(1);
         }
         turretPID = ControlSystem.builder()
                 .posPid(turretp,turreti,turretd)

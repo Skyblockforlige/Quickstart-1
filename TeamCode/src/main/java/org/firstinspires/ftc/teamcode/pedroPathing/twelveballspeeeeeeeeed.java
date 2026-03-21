@@ -94,6 +94,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
     public PathChain Path3;
     public PathChain Path4;
     public PathChain Path5;
+    private Timer currentTimer;
     public PathChain Path6;
     public PathChain Path7;
     public PathChain Path8;
@@ -209,6 +210,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
         opmodeTimer = new Timer();
         actionTimer = new Timer();
         goonTimer=new Timer();
+        currentTimer=new Timer();
         opmodeTimer.resetTimer();
         imu = hardwareMap.get(IMU.class, "imu");
         turretOscillationDirection = 0;
@@ -573,10 +575,13 @@ public class twelveballspeeeeeeeeed extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        if(intake.getCurrent(CurrentUnit.AMPS)<7.1) {
+        if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
             intake.setPower(1);
-        } else{
+            currentTimer.resetTimer();
+        } else if(currentTimer.getElapsedTimeSeconds()>1.2){
             intake.setPower(-1);
+        } else{
+            intake.setPower(1);
         }
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
