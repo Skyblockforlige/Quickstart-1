@@ -239,7 +239,7 @@ public class twelveballred extends OpMode {
                 .addPath(
                         new BezierLine(
                                 new Pose(blueToRedX(33.345), 110.100),
-                                new Pose(blueToRedX(35.285), 77.683)
+                                new Pose(blueToRedX(56.70038461538461), 122.97530769230771)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(46.5))
@@ -292,6 +292,10 @@ public class twelveballred extends OpMode {
         cs1 = ControlSystem.builder()
                 .posPid(p1)
                 .build();
+    }
+    @Override
+    public void start(){
+        opmodeTimer.resetTimer();
     }
 
     public void autonomousPathUpdate() {
@@ -515,6 +519,9 @@ public class twelveballred extends OpMode {
                 }
                 break;
             case 14:
+                if(opmodeTimer.getElapsedTimeSeconds()>29){
+                    setPathState(15);
+                }
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                     
                     transfer.setPower(1);

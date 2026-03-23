@@ -192,7 +192,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
         Path8 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(33.345, 114.100), new Pose(35.285, 77.683))
+                        new BezierLine(new Pose(33.345, 114.100), new Pose(56.70038461538461, 122.97530769230771))
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(133.5))
                 .build();
@@ -246,6 +246,10 @@ public class twelveballspeeeeeeeeed extends OpMode {
         cs1 = ControlSystem.builder()
                 .posPid(p1)
                 .build();
+    }
+    @Override
+    public void start(){
+        opmodeTimer.resetTimer();
     }
 
     public void autonomousPathUpdate() {
@@ -470,6 +474,9 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 }
                 break;
             case 14:
+                if(opmodeTimer.getElapsedTimeSeconds()>29){
+                    setPathState(15);
+                }
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
                     
                     transfer.setPower(1);

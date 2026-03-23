@@ -179,7 +179,7 @@ public class threeballauto extends OpMode {
                 //offset go back on spindexer
                 transfer.setPower(1);
                 follower.followPath(Path1);
-                targetTicksPerSecond=1125;
+                targetTicksPerSecond=1090;
 
                 setPathState(1);
 

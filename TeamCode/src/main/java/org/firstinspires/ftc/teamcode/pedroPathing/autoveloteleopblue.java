@@ -24,6 +24,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
@@ -41,6 +42,8 @@ public class autoveloteleopblue extends LinearOpMode {
     // ===================== OTHER SUBSYSTEMS =====================
     private DcMotorEx flywheel, intake, spindexer;
     private CRServoImplEx transfer;
+    private Timer currentTimer;
+
     private ServoImplEx transfermover;
     private Servo hood;
 
@@ -198,7 +201,7 @@ public class autoveloteleopblue extends LinearOpMode {
     @Override
     public void runOpMode() {
         shottimer= new Timer();
-
+        currentTimer=new Timer();
         telemetry = new MultipleTelemetry(
                 telemetry,
                 FtcDashboard.getInstance().getTelemetry(),
@@ -218,6 +221,7 @@ public class autoveloteleopblue extends LinearOpMode {
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // turret
+
         turretL = rconstants.turretL;
         turretR = rconstants.turretR;
 
@@ -292,7 +296,14 @@ public class autoveloteleopblue extends LinearOpMode {
                     transfer.setPower(0);
                 }
 
-                intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+                if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
+                    intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+                    currentTimer.resetTimer();
+                } else if(currentTimer.getElapsedTimeSeconds()>1.2){
+                    intake.setPower(-1);
+                } else{
+                    intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+                }
             }
         });
 
@@ -321,7 +332,7 @@ public class autoveloteleopblue extends LinearOpMode {
                 // Limelight read
                 LLResult res = limelight.getLatestResult();
                 hasTarget = (res != null) && res.isValid();
-                if(!res.isValid()){
+                /*if(!res.isValid()){
                     double fieldAngleDeg =
                             Math.toDegrees(
                                     Math.atan2(
@@ -357,7 +368,7 @@ public class autoveloteleopblue extends LinearOpMode {
                         //*TARGET_Y=125.15254237288136;
                         //*TARGET_X=121.89830508474577;
                     }
-                }
+                }*/
                 // ===================== FIX: APPLY TY OFFSET HERE =====================
                 tyRaw = hasTarget ? (res.getTy() + tyOffsetDeg) : 0.0;
 
@@ -366,7 +377,7 @@ public class autoveloteleopblue extends LinearOpMode {
                 tyFilt = (1.0 - alpha) * tyFilt + alpha * tyRaw;
 
                 // Manual override only while stick is moved; release -> go back to auto
-                double manualStick = -0.7*gamepad2.right_stick_x;
+                double manualStick = -0.4*gamepad2.right_stick_x;
                 boolean manualNow = Math.abs(manualStick) > manualDeadband;
 
                 // Update lastKnownAbs direction when tag is well-centered
@@ -513,8 +524,14 @@ public class autoveloteleopblue extends LinearOpMode {
                     farmode=false;
                 }
                 if(distancefromll(llResult.getTa())>=60){
-                    targetTicksPerSecond = velocityfromdistance(distancefromll(llResult.getTa()));
                     hood.setPosition(rconstants.hoodtop);
+
+                    if(distancefromll(llResult.getTa())>60&&distancefromll(llResult.getTa())<90){
+                        targetTicksPerSecond = velocityfromdistance(distancefromll(llResult.getTa()))-40;
+
+                    }else{
+                        targetTicksPerSecond = velocityfromdistance(distancefromll(llResult.getTa()));
+                    }
                 } else{
                     if (gamepad2.y) {
                         targetTicksPerSecond = rconstants.shootfar;

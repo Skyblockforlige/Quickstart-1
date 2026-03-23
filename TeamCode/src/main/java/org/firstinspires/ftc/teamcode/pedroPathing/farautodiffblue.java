@@ -469,6 +469,9 @@ public class farautodiffblue extends OpMode {
                 break;
             case 6:
                 if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.15) {
+                    if(opmodeTimer.getElapsedTimeSeconds()>27){
+                        setPathState(10);
+                    }
                     follower.followPath(Path4);
                     ballCount=0;
                     transfermover.setPosition(rconstants.transfermoveridle);
@@ -478,6 +481,9 @@ public class farautodiffblue extends OpMode {
                 break;
             case 7:
                 // READ COLOR (same hue method as teleop)
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(10);
+                }
                 colorSensor.getNormalizedColors();
                 Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
@@ -519,6 +525,9 @@ public class farautodiffblue extends OpMode {
                 }
                 break;
             case 8:
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(10);
+                }
                     follower.followPath(Path5);
                     spindexerspeed = 0.2;
                     spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -530,8 +539,10 @@ public class farautodiffblue extends OpMode {
 
                 break;
             case 9:
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(10);
+                }
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
-                    
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
                     spindexerspeed=1;
@@ -540,7 +551,7 @@ public class farautodiffblue extends OpMode {
                 if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1500){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
-                    if(opmodeTimer.getElapsedTimeSeconds()>=27.5) {
+                    if(opmodeTimer.getElapsedTimeSeconds()>=26.5) {
                         setPathState(10);
                     } else{
                         setPathState(6);
