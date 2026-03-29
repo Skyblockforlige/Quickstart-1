@@ -197,6 +197,7 @@ public class autoveloteleopblue extends LinearOpMode {
         return 562.47005* Math.pow(distance,0.202468);
     }
     public static double hoodpos;
+    public static int target = 0;
 
     @Override
     public void runOpMode() {
@@ -267,7 +268,6 @@ public class autoveloteleopblue extends LinearOpMode {
                 .basicFF(v, a, s)
                 .build();
 
-        int target = 0;
 
         // ===================== DRIVE THREAD (KEEP YOUR LOGIC) =====================
         Thread driveThread = new Thread(() -> {

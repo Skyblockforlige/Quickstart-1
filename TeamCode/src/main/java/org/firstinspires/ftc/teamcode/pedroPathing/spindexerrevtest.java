@@ -13,20 +13,21 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @TeleOp
-@Disabled
 public class spindexerrevtest extends LinearOpMode {
     Timer goonTimer;
     DcMotorEx spindexer;
     ControlSystem cs1;
-    public static double p=0.0009,i=0,d=0;
+    public static double p=0.003,i=0.001,d=
+            0.0000001;
     public static int movespindexer = 2731;
+    public static int target = 0;
+
 
     @Override
     public void runOpMode(){
         spindexer=hardwareMap.get(DcMotorEx.class,"spindexer");
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        int target = 0;
         waitForStart();
         while(opModeIsActive()){
             KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
@@ -39,7 +40,7 @@ public class spindexerrevtest extends LinearOpMode {
                 sleep(300);
             }
             if(Math.abs(gamepad2.left_stick_y)==0) {
-                spindexer.setPower(cs1.calculate(current2));
+                spindexer.setPower(-0.25*cs1.calculate(current2));
             } else{
                 spindexer.setPower(-gamepad2.left_stick_y);
                 target=spindexer.getCurrentPosition();

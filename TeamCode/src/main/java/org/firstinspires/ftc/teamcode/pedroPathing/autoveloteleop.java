@@ -53,10 +53,9 @@ public class autoveloteleop extends LinearOpMode {
     public static int movespindexer = 2731;
     public static double p = 0.0039, i = 0, d = 0.0000005;
     public static double v = 0.000372, a = 0.7, s = 0.0000005;
-    public static double p1 = 0.0009, i1 = 0, d1 = 0;
-
+    public static double p1=0.0025,i1=0.0001,d1=
+            0.00009;
     float[] hsv = new float[3];
-
     int ballCount = 0;
     public static int ballshot = 0;
     boolean colorPreviouslyDetected = false;
@@ -551,7 +550,9 @@ public class autoveloteleop extends LinearOpMode {
                 }
             }
 
-
+            cs1 = ControlSystem.builder()
+                    .posPid(p1, i1, d1)
+                    .build();
             if(gamepad2.ps){
                 spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 target=0;
@@ -650,7 +651,7 @@ public class autoveloteleop extends LinearOpMode {
             cs1.setGoal(new KineticState(target));
 
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
-                spindexer.setPower(-cs1.calculate(current2));
+                spindexer.setPower(-0.25*cs1.calculate(current2));
             } else if(farmode){
                 spindexer.setPower(0.6*gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
