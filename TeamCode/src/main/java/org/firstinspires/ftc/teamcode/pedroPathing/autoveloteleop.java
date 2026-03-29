@@ -53,8 +53,8 @@ public class autoveloteleop extends LinearOpMode {
     public static int movespindexer = 2731;
     public static double p = 0.0039, i = 0, d = 0.0000005;
     public static double v = 0.000372, a = 0.7, s = 0.0000005;
-    public static double p1=0.0025,i1=0.0001,d1=
-            0.00009;
+    public static double p1=0.0053,i1=0.01,d1=
+            0.012;
     float[] hsv = new float[3];
     int ballCount = 0;
     public static int ballshot = 0;
@@ -94,6 +94,7 @@ public class autoveloteleop extends LinearOpMode {
     private GoBildaPinpointDriver pinpoint;
     public static double targetTicks = 0;
     public static double ticks;
+    public static double spindexerPIDspeed= 0.1;
     private ControlSystem turretPID;
     private static final double FIELD_WIDTH = 144.0;     // inches
     private static final double FIELD_MID_X = FIELD_WIDTH / 2.0; // 72
@@ -550,9 +551,6 @@ public class autoveloteleop extends LinearOpMode {
                 }
             }
 
-            cs1 = ControlSystem.builder()
-                    .posPid(p1, i1, d1)
-                    .build();
             if(gamepad2.ps){
                 spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 target=0;
@@ -570,7 +568,6 @@ public class autoveloteleop extends LinearOpMode {
             }
             boolean intakeRunning = Math.abs(intake.getPower()) > 0.05;
 
-            // ---------- READ COLOR ----------
             if(spindexer.getCurrentPosition()%rconstants.movespindexer <= 100 || spindexer.getCurrentPosition()%rconstants.movespindexer >= rconstants.movespindexer-100) {
                 colorSensor.getNormalizedColors();
                 Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
@@ -578,12 +575,11 @@ public class autoveloteleop extends LinearOpMode {
 
             float hue = hsv[0];
 
-            boolean isPurple = (hue > 195 && hue < 220);
-            boolean isGreen = (hue > 150 && hue < 170);
+            boolean isPurple = (hue >= 195 && hue <= 230);
+            boolean isGreen = (hue >= 140 && hue <= 180);
 
             boolean colorDetected = (isPurple || isGreen);
 
-            // ---------- BALL DETECTION ----------
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
                 if(distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<7) {
                     //sleep(200);
@@ -647,16 +643,19 @@ public class autoveloteleop extends LinearOpMode {
             }
 
             // ---------- SPINDEXER PID ----------
-            KineticState current2 = new KineticState(spindexer.getCurrentPosition(), spindexer.getVelocity());
+            cs1 = ControlSystem.builder()
+                    .posPid(p1, i1, d1)
+                    .build();
+            KineticState current2 = new KineticState(spindexer.getCurrentPosition());
             cs1.setGoal(new KineticState(target));
 
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
-                spindexer.setPower(-0.25*cs1.calculate(current2));
+                spindexer.setPower(-spindexerPIDspeed*cs1.calculate(current2));
             } else if(farmode){
-                spindexer.setPower(0.6*gamepad2.left_stick_y);
+                spindexer.setPower(0.25*gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             } else{
-                spindexer.setPower(gamepad2.left_stick_y);
+                spindexer.setPower(0.6*gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             }
 
@@ -688,6 +687,8 @@ public class autoveloteleop extends LinearOpMode {
             telemetry.addData("Sorting", sorting);
             telemetry.addData("Sort Target", sortTarget[0] + "," + sortTarget[1] + "," + sortTarget[2]);
             telemetry.addData("Target", target);
+            telemetry.addData("Spindexer calculated speed:", -0.25*cs1.calculate(current2));
+            telemetry.addData("Spindexer current power: ", spindexer.getPower());
             telemetry.addData("spindexer_pos", spindexer.getCurrentPosition());
             if(llResult.isValid()){
                 telemetry.addData("TA: ", llResult.getTa());
