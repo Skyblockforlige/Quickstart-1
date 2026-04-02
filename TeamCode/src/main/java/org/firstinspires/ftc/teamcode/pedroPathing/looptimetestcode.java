@@ -37,8 +37,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp(name="Auto Velo Tele - RED")
-public class autoveloteleop extends LinearOpMode {
+@TeleOp(name="loop time test code")
+public class looptimetestcode extends LinearOpMode {
 
     // ===================== DRIVE =====================
     private DcMotor lf, lb, rf, rb;
@@ -97,7 +97,7 @@ public class autoveloteleop extends LinearOpMode {
     private DcMotorEx turretEnc;
 
     // Pinpoint
-    private GoBildaPinpointDriver pinpoint;
+    //private GoBildaPinpointDriver pinpoint;
     public static double targetTicks = 0;
     public static double ticks;
     public static double spindexerPIDspeed= 0.1;
@@ -248,8 +248,8 @@ public class autoveloteleop extends LinearOpMode {
         turretEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // pinpoint
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, pp);
-        configurePinpoint(pinpoint);
+        //pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, pp);
+        //configurePinpoint(pinpoint);
 
         // shooter / intake / spindexer
         flywheel = rconstants.flywheel;
@@ -375,9 +375,9 @@ public class autoveloteleop extends LinearOpMode {
                 if (dt <= 0) dt = 0.02;
 
                 // Always update pinpoint + heading
-                pinpoint.update();
-                Pose2D pose = pinpoint.getPosition();
-                robotHeadingDeg = pose.getHeading(AngleUnit.DEGREES);
+                //pinpoint.update();
+                //Pose2D pose = pinpoint.getPosition();
+                //robotHeadingDeg = pose.getHeading(AngleUnit.DEGREES);
 
                 // Turret relative angle from encoder
                 turretRelDeg = turretEnc.getCurrentPosition() / ticksPerDeg;
@@ -491,9 +491,9 @@ public class autoveloteleop extends LinearOpMode {
                 double cmdPower;
 
                 if(gamepad2.options){
-                    pinpoint.setPosX(121.89830508474577,DistanceUnit.INCH);
-                    pinpoint.setPosY(125.15254237288136,DistanceUnit.INCH);
-                    pinpoint.setHeading(35,AngleUnit.DEGREES);
+                    //pinpoint.setPosX(121.89830508474577,DistanceUnit.INCH);
+                    //pinpoint.setPosY(125.15254237288136,DistanceUnit.INCH);
+                    //pinpoint.setHeading(35,AngleUnit.DEGREES);
                     //*TARGET_Y=125.15254237288136;
                     //*TARGET_X=121.89830508474577;
                 }
@@ -604,9 +604,9 @@ public class autoveloteleop extends LinearOpMode {
             boolean isPurple = (hue >= 195 && hue <= 230);
             boolean isGreen = (hue >= 140 && hue <= 180);
 
-            boolean colorDetected = (isPurple || isGreen);
+            boolean distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
-            if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
+            if (intakeRunning && distanceDetected && !colorPreviouslyDetected && ballCount < 3) {
                 if(distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<7) {
                     //sleep(200);
                     target += rconstants.movespindexer;
@@ -619,7 +619,7 @@ public class autoveloteleop extends LinearOpMode {
                 }
             }
 
-            if (!colorDetected) {
+            if (!distanceDetected) {
                 colorPreviouslyDetected = false;
             }
 

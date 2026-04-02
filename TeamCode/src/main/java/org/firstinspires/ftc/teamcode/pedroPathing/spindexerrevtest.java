@@ -17,8 +17,8 @@ public class spindexerrevtest extends LinearOpMode {
     Timer goonTimer;
     DcMotorEx spindexer;
     ControlSystem cs1;
-    public static double p=0.003,i=0.001,d=
-            0.0000001;
+    public static double p=0.0084,i=0,d=
+            0.000005;
     public static int movespindexer = 2731;
     public static int target = 0;
 
