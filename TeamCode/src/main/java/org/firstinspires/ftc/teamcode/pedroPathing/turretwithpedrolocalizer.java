@@ -7,8 +7,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
-import com.pedropathing.util.NanoTimer;
-import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -19,6 +17,14 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.ftc.FTCCoordinates;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.PedroCoordinates;
+import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
@@ -26,9 +32,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
@@ -36,11 +42,14 @@ import dev.nextftc.control.KineticState;
 @Configurable
 @Config
 @TeleOp
-public class turretpinpointlltest extends LinearOpMode {
+public class turretwithpedrolocalizer extends LinearOpMode {
+    private Limelight3A camera; //any camera here
+    private Follower follower;
+    private boolean following = false;
+
+
 
     private DcMotor lf, lb, rf, rb;
-    private Timer currentTimer;
-
     private DcMotorEx flywheel, intake, spindexer;
     private CRServoImplEx transfer;
     private ServoImplEx transfermover;
@@ -56,8 +65,10 @@ public class turretpinpointlltest extends LinearOpMode {
     public static double START_X = 35.285;
     public static double START_Y = 77.683;
     public static double START_HEADING_DEG = 133.5;
-    public static double TARGET_X = 144;
-    public static double TARGET_Y=135;
+    public static double TARGET_X = 0;
+    public static double TARGET_Y=144;
+    private final Pose TARGET_LOCATION = new Pose(TARGET_X,TARGET_Y); //Put the target location here
+
     private static final double FIELD_WIDTH = 144.0;     // inches
     private static final double FIELD_MID_X = FIELD_WIDTH / 2.0; // 72
     private static final double HEADING_MID_RAD = Math.toRadians(90.0); // 90 deg
@@ -83,9 +94,7 @@ public class turretpinpointlltest extends LinearOpMode {
 
     public static double p = 0.0039, i = 0, d = 0.0000005;
     public static double v = 0.000372, a = 0.7, s = 0.0000005;
-    public static double p1=0.0084,i1=0,d1=0.000005;
-    public static double targetTicksPerSecond=200;
-
+    public static double p1 = 0.0009, i1 = 0, d1 = 0;
 
     ControlSystem cs, cs1;
 
@@ -101,18 +110,8 @@ public class turretpinpointlltest extends LinearOpMode {
     boolean sorting = false;
     int[] sortTarget = new int[]{0,0,0};
 
-
     @Override
     public void runOpMode() {
-        currentTimer=new Timer();
-
-        cs1 = ControlSystem.builder()
-                .posPid(p1,i1,d1)
-                .build();
-        cs = ControlSystem.builder()
-                .velPid(p,i,d)
-                .basicFF(v,a,s)
-                .build();
 
         telemetry = new MultipleTelemetry(
                 telemetry,
@@ -129,6 +128,8 @@ public class turretpinpointlltest extends LinearOpMode {
 
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(new Pose());
 
         turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
         turretServo = hardwareMap.crservo.get("turretL");
@@ -136,9 +137,9 @@ public class turretpinpointlltest extends LinearOpMode {
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(1);
-        limelight.start();
+        camera = hardwareMap.get(Limelight3A.class, "limelight");
+        camera.pipelineSwitch(1);
+        camera.start();
 
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pp");
         configurePinpoint(pinpoint);
@@ -147,8 +148,7 @@ public class turretpinpointlltest extends LinearOpMode {
         intake = rconstants.intake;
         spindexer = rconstants.spindexer;
         hood = rconstants.hood;
-        flywheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -186,14 +186,13 @@ public class turretpinpointlltest extends LinearOpMode {
                                         TARGET_X - pinpoint.getPosX(DistanceUnit.INCH)
                                 )
                         ) - pinpoint.getHeading(AngleUnit.DEGREES);
-
+                if(fieldAngleDeg>50){
+                    fieldAngleDeg=-50;
+                }else if(fieldAngleDeg<-50){
+                    fieldAngleDeg=50;
+                }
                 ticks = fieldAngleDeg * (ticksPerDegree/10.0);
                 targetTicks = ticks;
-                if(targetTicks > (60*ticksPerDegree/10.0)){
-                    targetTicks=60*ticksPerDegree/10.0;
-                } else if (targetTicks < (-60*ticksPerDegree/10.0)){
-                    targetTicks=-60*ticksPerDegree/10.0;
-                }
 
                 KineticState current =
                         new KineticState(
@@ -210,66 +209,17 @@ public class turretpinpointlltest extends LinearOpMode {
                     turretServo.setPower(-turretPID.calculate(current));
                 } else {
                     turretServo.setPower(gamepad2.right_stick_x);
-                    targetTicks = turretEnc.getCurrentPosition()/10.0;
+                    targetTicks = turretEnc.getCurrentPosition();
                 }
             }
         });
 
         waitForStart();
         driveThread.start();
-        int target = 0;
 
         while (opModeIsActive()) {
-            KineticState current2 = new KineticState(spindexer.getCurrentPosition(), spindexer.getVelocity());
-            cs1.setGoal(new KineticState(target));
-            if(gamepad2.left_bumper){
-                int moveamount = rconstants.movespindexer-(target%rconstants.movespindexer);
-                target+=moveamount;
-                sleep(300);
-            }
-            if (Math.abs(gamepad2.left_stick_y) < 0.1) {
-                spindexer.setPower(-cs1.calculate(current2));
-            } else{
-                spindexer.setPower(0.6*gamepad2.left_stick_y);
-                target = spindexer.getCurrentPosition();
-            }
 
-            if(gamepad2.right_trigger>0 && gamepad2.right_bumper){
-                transfermover.setPosition(rconstants.transfermoverfull);
-                transfer.setPower(gamepad2.right_trigger);
-            }
-            if(gamepad2.right_trigger>0 && !gamepad2.right_bumper){
-                transfermover.setPosition(rconstants.transfermoverscore);
-                transfer.setPower(gamepad2.right_trigger);
-            }
-            if(gamepad2.right_trigger==0){
-                transfermover.setPosition(rconstants.transfermoveridle);
-                transfer.setPower(0);
-            }
-            if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
-                intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
-                currentTimer.resetTimer();
-            } else if(currentTimer.getElapsedTimeSeconds()>1.2){
-                intake.setPower(-1);
-            } else{
-                intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
-            }
-            cs.setGoal(new KineticState(0,targetTicksPerSecond));
-            KineticState current1 = new KineticState(flywheel.getCurrentPosition(),flywheel.getVelocity());
-            flywheel.setPower(cs.calculate(current1));
-            if (gamepad2.y) {
-                targetTicksPerSecond = rconstants.shootfar;
-                hood.setPosition(rconstants.hoodtop);
-            }
-            if (gamepad2.b){
-                targetTicksPerSecond = rconstants.shootclose;
-                hood.setPosition(rconstants.hoodtop);
-            }
-            if (gamepad2.a) {
-                targetTicksPerSecond = rconstants.shooteridle;
-                hood.setPosition(rconstants.hoodbottom);
-            }
-            if(gamepad2.right_stick_button){
+            if(gamepad2.options){
                 pinpoint.setPosX(144-21.5,DistanceUnit.INCH);
                 pinpoint.setPosY(144-12.5,DistanceUnit.INCH);
                 pinpoint.setHeading(35,AngleUnit.DEGREES);
@@ -280,20 +230,36 @@ public class turretpinpointlltest extends LinearOpMode {
                 autoalign = !autoalign;
                 sleep(300);
             }
-
+            if(camera.getLatestResult().isValid()) {
+                follower.setPose(getRobotPoseFromCamera());
+            }
             telemetry.addData("AutoAlign", autoalign);
-            telemetry.addData("Turret Pos", turretEnc.getCurrentPosition()/10.0);
+            telemetry.addData("Turret Pos", turretEnc.getCurrentPosition());
             telemetry.addData("Target Ticks", targetTicks);
-            telemetry.addData("Robot Heading:" , pinpoint.getHeading(AngleUnit.DEGREES));
             telemetry.addData("LL tx",
-                    limelight.getLatestResult() != null
-                            ? limelight.getLatestResult().getTx()
+                    camera.getLatestResult() != null
+                            ? camera.getLatestResult().getTx()
                             : 0
             );
             telemetry.update();
         }
     }
+    private Pose getRobotPoseFromCamera() {
+        //Fill this out to get the robot Pose from the camera's output (apply any filters if you need to using follower.getPose() for fusion)
+        //Pedro Pathing has built-in KalmanFilter and LowPassFilter classes you can use for this
+        //Use this to convert standard FTC coordinates to standard Pedro Pathing coordinates
+        Pose3D campose = null;
+         double xpos;
+        double ypos;
+        double heading;
+             campose = camera.getLatestResult().getBotpose_MT2();
+             xpos = campose.getPosition().x;
+             ypos=campose.getPosition().y;
+             heading =campose.getOrientation().getPitch(AngleUnit.RADIANS);
 
+        return new Pose(xpos,ypos,heading) ;
+
+    }
     private void configurePinpoint(GoBildaPinpointDriver pp) {
 
         pp.setOffsets(-5.46, -1.693, DistanceUnit.INCH);

@@ -37,8 +37,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp(name="loop time test code")
-public class looptimetestcode extends LinearOpMode {
+@TeleOp(name="Pinpoint TeleOp Blue - USE THIS")
+public class fullpinpointteleopblue extends LinearOpMode {
 
     // ===================== DRIVE =====================
     private DcMotor lf, lb, rf, rb;
@@ -81,14 +81,13 @@ public class looptimetestcode extends LinearOpMode {
     public static double turretv = 0.0000372;
     public static double turreta = 0.007;
     public static double turrets = 0.05;
-    public static double ticksPerDegree = 126.42/10.0;
-    public static double START_X = blueToRedX(35.285);
+    public static double ticksPerDegree = 126.42;
+    public static double START_X = 35.285;
     public static double START_Y = 77.683;
-    public static double START_HEADING_DEG = 46.5;
-    public static double TARGET_X = 144;
-    public static double TARGET_Y=144;
+    public static double START_HEADING_DEG = 133.5;
+    public static double TARGET_X = 0;
+    public static double TARGET_Y=135;
     // ===================== LIMELIGHT + TURRET FUSED AUTOALIGN =====================
-    private Limelight3A limelight;
 
     private CRServo turretL;
     private CRServo turretR;
@@ -97,7 +96,7 @@ public class looptimetestcode extends LinearOpMode {
     private DcMotorEx turretEnc;
 
     // Pinpoint
-    //private GoBildaPinpointDriver pinpoint;
+    private GoBildaPinpointDriver pinpoint;
     public static double targetTicks = 0;
     public static double ticks;
     public static double spindexerPIDspeed= 0.1;
@@ -237,10 +236,7 @@ public class looptimetestcode extends LinearOpMode {
         turretR = rconstants.turretR;
 
         // limelight
-        limelight = rconstants.limelight;
-        limelight.pipelineSwitch(pipelineIndex);
-        limelight.setPollRateHz(100);
-        limelight.start();
+
 
         // turret encoder (your new config name)
         turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
@@ -248,8 +244,8 @@ public class looptimetestcode extends LinearOpMode {
         turretEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // pinpoint
-        //pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, pp);
-        //configurePinpoint(pinpoint);
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, pp);
+        configurePinpoint(pinpoint);
 
         // shooter / intake / spindexer
         flywheel = rconstants.flywheel;
@@ -283,7 +279,40 @@ public class looptimetestcode extends LinearOpMode {
         // ===================== DRIVE THREAD (KEEP YOUR LOGIC) =====================
         Thread driveThread = new Thread(() -> {
             while (opModeIsActive()) {
+                pinpoint.update();
+                double fieldAngleDeg =
+                        Math.toDegrees(
+                                Math.atan2(
+                                        TARGET_Y - pinpoint.getPosY(DistanceUnit.INCH),
+                                        TARGET_X - pinpoint.getPosX(DistanceUnit.INCH)
+                                )
+                        ) - pinpoint.getHeading(AngleUnit.DEGREES);
 
+                ticks = fieldAngleDeg * (ticksPerDegree/10.0);
+                targetTicks = ticks;
+                if(targetTicks > (60*ticksPerDegree/10.0)){
+                    targetTicks=60*ticksPerDegree/10.0;
+                } else if (targetTicks < (-60*ticksPerDegree/10.0)){
+                    targetTicks=-60*ticksPerDegree/10.0;
+                }
+
+                KineticState current =
+                        new KineticState(
+                                turretEnc.getCurrentPosition()/10.0
+                        );
+
+                if (Math.abs(gamepad2.right_stick_x) < 0.05) {
+                    turretPID = ControlSystem.builder()
+                            .posPid(turretp, turreti, turretd)
+                            .basicFF(turretv,turreta,turrets)
+                            .build();
+
+                    turretPID.setGoal(new KineticState(targetTicks));
+                    turretL.setPower(-turretPID.calculate(current));
+                } else {
+                    turretL.setPower(gamepad2.right_stick_x);
+                    targetTicks = turretEnc.getCurrentPosition()/10.0;
+                }
                 double y = -gamepad1.left_stick_y;
                 double x = gamepad1.left_stick_x * 1.1;
                 double rx = gamepad1.right_stick_x;
@@ -315,45 +344,44 @@ public class looptimetestcode extends LinearOpMode {
                 } else{
                     intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
                 }
-                LLResult llResult = limelight.getLatestResult();
 
-                if(llResult.isValid()){
-                    if(distancefromll(llResult.getTa())>110){
+
+                if(getDistance()>110){
+                    farmode=true;
+                } else{
+                    farmode=false;
+                }
+                if(getDistance()>=60){
+                    hood.setPosition(rconstants.hoodtop);
+
+                    if(getDistance()>60&&getDistance()<90){
+                        targetTicksPerSecond = velocityfromdistance(getDistance())-40;
+
+                    }else{
+                        targetTicksPerSecond = velocityfromdistance(getDistance());
+                    }
+                } else{
+                    if (gamepad2.y) {
+                        targetTicksPerSecond = rconstants.shootfar;
+                        hood.setPosition(rconstants.hoodtop);
                         farmode=true;
-                    } else{
+                    }
+                    else if (gamepad2.b){
+                        targetTicksPerSecond = rconstants.shootclose;
+                        hood.setPosition(rconstants.hoodtop);
                         farmode=false;
                     }
-                    if(distancefromll(llResult.getTa())>=60){
-                        hood.setPosition(rconstants.hoodtop);
-
-                        if(distancefromll(llResult.getTa())>60&&distancefromll(llResult.getTa())<90){
-                            targetTicksPerSecond = velocityfromdistance(distancefromll(llResult.getTa()))-40;
-
-                        }else{
-                            targetTicksPerSecond = velocityfromdistance(distancefromll(llResult.getTa()));
-                        }
+                    else if (gamepad2.a) {
+                        targetTicksPerSecond = rconstants.shooteridle;
+                        hood.setPosition(rconstants.hoodbottom);
+                        farmode=false;
                     } else{
-                        if (gamepad2.y) {
-                            targetTicksPerSecond = rconstants.shootfar;
-                            hood.setPosition(rconstants.hoodtop);
-                            farmode=true;
-                        }
-                        else if (gamepad2.b){
-                            targetTicksPerSecond = rconstants.shootclose;
-                            hood.setPosition(rconstants.hoodtop);
-                            farmode=false;
-                        }
-                        else if (gamepad2.a) {
-                            targetTicksPerSecond = rconstants.shooteridle;
-                            hood.setPosition(rconstants.hoodbottom);
-                            farmode=false;
-                        } else{
-                            hood.setPosition(rconstants.hoodbottom);
-                            targetTicksPerSecond=rconstants.shooteridle;
-                            farmode=false;
-                        }
+                        hood.setPosition(rconstants.hoodbottom);
+                        targetTicksPerSecond=rconstants.shooteridle;
+                        farmode=false;
                     }
                 }
+
                 cs.setGoal(new KineticState(0,targetTicksPerSecond));
                 KineticState current1 = new KineticState(flywheel.getCurrentPosition(),flywheel.getVelocity());
                 flywheel.setPower(cs.calculate(current1));
@@ -361,200 +389,6 @@ public class looptimetestcode extends LinearOpMode {
         });
 
         // ===================== TURRET THREAD (ALWAYS RUNS) =====================
-        Thread turretThread = new Thread(() -> {
-
-            long lastNanos = System.nanoTime();
-            // start in AUTO (not manual)
-            turretMode = TurretMode.IDLE;
-
-            while (opModeIsActive()) {
-
-                long now = System.nanoTime();
-                double dt = (now - lastNanos) / 1e9;
-                lastNanos = now;
-                if (dt <= 0) dt = 0.02;
-
-                // Always update pinpoint + heading
-                //pinpoint.update();
-                //Pose2D pose = pinpoint.getPosition();
-                //robotHeadingDeg = pose.getHeading(AngleUnit.DEGREES);
-
-                // Turret relative angle from encoder
-                turretRelDeg = turretEnc.getCurrentPosition() / ticksPerDeg;
-
-                // Limelight read
-                LLResult res = limelight.getLatestResult();
-                hasTarget = (res != null) && res.isValid();
-                /*if(!res.isValid()){
-                    double fieldAngleDeg =
-                            Math.toDegrees(
-                                    Math.atan2(
-                                            TARGET_Y - pinpoint.getPosY(DistanceUnit.INCH),
-                                            TARGET_X - pinpoint.getPosX(DistanceUnit.INCH)
-                                    )
-                            ) - pinpoint.getHeading(AngleUnit.DEGREES);
-
-                    ticks = fieldAngleDeg * ticksPerDegree;
-                    targetTicks = ticks;
-
-                    KineticState current =
-                            new KineticState(
-                                    turretEnc.getCurrentPosition()/10.0
-                            );
-
-                    turretPID = ControlSystem.builder()
-                            .posPid(turretp, turreti, turretd)
-                            .basicFF(turretv,turreta,turrets)
-                            .build();
-
-                    turretPID.setGoal(new KineticState(targetTicks));
-                    turretL.setPower(-turretPID.calculate(current));
-
-
-                }*/
-                // ===================== FIX: APPLY TY OFFSET HERE =====================
-                tyRaw = hasTarget ? (res.getTy() + tyOffsetDeg) : 0.0;
-
-                // Filter TY
-                double alpha = clamp(errAlpha, 0.0, 1.0);
-                tyFilt = (1.0 - alpha) * tyFilt + alpha * tyRaw;
-
-                // Manual override only while stick is moved; release -> go back to auto
-                double manualStick = -0.4*gamepad2.right_stick_x;
-                boolean manualNow = Math.abs(manualStick) > manualDeadband;
-
-                // Update lastKnownAbs direction when tag is well-centered
-                if (hasTarget && Math.abs(tyFilt) <= lastKnownSaveWindowDeg) {
-                    lastKnownAbsDeg = angleWrapDeg(robotHeadingDeg + turretRelDeg);
-                    haveLastKnown = true;
-                }
-
-                // If manual: drive turret directly, but ALSO keep lastKnownAbs tracking turret direction
-                if (manualNow) {
-                    turretMode = TurretMode.MANUAL;
-
-                    lastKnownAbsDeg = angleWrapDeg(robotHeadingDeg + turretRelDeg);
-                    haveLastKnown = true;
-
-                    double cmd = clamp(manualStick, -1.0, +1.0);
-
-                    // soft limits in manual too
-                    if (turretRelDeg <= minTurretDeg && cmd < 0) cmd = 0;
-                    if (turretRelDeg >= maxTurretDeg && cmd > 0) cmd = 0;
-
-                    setTurretPower(servoDir * cmd);
-                    lastTurretCmdPower = cmd;
-
-                    // reset edge-search state so it doesn't resume mid-sweep
-                    edgePauseTimer = 0.0;
-                    sweepTargetDeg = 0.0;
-
-                    continue;
-                }
-
-                // Not manual => AUTO
-                relUnclampedNeeded = 0.0;
-                turretRelNeededDeg = 0.0;
-                holdErrDeg = 0.0;
-
-                if (haveLastKnown) {
-                    relUnclampedNeeded = angleWrapDeg(lastKnownAbsDeg - robotHeadingDeg);
-                    turretRelNeededDeg = clamp(relUnclampedNeeded, minTurretDeg, maxTurretDeg);
-                    holdErrDeg = angleWrapDeg(turretRelNeededDeg - turretRelDeg);
-                }
-
-                // Mode selection (with hysteresis)
-                TurretMode next;
-                if (hasTarget) {
-                    next = TurretMode.TRACK;
-                } else if (!haveLastKnown) {
-                    next = TurretMode.IDLE;
-                } else {
-                    boolean outsideEnter =
-                            (relUnclampedNeeded > (maxTurretDeg + edgeEnterMarginDeg)) ||
-                                    (relUnclampedNeeded < (minTurretDeg - edgeEnterMarginDeg));
-
-                    boolean insideExit =
-                            (relUnclampedNeeded < (maxTurretDeg - edgeExitMarginDeg)) &&
-                                    (relUnclampedNeeded > (minTurretDeg + edgeExitMarginDeg));
-
-                    if (turretMode == TurretMode.EDGE_SEARCH) {
-                        next = insideExit ? TurretMode.IDLE : TurretMode.EDGE_SEARCH;
-                    } else {
-                        next = outsideEnter ? TurretMode.EDGE_SEARCH : TurretMode.IDLE;
-                    }
-
-                }
-                turretMode = next;
-
-                // Command power
-                double cmdPower;
-
-                if(gamepad2.options){
-                    //pinpoint.setPosX(121.89830508474577,DistanceUnit.INCH);
-                    //pinpoint.setPosY(125.15254237288136,DistanceUnit.INCH);
-                    //pinpoint.setHeading(35,AngleUnit.DEGREES);
-                    //*TARGET_Y=125.15254237288136;
-                    //*TARGET_X=121.89830508474577;
-                }
-
-                if (turretMode == TurretMode.TRACK) {
-                    // drive TY to 0
-                    if (Math.abs(tyFilt) <= deadbandDeg) {
-                        cmdPower = 0.0;
-                    } else {
-                        cmdPower = -kP_track * tyFilt;
-                        cmdPower = clamp(cmdPower, -maxTrackPower, +maxTrackPower);
-                    }
-               /* } else if (turretMode == TurretMode.HOLD) {
-                    cmdPower = kP_hold * holdErrDeg;
-                    cmdPower = clamp(cmdPower, -maxHoldPower, +maxHoldPower);*/
-                } else {
-                    cmdPower = 0.0;
-                    edgePauseTimer = 0.0;
-                    sweepTargetDeg = Double.NaN;
-                }
-                /*else if (turretMode == TurretMode.EDGE_SEARCH) {
-
-                    double desiredEdge = (relUnclampedNeeded >= 0) ? maxTurretDeg : minTurretDeg;
-
-                    if (Double.isNaN(sweepTargetDeg)) {
-                        sweepTargetDeg = desiredEdge;
-                        sweepDir = (sweepTargetDeg > turretRelDeg) ? +1 : -1;
-                        edgePauseTimer = 0.0;
-                    }
-
-                    boolean atEdge = Math.abs(turretRelDeg - sweepTargetDeg) <= 2.0;
-
-                    if (atEdge) {
-                        edgePauseTimer += dt;
-
-                        if (edgePauseTimer >= edgePauseSec) {
-                            sweepTargetDeg = (sweepTargetDeg > 0) ? minTurretDeg : maxTurretDeg;
-                            sweepDir = (sweepTargetDeg > turretRelDeg) ? +1 : -1;
-                            edgePauseTimer = 0.0;
-                        }
-                        cmdPower = 0.0;
-                    } else {
-                        edgePauseTimer = 0.0;
-                        cmdPower = sweepDir * searchPower;
-                    }*/
-
-
-
-                // Soft limits
-                if (turretRelDeg <= minTurretDeg && cmdPower < 0) cmdPower = 0.0;
-                if (turretRelDeg >= maxTurretDeg && cmdPower > 0) cmdPower = 0.0;
-
-                // Slew limit (smooth)
-                double maxDelta = powerSlewPerSec * dt;
-                cmdPower = clamp(cmdPower, lastTurretCmdPower - maxDelta, lastTurretCmdPower + maxDelta);
-                lastTurretCmdPower = cmdPower;
-
-                turretOut = servoDir * cmdPower;
-                setTurretPower(turretOut);
-            }
-        });
 
         // IMPORTANT: init edge-search sentinel
         sweepTargetDeg = Double.NaN;
@@ -562,7 +396,6 @@ public class looptimetestcode extends LinearOpMode {
         waitForStart();
 
         driveThread.start();
-        turretThread.start();
 
         // ============================================================
         //                     MAIN LOOP
@@ -604,9 +437,9 @@ public class looptimetestcode extends LinearOpMode {
             boolean isPurple = (hue >= 195 && hue <= 230);
             boolean isGreen = (hue >= 140 && hue <= 180);
 
-            boolean distanceDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
+            boolean colorDetected = (isPurple || isGreen);
 
-            if (intakeRunning && distanceDetected && !colorPreviouslyDetected && ballCount < 3) {
+            if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
                 if(distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<7) {
                     //sleep(200);
                     target += rconstants.movespindexer;
@@ -619,7 +452,7 @@ public class looptimetestcode extends LinearOpMode {
                 }
             }
 
-            if (!distanceDetected ) {
+            if (!colorDetected) {
                 colorPreviouslyDetected = false;
             }
 
@@ -701,9 +534,13 @@ public class looptimetestcode extends LinearOpMode {
                     sleep(300);
                 }
             }
-
-
-
+            if(gamepad2.right_stick_button){
+                pinpoint.setPosX(21.5,DistanceUnit.INCH);
+                pinpoint.setPosY(144-12.5,DistanceUnit.INCH);
+                pinpoint.setHeading(145,AngleUnit.DEGREES);
+                //*TARGET_Y=125.15254237288136;
+                //*TARGET_X=121.89830508474577;
+            }
             // ---------- TELEMETRY ----------
             telemetry.addData("Hue", hue);
             telemetry.addData("Ball Count", ballCount);
@@ -714,26 +551,46 @@ public class looptimetestcode extends LinearOpMode {
             telemetry.addData("Spindexer calculated speed:", -0.25*cs1.calculate(current2));
             telemetry.addData("Spindexer current power: ", spindexer.getPower());
             telemetry.addData("spindexer_pos", spindexer.getCurrentPosition());
-            LLResult llResult = limelight.getLatestResult();
-            if(llResult.isValid()){
-                telemetry.addData("TA: ", llResult.getTa());
-            }
-            telemetry.addData("distance", distancefromll(llResult.getTa()));
+            telemetry.addData("Flywheel Target: ", targetTicksPerSecond);
+            telemetry.addData("Flywheel Velocity: ", flywheel.getVelocity());
+            telemetry.addData("distance", getDistance());
             telemetry.addData("distance of spindexer", distance.getDistance(DistanceUnit.CM));
             telemetry.update();
 
 
         }
+
+    }
+    private double getDistance(){
+        double dy = TARGET_Y-pinpoint.getPosY(DistanceUnit.INCH);
+        double dx= TARGET_X-pinpoint.getPosX(DistanceUnit.INCH);
+        double distance = Math.sqrt(Math.pow(dy,2)+Math.pow(dx,2));
+        return distance;
     }
 
     // ===================== Pinpoint setup =====================
-    private void configurePinpoint(GoBildaPinpointDriver ppDevice) {
-        ppDevice.setOffsets(forwardPodY, strafePodX, ppUnit);
-        ppDevice.setEncoderResolution(podType);
-        ppDevice.setEncoderDirections(forwardDir, strafeDir);
-        ppDevice.resetPosAndIMU();
-    }
+    private void configurePinpoint(GoBildaPinpointDriver pp) {
 
+        pp.setOffsets(-5.46, -1.693, DistanceUnit.INCH);
+
+        pp.setEncoderResolution(
+                GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
+        );
+        pp.setEncoderDirections(
+                GoBildaPinpointDriver.EncoderDirection.FORWARD,
+                GoBildaPinpointDriver.EncoderDirection.REVERSED
+        );
+
+        pp.resetPosAndIMU();
+
+        pp.setPosition(new Pose2D(
+                DistanceUnit.INCH,
+                START_X,
+                START_Y,
+                AngleUnit.DEGREES,
+                START_HEADING_DEG
+        ));
+    }
     // ===================== Turret power helper =====================
     private void setTurretPower(double pwr) {
         turretL.setPower(pwr);
