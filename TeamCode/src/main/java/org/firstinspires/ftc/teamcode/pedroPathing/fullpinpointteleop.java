@@ -32,8 +32,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import java.util.List;
 
+import dev.frozenmilk.dairy.cachinghardware.CachingCRServo;
+import dev.frozenmilk.dairy.cachinghardware.CachingServo;
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
+import dev.frozenmilk.dairy.cachinghardware.CachingDcMotorEx;
 
 @Configurable
 @Config
@@ -41,15 +44,15 @@ import dev.nextftc.control.KineticState;
 public class fullpinpointteleop extends LinearOpMode {
 
     // ===================== DRIVE =====================
-    private DcMotor lf, lb, rf, rb;
+    private CachingDcMotorEx lf, lb, rf, rb;
     private List<LynxModule> allHubs;
     private ElapsedTime elapsedtime;
 
     // ===================== OTHER SUBSYSTEMS =====================
-    private DcMotorEx flywheel, intake, spindexer;
-    private CRServoImplEx transfer;
+    private CachingDcMotorEx flywheel, intake, spindexer;
+    private CachingCRServo transfer;
     private ServoImplEx transfermover;
-    private Servo hood;
+    private CachingServo hood;
 
     public static NormalizedColorSensor colorSensor;
     DistanceSensor distance;
@@ -89,7 +92,7 @@ public class fullpinpointteleop extends LinearOpMode {
     public static double TARGET_Y=135;
     // ===================== LIMELIGHT + TURRET FUSED AUTOALIGN =====================
 
-    private CRServo turretL;
+    private CachingCRServo turretL;
     private CRServo turretR;
 
     // dedicated encoder you configured in RC as "turret_enc"
@@ -213,10 +216,10 @@ public class fullpinpointteleop extends LinearOpMode {
 
         rconstants.initHardware(hardwareMap);
         // drive motors
-        lf = rconstants.lf;
-        lb = rconstants.lb;
-        rf = rconstants.rf;
-        rb = rconstants.rb;
+        lf = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class,"lf"));
+        lb = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class,"lb"));
+        rf = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class,"rf"));
+        rb = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class,"rb"));
         boolean shotLatched = false;
 
         elapsedtime = new ElapsedTime();
@@ -232,7 +235,7 @@ public class fullpinpointteleop extends LinearOpMode {
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // turret
-        turretL = rconstants.turretL;
+        turretL = new CachingCRServo(hardwareMap.get(CRServo.class,"turretL"));;
         turretR = rconstants.turretR;
 
         // limelight
@@ -248,17 +251,17 @@ public class fullpinpointteleop extends LinearOpMode {
         configurePinpoint(pinpoint);
 
         // shooter / intake / spindexer
-        flywheel = rconstants.flywheel;
-        hood = rconstants.hood;
+        flywheel = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class,"shooter"));
+        hood = new CachingServo(hardwareMap.get(Servo.class,"hood"));
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        intake = rconstants.intake;
+        intake = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class,"intake"));
 
-        spindexer = rconstants.spindexer;
+        spindexer = new CachingDcMotorEx(hardwareMap.get(DcMotorEx.class,"spindexer"));
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        transfer = rconstants.transfer;
+        transfer = new CachingCRServo(hardwareMap.get(CRServo.class,"transfer"));
         transfermover = rconstants.transfermover;
         transfermover.setPosition(rconstants.transfermoveridle);
 

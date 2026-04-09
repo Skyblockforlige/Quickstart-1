@@ -511,7 +511,7 @@ public class fullpinpointteleopblue extends LinearOpMode {
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
                 spindexer.setPower(-spindexerPIDspeed*cs1.calculate(current2));
             } else if(farmode){
-                spindexer.setPower(0.25*gamepad2.left_stick_y);
+                spindexer.setPower(0.6*gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
             } else{
                 spindexer.setPower(0.6*gamepad2.left_stick_y);
