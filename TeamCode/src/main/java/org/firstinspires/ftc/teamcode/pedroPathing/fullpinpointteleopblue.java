@@ -437,7 +437,8 @@ public class fullpinpointteleopblue extends LinearOpMode {
             boolean isPurple = (hue >= 195 && hue <= 230);
             boolean isGreen = (hue >= 140 && hue <= 180);
 
-            boolean colorDetected = (isPurple || isGreen);
+            //distance
+            boolean colorDetected = distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6;
 
             if (intakeRunning && colorDetected && !colorPreviouslyDetected && ballCount < 3) {
                 if(distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<7) {

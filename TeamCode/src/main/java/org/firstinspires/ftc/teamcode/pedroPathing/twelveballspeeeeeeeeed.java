@@ -68,7 +68,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
     private Servo hood;
     public static double targetTicksPerSecond=0;
 
-    public static double p1=0.0009,i1=0,d1=0;
+    public static double p1=0.0084,i1=0,d1= 0.000005;
     public static double hoodtop = 0;
     public static double hoodbottom = 0.1;
     public static int ball1_pos=950;
@@ -244,7 +244,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
                 .basicFF(v,a,s)
                 .build();
         cs1 = ControlSystem.builder()
-                .posPid(p1)
+                .posPid(p1,i1,d1)
                 .build();
     }
     @Override
@@ -437,12 +437,9 @@ public class twelveballspeeeeeeeeed extends OpMode {
 
                 // New ball enters
                 if (distanceDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
-
                     // record color into slot memory
-
                     ballCount++;
                     colorPreviouslyDetected = true;
-
                     // schedule ONE move after short delay (no sleep in OpMode)
                     actionTimer.resetTimer();
                     pendingMove = true;
@@ -596,7 +593,7 @@ public class twelveballspeeeeeeeeed extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower((-cs1.calculate(current2)));
+        spindexer.setPower(0.4*(-cs1.calculate(current2)));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         turretL.setPower(0);
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
