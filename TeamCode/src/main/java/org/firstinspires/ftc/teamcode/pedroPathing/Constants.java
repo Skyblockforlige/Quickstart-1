@@ -17,12 +17,19 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+
+import com.pedropathing.follower.Follower;
+import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.ftc.FollowerBuilder;
+import com.pedropathing.paths.PathConstraints;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @Configurable
 public class Constants {
 
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(12.42843)
+            .mass(13.87993)
             .forwardZeroPowerAcceleration(-38.425487667171446)
             .lateralZeroPowerAcceleration((-82.76446497544191-88.5895025636651)/2.0)
             .useSecondaryTranslationalPIDF(false)
@@ -46,14 +53,14 @@ public class Constants {
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
 
-            .xVelocity(69.566764771469)
-            .yVelocity(49.79790971410556)
+            .xVelocity((60.53848530927043+61.00337039016364+60.014416792261315)/3)
+            .yVelocity((49.219320943036415+49.22042101762426+48.881982998585144)/3)
             ;
 
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(-5.46)
-            .strafePodX(-1.693)
+            .forwardPodY((5.116845318651574+5.1502200149175658)/2)
+            .strafePodX((-1.7446620670829205-1.5766591950664406)/2)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pp")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD)

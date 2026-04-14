@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+
 import android.graphics.Color;
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -30,22 +32,43 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
+import java.util.function.Supplier;
+
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.HeadingInterpolator;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @Configurable
 @Config
-@TeleOp(name="Auto Velo Tele - BLUE")
-public class autoveloteleopblue extends LinearOpMode {
+@TeleOp(name="maahir_learning_assignment")
+public class newteleop_maahir_learning_assignmrnyt extends LinearOpMode {
 
     // ===================== DRIVE =====================
     private DcMotor lf, lb, rf, rb;
 
+    private boolean pressed_alr = false;
+
+    private Follower follower;
+    public static Pose startingPose=new Pose(12.546684709066305, 13.456021650879565, Math.toRadians(90));
+    private boolean automatedDrive;
+    private Supplier<PathChain> pathChain;
+    private TelemetryManager telemetryM;
+
     // ===================== OTHER SUBSYSTEMS =====================
     private DcMotorEx flywheel, intake, spindexer;
     private CRServoImplEx transfer;
-    private Timer currentTimer;
-
     private ServoImplEx transfermover;
     private Servo hood;
+
+    public boolean init_starter =true;
 
     public static NormalizedColorSensor colorSensor;
     DistanceSensor distance;
@@ -55,16 +78,9 @@ public class autoveloteleopblue extends LinearOpMode {
     public static int movespindexer = 2731;
     public static double p = 0.0039, i = 0, d = 0.0000005;
     public static double v = 0.000372, a = 0.7, s = 0.0000005;
-    public static double p1 = 0.0009, i1 = 0, d1 = 0;
-    public static double turretp = 0.002;
-    public static double turreti = 0;
-    public static double turretd = 0.00000005;
-    public static double turretv = 0.0000372;
-    public static double turreta = 0.007;
-    public static double turrets = 0.05;
-    public static double ticksPerDegree = 126.42;
+    public static double p1=0.0025,i1=0.0001,d1=
+            0.00009;
     float[] hsv = new float[3];
-
     int ballCount = 0;
     public static int ballshot = 0;
     boolean colorPreviouslyDetected = false;
@@ -78,7 +94,18 @@ public class autoveloteleopblue extends LinearOpMode {
     public static double shootclose = 1000;
     public static double shootfar = 1600;
     public static double shooteridle = 200;
-
+    public static double turretp = 0.002;
+    public static double turreti = 0;
+    public static double turretd = 0.00000005;
+    public static double turretv = 0.0000372;
+    public static double turreta = 0.007;
+    public static double turrets = 0.05;
+    public static double ticksPerDegree = 126.42/10.0;
+    public static double START_X = blueToRedX(35.285);
+    public static double START_Y = 77.683;
+    public static double START_HEADING_DEG = 46.5;
+    public static double TARGET_X = 144;
+    public static double TARGET_Y=144;
     // ===================== LIMELIGHT + TURRET FUSED AUTOALIGN =====================
     private Limelight3A limelight;
 
@@ -90,7 +117,17 @@ public class autoveloteleopblue extends LinearOpMode {
 
     // Pinpoint
     private GoBildaPinpointDriver pinpoint;
+    public static double targetTicks = 0;
+    public static double ticks;
+    private ControlSystem turretPID;
+    private static final double FIELD_WIDTH = 144.0;     // inches
+    private static final double FIELD_MID_X = FIELD_WIDTH / 2.0; // 72
+    private static final double HEADING_MID_RAD = Math.toRadians(90.0); // 90 deg
 
+    // X' = 72 + (72 - X) = 144 - X
+    private static double blueToRedX(double x) {
+        return FIELD_MID_X + (FIELD_MID_X - x);
+    }
     // ---- your values ----
     public static String pp = "pp";
 
@@ -120,7 +157,7 @@ public class autoveloteleopblue extends LinearOpMode {
     public static double maxTurretDeg = 60;
     public static double minTurretDeg = -60;
 
-    public static int pipelineIndex = 1;
+    public static int pipelineIndex = 2;
     public static double powerSlewPerSec = 1.2;
     public static double searchPower = 0.18;
 
@@ -141,7 +178,7 @@ public class autoveloteleopblue extends LinearOpMode {
 
     // ===================== LIMELIGHT AIM OFFSET (FIX) =====================
     // + = shift aim left, - = shift aim right
-    public static double tyOffsetDeg = -5.75;
+    public static double tyOffsetDeg = -3.5;
     private boolean farmode = false;
 
     // ===================== TURRET STATE =====================
@@ -157,30 +194,15 @@ public class autoveloteleopblue extends LinearOpMode {
     private boolean movedoffsetspindexer;
 
     // EDGE SEARCH sweep state
-    public static double START_X = 35.285;
-    public static double START_Y = 77.683;
-    public static double START_HEADING_DEG = 133.5;
-    public static double TARGET_X = 0;
-    public static double TARGET_Y=144;
     private volatile double edgePauseTimer = 0.0;
     private volatile int sweepDir = +1;
+    private Timer currentTimer;
     private volatile double sweepTargetDeg = 0.0;
 
     // For telemetry/debug
     private volatile double robotHeadingDeg = 0.0;
     private volatile double turretRelDeg = 0.0;
     private volatile double tyRaw = 0.0;
-    public static double targetTicks = 0;
-    public static double ticks;
-    private ControlSystem turretPID;
-    private static final double FIELD_WIDTH = 144.0;     // inches
-    private static final double FIELD_MID_X = FIELD_WIDTH / 2.0; // 72
-    private static final double HEADING_MID_RAD = Math.toRadians(90.0); // 90 deg
-
-    // X' = 72 + (72 - X) = 144 - X
-    private static double blueToRedX(double x) {
-        return FIELD_MID_X + (FIELD_MID_X - x);
-    }
     private volatile boolean hasTarget = false;
     private volatile double relUnclampedNeeded = 0.0;
     private volatile double turretRelNeededDeg = 0.0;
@@ -189,6 +211,9 @@ public class autoveloteleopblue extends LinearOpMode {
     public static Timer shottimer;
     public static boolean shots=true;
 
+
+
+
     // ===================== HELPERS =====================
     public double distancefromll(double ta) {
         return (71.7321 * (Math.pow(ta, -0.4550)));
@@ -196,13 +221,27 @@ public class autoveloteleopblue extends LinearOpMode {
     public double velocityfromdistance(double distance){
         return 562.47005* Math.pow(distance,0.202468);
     }
+
+
     public static double hoodpos;
-    public static int target = 0;
 
     @Override
     public void runOpMode() {
         shottimer= new Timer();
         currentTimer=new Timer();
+       if(init_starter==true)
+       {
+           init_starter=false;
+           follower = Constants.createFollower(hardwareMap);
+           follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+           follower.update();
+           telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+           pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
+                   .addPath(new Path(new BezierLine(follower::getPose, new Pose(37.7, 33))))
+                   .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(45), 0.8))
+                   .build();
+       }
+
         telemetry = new MultipleTelemetry(
                 telemetry,
                 FtcDashboard.getInstance().getTelemetry(),
@@ -216,13 +255,13 @@ public class autoveloteleopblue extends LinearOpMode {
         rf = rconstants.rf;
         rb = rconstants.rb;
         boolean shotLatched = false;
+        follower.startTeleopDrive();
 
 
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // turret
-
         turretL = rconstants.turretL;
         turretR = rconstants.turretR;
 
@@ -268,20 +307,29 @@ public class autoveloteleopblue extends LinearOpMode {
                 .basicFF(v, a, s)
                 .build();
 
+        int target = 0;
 
         // ===================== DRIVE THREAD (KEEP YOUR LOGIC) =====================
         Thread driveThread = new Thread(() -> {
             while (opModeIsActive()) {
 
-                double y = -gamepad1.left_stick_y;
-                double x = gamepad1.left_stick_x * 1.1;
-                double rx = gamepad1.right_stick_x;
+                if (automatedDrive) {
+                    follower.update();
 
-                double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-                lf.setPower((y + x + rx) / denom);
-                lb.setPower((y - x + rx) / denom);
-                rf.setPower((y - x - rx) / denom);
-                rb.setPower((y + x - rx) / denom);
+                    if (!follower.isBusy()) {
+                        automatedDrive = false;
+                    }
+                } else {
+                    double y = -gamepad1.left_stick_y;
+                    double x = gamepad1.left_stick_x * 1.1;
+                    double rx = gamepad1.right_stick_x;
+
+                    double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+                    lf.setPower((y + x + rx) / denom);
+                    lb.setPower((y - x + rx) / denom);
+                    rf.setPower((y - x - rx) / denom);
+                    rb.setPower((y + x - rx) / denom);
+                }
 
                 if (gamepad2.right_trigger > 0 && !gamepad2.right_bumper) {
                     transfermover.setPosition(rconstants.transfermoverscore);
@@ -295,6 +343,17 @@ public class autoveloteleopblue extends LinearOpMode {
                     transfermover.setPosition(rconstants.transfermoveridle);
                     transfer.setPower(0);
                 }
+                if (gamepad1.left_bumper &&!pressed_alr && !automatedDrive)
+                {
+                    automatedDrive=true;
+                    follower.followPath(pathChain.get());
+                    pressed_alr=true;
+
+                }
+
+
+
+
 
                 if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
                     intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
@@ -329,8 +388,6 @@ public class autoveloteleopblue extends LinearOpMode {
                 // Turret relative angle from encoder
                 turretRelDeg = turretEnc.getCurrentPosition() / ticksPerDeg;
 
-                
-
                 // Limelight read
                 LLResult res = limelight.getLatestResult();
                 hasTarget = (res != null) && res.isValid();
@@ -343,7 +400,7 @@ public class autoveloteleopblue extends LinearOpMode {
                                     )
                             ) - pinpoint.getHeading(AngleUnit.DEGREES);
 
-                    ticks = fieldAngleDeg * (ticksPerDegree/10.0);
+                    ticks = fieldAngleDeg * ticksPerDegree;
                     targetTicks = ticks;
 
                     KineticState current =
@@ -351,25 +408,15 @@ public class autoveloteleopblue extends LinearOpMode {
                                     turretEnc.getCurrentPosition()/10.0
                             );
 
-                    if (Math.abs(gamepad2.right_stick_x) < 0.05) {
-                        turretPID = ControlSystem.builder()
-                                .posPid(turretp, turreti, turretd)
-                                .basicFF(turretv,turreta,turrets)
-                                .build();
+                    turretPID = ControlSystem.builder()
+                            .posPid(turretp, turreti, turretd)
+                            .basicFF(turretv,turreta,turrets)
+                            .build();
 
-                        turretPID.setGoal(new KineticState(targetTicks));
-                        turretL.setPower(-turretPID.calculate(current));
-                    } else {
-                        turretL.setPower(gamepad2.right_stick_x);
-                        targetTicks = turretEnc.getCurrentPosition();
-                    }
-                    if(gamepad2.options){
-                        pinpoint.setPosX(23.234484380370116,DistanceUnit.INCH);
-                        pinpoint.setPosY(126.53568004630719,DistanceUnit.INCH);
-                        pinpoint.setHeading(145,AngleUnit.DEGREES);
-                        //*TARGET_Y=125.15254237288136;
-                        //*TARGET_X=121.89830508474577;
-                    }
+                    turretPID.setGoal(new KineticState(targetTicks));
+                    turretL.setPower(-turretPID.calculate(current));
+
+
                 }*/
                 // ===================== FIX: APPLY TY OFFSET HERE =====================
                 tyRaw = hasTarget ? (res.getTy() + tyOffsetDeg) : 0.0;
@@ -442,11 +489,20 @@ public class autoveloteleopblue extends LinearOpMode {
                     } else {
                         next = outsideEnter ? TurretMode.EDGE_SEARCH : TurretMode.IDLE;
                     }
+
                 }
                 turretMode = next;
 
                 // Command power
                 double cmdPower;
+
+                if(gamepad2.options){
+                    pinpoint.setPosX(121.89830508474577,DistanceUnit.INCH);
+                    pinpoint.setPosY(125.15254237288136,DistanceUnit.INCH);
+                    pinpoint.setHeading(35,AngleUnit.DEGREES);
+                    //*TARGET_Y=125.15254237288136;
+                    //*TARGET_X=121.89830508474577;
+                }
 
                 if (turretMode == TurretMode.TRACK) {
                     // drive TY to 0
@@ -456,10 +512,10 @@ public class autoveloteleopblue extends LinearOpMode {
                         cmdPower = -kP_track * tyFilt;
                         cmdPower = clamp(cmdPower, -maxTrackPower, +maxTrackPower);
                     }
-                } /*else if (turretMode == TurretMode.HOLD) {
+               /* } else if (turretMode == TurretMode.HOLD) {
                     cmdPower = kP_hold * holdErrDeg;
                     cmdPower = clamp(cmdPower, -maxHoldPower, +maxHoldPower);*/
-                 else {
+                } else {
                     cmdPower = 0.0;
                     edgePauseTimer = 0.0;
                     sweepTargetDeg = Double.NaN;
@@ -510,6 +566,7 @@ public class autoveloteleopblue extends LinearOpMode {
         sweepTargetDeg = Double.NaN;
 
         waitForStart();
+        follower.startTeleopDrive();
 
         driveThread.start();
         turretThread.start();
@@ -557,7 +614,9 @@ public class autoveloteleopblue extends LinearOpMode {
                 }
             }
 
-
+            cs1 = ControlSystem.builder()
+                    .posPid(p1, i1, d1)
+                    .build();
             if(gamepad2.ps){
                 spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 target=0;
@@ -656,7 +715,7 @@ public class autoveloteleopblue extends LinearOpMode {
             cs1.setGoal(new KineticState(target));
 
             if (Math.abs(gamepad2.left_stick_y) < 0.1) {
-                spindexer.setPower(-cs1.calculate(current2));
+                spindexer.setPower(-0.25*cs1.calculate(current2));
             } else if(farmode){
                 spindexer.setPower(0.6*gamepad2.left_stick_y);
                 target = spindexer.getCurrentPosition();
