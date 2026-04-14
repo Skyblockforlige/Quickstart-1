@@ -57,8 +57,8 @@ public class rconstants {
 
     public static void initHardware(HardwareMap hardwareMap){
         colorSensor=hardwareMap.get(NormalizedColorSensor.class,"cs1");
-        turretL = hardwareMap.crservo.get("turretL");
-        turretR = hardwareMap.crservo.get("turretR");
+        //turretL = hardwareMap.crservo.get("turretL");
+        //turretR = hardwareMap.crservo.get("turretR");
         lf = hardwareMap.dcMotor.get("lf");
         lb = hardwareMap.dcMotor.get("lb");
         rf = hardwareMap.dcMotor.get("rf");
