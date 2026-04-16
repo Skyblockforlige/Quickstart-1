@@ -45,12 +45,15 @@ public class position_servo_code extends LinearOpMode {
     private ElapsedTime elapsedtime;
 
     private DcMotorEx flywheel, intake, spindexer;
+    private double shooter_reverse = 1;
     private CRServoImplEx transfer;
     private ServoImplEx transfermover;
     private Servo hood;
 
     public volatile Pose llPedro = new Pose(0, 0, 0);
     public volatile boolean llValid = false;
+
+    public static volatile double spindexer_speed_shooting = 0.6;
 
     private Limelight3A limelight;
 
@@ -138,7 +141,8 @@ public class position_servo_code extends LinearOpMode {
     }
 
     public double velocityfromdistance(double distance) {
-        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766;
+        //return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766;
+        return 515.47005* Math.pow(distance,0.202468);
     }
 
     @Override
@@ -272,15 +276,6 @@ public class position_servo_code extends LinearOpMode {
                 }
 
                 double dist = getDistance();
-                if(getDistance()>=110)
-                {
-                    spindexerPIDspeed=spindexer_speed_far;
-                }
-                else
-                {
-                    spindexerPIDspeed=spindexer_speed_close;
-                }
-
                 if (dist >= 50) {
                     hood.setPosition(constants_testing.hoodtop);
                     targetTicksPerSecond = velocityfromdistance(dist);
@@ -352,6 +347,12 @@ public class position_servo_code extends LinearOpMode {
                     sorting = false;
                 }
             }
+            if (getDistance()>=110)
+                spindexer_speed_shooting=0.4;
+            else
+                spindexer_speed_shooting=0.6;
+
+
 
             cs1 = ControlSystem.builder().posPid(p1, i1, d1).build();
             cs1.setGoal(new KineticState(target));
@@ -359,7 +360,11 @@ public class position_servo_code extends LinearOpMode {
                 spindexer.setPower(-spindexerPIDspeed
                         * cs1.calculate(new KineticState(spindexer.getCurrentPosition())));
             } else {
-                spindexer.setPower(0.6 * gamepad2.left_stick_y);
+                if(gamepad2.left_stick_y<0)
+                    shooter_reverse = -1;
+                else
+                    shooter_reverse = 1;
+                spindexer.setPower(spindexer_speed_shooting * shooter_reverse);
                 target = spindexer.getCurrentPosition();
             }
 
