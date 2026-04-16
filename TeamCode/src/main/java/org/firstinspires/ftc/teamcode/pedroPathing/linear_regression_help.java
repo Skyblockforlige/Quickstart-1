@@ -37,8 +37,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp(name="testing")
-public class position_servo_code extends LinearOpMode {
+@TeleOp(name="linear_regression")
+public class linear_regression_help extends LinearOpMode {
 
     private DcMotor lf, lb, rf, rb;
     private List<LynxModule> allHubs;
@@ -46,6 +46,8 @@ public class position_servo_code extends LinearOpMode {
 
     private DcMotorEx flywheel, intake, spindexer;
     private CRServoImplEx transfer;
+    public static double hood_position=constants_testing.hoodbottom;
+    public static double top_hood_pos=constants_testing.hoodtop;
     private ServoImplEx transfermover;
     private Servo hood;
 
@@ -91,8 +93,6 @@ public class position_servo_code extends LinearOpMode {
     public static double targetTicks = 0;
     public static double ticks;
     public static double spindexerPIDspeed = 0.1;
-    public static double spindexer_speed_close = 0.1;
-    public static double spindexer_speed_far = 0.05;
 
     public static String pp = "pp";
     public static int pipelineIndex = 5;
@@ -138,7 +138,7 @@ public class position_servo_code extends LinearOpMode {
     }
 
     public double velocityfromdistance(double distance) {
-        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766;
+        return 562.47005 * Math.pow(distance, 0.202468);
     }
 
     @Override
@@ -272,25 +272,13 @@ public class position_servo_code extends LinearOpMode {
                 }
 
                 double dist = getDistance();
-                if(getDistance()>=110)
-                {
-                    spindexerPIDspeed=spindexer_speed_far;
-                }
-                else
-                {
-                    spindexerPIDspeed=spindexer_speed_close;
-                }
 
-                if (dist >= 50) {
-                    hood.setPosition(constants_testing.hoodtop);
-                    targetTicksPerSecond = velocityfromdistance(dist);
-                } else {
+
                     if      (gamepad2.y) { targetTicksPerSecond = constants_testing.shootfar;   hood.setPosition(constants_testing.hoodtop);    }
                     else if (gamepad2.b) { targetTicksPerSecond = constants_testing.shootclose;  hood.setPosition(constants_testing.hoodtop);    }
                     else if (gamepad2.a) { targetTicksPerSecond = constants_testing.shooteridle; hood.setPosition(constants_testing.hoodbottom); }
-                    else                 { hood.setPosition(constants_testing.hoodbottom); targetTicksPerSecond = constants_testing.shooteridle; }
-                }
 
+                hood.setPosition(hood_position);
                 cs = ControlSystem.builder().velPid(p, i, d).basicFF(v, a, s).build();
                 cs.setGoal(new KineticState(0, targetTicksPerSecond));
                 flywheel.setPower(cs.calculate(new KineticState(
@@ -397,9 +385,6 @@ public class position_servo_code extends LinearOpMode {
         return Math.sqrt(
                 Math.pow(TARGET_Y - pinpoint.getPosY(DistanceUnit.INCH), 2)
                         + Math.pow(TARGET_X - pinpoint.getPosX(DistanceUnit.INCH), 2));
-    }
-    public double getSpindexerSpeed(double dist) {
-        return 0.05;
     }
 
     private void configurePinpoint(GoBildaPinpointDriver pp) {
