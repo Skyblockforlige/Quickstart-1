@@ -31,6 +31,7 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -68,15 +69,6 @@ public class farautodiffblue extends OpMode {
     private ControlSystem cs;
 
     public double targetx;
-    public static double turrettarget=335;
-
-    public static double turretp = 0.002;
-    public static double turreti = 0;
-    public static double turretd = 0.00000005;
-    public static double turretv = 0.0000372;
-    public static double turreta = 0.007;
-    public static double turrets = 0.05;
-    private ControlSystem turretPID;
 
     public int turretOscillationDirection;
     public static double transfermoveridle = 0.6;
@@ -85,7 +77,6 @@ public class farautodiffblue extends OpMode {
     public static double p=0.0039,i=0,d=0.0000005;
     public static double v=0.000372,a=0.7,s=0.0000005;
     private static int targetpos;
-    private CRServo turretL;
     private CRServo turretR;
 
     public boolean first = false;
@@ -98,7 +89,7 @@ public class farautodiffblue extends OpMode {
     public boolean check_follower=false;
     public boolean switchcase1=false;
 
-    public static double p1=0.0009,i1=0,d1=0;
+    public static double p1 = 0.0084, i1 = 0, d1 = 0.000005;
     public static double hoodtop = 0;
     public static double hoodbottom = 0.1;
     public static int ball1_pos=950;
@@ -119,6 +110,7 @@ public class farautodiffblue extends OpMode {
     boolean intakeBaseSet = false;
 
     boolean pendingMove = false;
+    private Servo turretL;
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
@@ -211,31 +203,34 @@ public class farautodiffblue extends OpMode {
 
                 .build();
 
-        Path2 = follower.pathBuilder().addPath(
+        Path2 = follower.pathBuilder()
+                .addPath(
                         new BezierCurve(
                                 new Pose(56.000, 19.000),
-                                new Pose(52.72646657571624, 27.77070017777499),
-                                new Pose(20.128, 23.839)
+                                new Pose(59.587, 37.292),
+                                new Pose(16.336, 35.221)
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(90),Math.toRadians(180))
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(180))
 
                 .build();
 
-        Path3 = follower.pathBuilder().addPath(
-                        new BezierLine(
-                                new Pose(16.128, 23.839),
-
+        Path3 = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(16.336, 35.221),
+                                new Pose(59.587, 37.292),
                                 new Pose(56.000, 19.000)
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
-
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(180),Math.toRadians(90))
                 .build();
 
         Path4 = follower.pathBuilder().addPath(
                         new BezierLine(
                                 new Pose(56.000, 19.000),
 
-                                new Pose(20, 1)
+                                new Pose(15, 13)
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(200))
 
@@ -243,7 +238,7 @@ public class farautodiffblue extends OpMode {
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(20, 1),
+                                new Pose(15, 13),
 
                                 new Pose(56.000, 19.000)
                         )
@@ -280,7 +275,7 @@ public class farautodiffblue extends OpMode {
         turretOscillationDirection = 0;
         rconstants.initHardware(hardwareMap);
         colorSensor=rconstants.colorSensor;
-        turretL = hardwareMap.crservo.get("turretL");
+        turretL = hardwareMap.servo.get("turretL");
         turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
 
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -288,7 +283,7 @@ public class farautodiffblue extends OpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1);
         limelight.start();
-        turretL.setPower(0);
+        turretL.setPosition(0.32);
         // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
@@ -314,7 +309,7 @@ public class farautodiffblue extends OpMode {
                 .basicFF(v,a,s)
                 .build();
         cs1 = ControlSystem.builder()
-                .posPid(p1)
+                .posPid(p1,i1,d1)
                 .build();
         hood.setPosition(rconstants.hoodtop);
         limelight = rconstants.limelight;
@@ -326,13 +321,7 @@ public class farautodiffblue extends OpMode {
     }
     @Override
     public void init_loop(){
-        turretPID = ControlSystem.builder()
-                .posPid(turretp,turreti,turretd)
-                .basicFF(turretv,turreta,turrets)
-                .build();
-        turretPID.setGoal(new KineticState(turrettarget));
-        KineticState current4 = new KineticState(turretEnc.getCurrentPosition()/10.0);
-        turretL.setPower(-turretPID.calculate(current4));
+
     }
     public void start(){
         opmodeTimer.resetTimer();
@@ -346,8 +335,7 @@ public class farautodiffblue extends OpMode {
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
                 follower.followPath(Path1);
-                spindexerspeed=0.1;
-                targetTicksPerSecond=rconstants.shootfar-10;
+                targetTicksPerSecond=rconstants.shootfar-50;
 
                 setPathState(1);
 
@@ -373,14 +361,12 @@ public class farautodiffblue extends OpMode {
                     third_1=true;
                     setPathState(2);
                 }*/
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1450){
                     
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
-                    spindexerspeed=0.5;
                 }
-                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-400)&&flywheel.getVelocity()>=1500){
-                    spindexerspeed=1;
+                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-400)){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(2);
                 }
@@ -389,8 +375,9 @@ public class farautodiffblue extends OpMode {
             case 2:
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.5) {
-                    spindexerspeed=1;
+                    follower.setMaxPower(0.6);
                     follower.followPath(Path2);
+                    transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
                     setPathState(3);
 
@@ -435,31 +422,34 @@ public class farautodiffblue extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5)) {
+                    transfermover.setPosition(rconstants.transfermoverscore);
                     setPathState(4);
                 }
 
                 break;
             case 4:
-               /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
+                if(follower.getCurrentPath().isAtParametricEnd()) {
+                    follower.setMaxPower(1);
+                    /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
                     follower.followPath(Path3);
-                    spindexerspeed=0.2;
                     /*spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                    target=0;*/
                     setPathState(5);
+                }
                     //move to shoot position
 
                 break;
             case 5:
                 // READ COLOR (same hue method as teleop)
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
-                    
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
+                    transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =9*rconstants.movespindexer;
+                    target =11*rconstants.movespindexer;
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (9*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
+                if(spindexer.getCurrentPosition()>= (11*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1420){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     setPathState(6);
@@ -529,7 +519,6 @@ public class farautodiffblue extends OpMode {
                     setPathState(10);
                 }
                     follower.followPath(Path5);
-                    spindexerspeed = 0.2;
                     spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     target = 0;
@@ -542,13 +531,13 @@ public class farautodiffblue extends OpMode {
                 if(opmodeTimer.getElapsedTimeSeconds()>27){
                     setPathState(10);
                 }
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1500){
+                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1420){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     if(opmodeTimer.getElapsedTimeSeconds()>=26.5) {
@@ -580,7 +569,6 @@ public class farautodiffblue extends OpMode {
                 }
                 break;
             case -1:
-                turrettarget=0;
                 if (pathTimer.getElapsedTimeSeconds() > 1) {
                     transfermover.setPosition(rconstants.transfermoveridle);
                     stop();
@@ -786,21 +774,15 @@ public class farautodiffblue extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
+        if (intake.getCurrent(CurrentUnit.AMPS) < 6) {
             intake.setPower(1);
             currentTimer.resetTimer();
-        } else if(currentTimer.getElapsedTimeSeconds()>1.2){
+        } else if (currentTimer.getElapsedTimeSeconds() > 0.5) {
             intake.setPower(-1);
-        } else{
+        } else {
             intake.setPower(1);
         }
-        turretPID = ControlSystem.builder()
-                .posPid(turretp,turreti,turretd)
-                .basicFF(turretv,turreta,turrets)
-                .build();
-        turretPID.setGoal(new KineticState(turrettarget));
-        KineticState current3 = new KineticState(turretEnc.getCurrentPosition()/10.0);
-        turretL.setPower(-turretPID.calculate(current3));
+
 
        /* long lastNanos = System.nanoTime();
         // start in AUTO (not manual)
@@ -1019,7 +1001,7 @@ public class farautodiffblue extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(0.8*spindexerspeed*(-cs1.calculate(current2)));
+        spindexer.setPower(Range.clip(-0.7 * cs1.calculate(current2),-0.7,0.7));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
@@ -1140,9 +1122,7 @@ public class farautodiffblue extends OpMode {
 
 
     // ===================== Turret power helper =====================
-    private void setTurretPower(double pwr) {
-        turretL.setPower(pwr);
-    }
+
 
     // Wrap degrees to [-180, +180]
     private static double angleWrapDeg(double deg) {

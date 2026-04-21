@@ -394,6 +394,7 @@ public class position_servo_code extends LinearOpMode {
                 telemetry.addData("LL Y (in)",        String.format("%.3f in", llPedro.getY()));
                 telemetry.addData("LL Heading (deg)", String.format("%.2f°", Math.toDegrees(llPedro.getHeading())));
             }
+            telemetry.addData("Intake Current Amps: ", intake.getCurrent(CurrentUnit.AMPS));
             telemetry.update();
         }
     }

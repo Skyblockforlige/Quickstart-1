@@ -1,14 +1,10 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
-
 import android.graphics.Color;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.geometry.BezierCurve;
-import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -16,7 +12,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -26,21 +21,19 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Autonomous(name = "Gate Intake Auto")
-public class gateintakeauto extends OpMode {
+@Autonomous(name = "Gate Intake Auto NO 3rd SPIKE - RED")
+public class gateintakeno3rdspikered extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
@@ -85,10 +78,10 @@ public class gateintakeauto extends OpMode {
 
     boolean pendingMove = false;
 
-    private Timer pathTimer, actionTimer, opmodeTimer,goonTimer , bctimer;
+    private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    public static double turretPos = 0.8;
-    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(145));
+    public static double turretPos = 0.28;
+    private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(145)).mirror();
 
     public PathChain firstpath;
     public PathChain Path1;
@@ -120,11 +113,11 @@ public class gateintakeauto extends OpMode {
         Path1 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(27.463, 131.821),
-                                new Pose(45.005, 112.859)
+                                new Pose(27.463, 131.821).mirror(),
+                                new Pose(45.005, 112.859).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(0))
                 .setBrakingStrength(0.9)
                 .setTValueConstraint(0.85)
                 .build();
@@ -132,36 +125,36 @@ public class gateintakeauto extends OpMode {
         Path2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(43.796, 99.812),
-                                new Pose(63, 56.8),
-                                new Pose(20.500, 59.600)
+                                new Pose(43.796, 99.812).mirror(),
+                                new Pose(63, 56.8).mirror(),
+                                new Pose(20.500, 59.600).mirror()
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .setTValueConstraint(0.85)
                 .build();
 
         Path3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(20.500, 59.600),
-                                new Pose(53.500, 56.800),
-                                new Pose(59.382, 85.557)
+                                new Pose(20.500, 59.600).mirror(),
+                                new Pose(53.500, 56.800).mirror(),
+                                new Pose(59.382, 85.557).mirror()
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .setTValueConstraint(0.85)
                 .build();
 
         Path4 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(59.382, 85.557),
-                                new Pose(52.782, 51.290),
-                                new Pose(21.530, 62.124)
+                                new Pose(59.382, 85.557).mirror(),
+                                new Pose(52.782, 51.290).mirror(),
+                                new Pose(21.530, 62.124).mirror()
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(160))
+                .setConstantHeadingInterpolation(Math.toRadians(20))
                 .setTValueConstraint(0.85)
                 .build();
 
@@ -179,33 +172,34 @@ public class gateintakeauto extends OpMode {
         Path6 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(21.530, 62.124),
-                                new Pose(62.382, 85.557)
+                                new Pose(21.530, 62.124).mirror(),
+                                new Pose(59.382, 85.557).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(160), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(20), Math.toRadians(0))
                 .setTValueConstraint(0.85)
                 .build();
 
         Path7 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(62.382, 85.557),
-                                new Pose(22.000, 85.557)
+                                new Pose(59.382, 85.557).mirror(),
+                                new Pose(23.000, 85.557).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .setTValueConstraint(0.85)
                 .build();
 
         Path8 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(22.000, 85.557),
-                                new Pose(59.382, 85.557)
+                                new Pose(23.000, 85.557).mirror(),
+                                new Pose(59.000, 114.300).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .setTangentHeadingInterpolation()
+                .setReversed()
                 .setTValueConstraint(0.85)
                 .build();
 
@@ -225,7 +219,7 @@ public class gateintakeauto extends OpMode {
                 .addPath(
                         new BezierLine(
                                 new Pose(21.000, 35.293),
-                                new Pose(59.000, 122.300)
+                                new Pose(59.000, 114.300)
                         )
                 )
                 .setTangentHeadingInterpolation()
@@ -257,7 +251,6 @@ public class gateintakeauto extends OpMode {
         actionTimer = new Timer();
         goonTimer=new Timer();
         currentTimer=new Timer();
-        bctimer=new Timer();
         opmodeTimer.resetTimer();
         imu = hardwareMap.get(IMU.class, "imu");
         turretOscillationDirection = 0;
@@ -308,7 +301,7 @@ public class gateintakeauto extends OpMode {
                 transfer.setPower(1);
                 follower.followPath(Path1);
                 targetTicksPerSecond=1100;
-                turretPos=0.72;
+                turretPos=0.28;
                 hood.setPosition(constants_testing.hoodbottom);
                 setPathState(1);
 
@@ -335,7 +328,7 @@ public class gateintakeauto extends OpMode {
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path2);
-                    targetTicksPerSecond=1275;
+                    targetTicksPerSecond=1290;
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
 
@@ -374,7 +367,7 @@ public class gateintakeauto extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5)) {
-                    turretPos=0.8;
+                    turretPos=0.33;
                     setPathState(4);
                 }
                 break;
@@ -391,9 +384,9 @@ public class gateintakeauto extends OpMode {
 
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =12*rconstants.movespindexer;
+                    target =11*rconstants.movespindexer;
                 }
-                if(spindexer.getCurrentPosition()>= (12*rconstants.movespindexer-800)){
+                if(spindexer.getCurrentPosition()>= (11*rconstants.movespindexer-800)){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(6);
 
@@ -449,6 +442,7 @@ public class gateintakeauto extends OpMode {
                 break;
             case 9:
                 if(follower.getCurrentPath().isAtParametricEnd()) {
+
                     //move to shooting position for balls 4,5,6
                     follower.followPath(Path6);
                     setPathState(10);
@@ -459,9 +453,9 @@ public class gateintakeauto extends OpMode {
 
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =19*rconstants.movespindexer;
+                    target =17*rconstants.movespindexer;
                 }
-                if(spindexer.getCurrentPosition()>= (19*rconstants.movespindexer-1000)){
+                if(spindexer.getCurrentPosition()>= (17*rconstants.movespindexer-1000)){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(11);
 
@@ -470,7 +464,7 @@ public class gateintakeauto extends OpMode {
             case 11:
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     ballCount=0;
-                    follower.followPath(Path7);
+                    follower.followPath(Path4);
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
 
@@ -509,7 +503,7 @@ public class gateintakeauto extends OpMode {
                 }
 
                 // after 3 balls, move to next path state once follower done
-                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>2.5)) {
+                if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
                     setPathState(13);
                 }
 
@@ -518,7 +512,7 @@ public class gateintakeauto extends OpMode {
                 if(follower.getCurrentPath().isAtParametricEnd()) {
                     //move to shooting position for balls 4,5,6
 
-                    follower.followPath(Path8);
+                    follower.followPath(Path6);
                     setPathState(14);
                 }
                 break;
@@ -530,9 +524,9 @@ public class gateintakeauto extends OpMode {
 
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =26*rconstants.movespindexer;
+                    target =23*rconstants.movespindexer;
                 }
-                if(spindexer.getCurrentPosition()>= (26*rconstants.movespindexer-1200)){
+                if(spindexer.getCurrentPosition()>= (23*rconstants.movespindexer-1200)){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(15);
 
@@ -540,7 +534,7 @@ public class gateintakeauto extends OpMode {
                 break;
             case 15:
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
-                    follower.followPath(Path9);
+                    follower.followPath(Path7);
                     ballCount=0;
                     transfermover.setPosition(rconstants.transfermoveridle);
                     transfer.setPower(-1);
@@ -578,16 +572,16 @@ public class gateintakeauto extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3)) {
-                    turretPos=1;
+                    turretPos=0;
                     hood.setPosition(constants_testing.hoodbottom);
-                    targetTicksPerSecond=1100;
+                    targetTicksPerSecond=1050;
                     setPathState(17);
                 }
 
                 break;
             case 17:
 
-                follower.followPath(Path10);
+                follower.followPath(Path8);
                 setPathState(18);
                 break;
             case 18:
@@ -596,9 +590,9 @@ public class gateintakeauto extends OpMode {
 
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =34*rconstants.movespindexer;
+                    target =30*rconstants.movespindexer;
                 }
-                if(spindexer.getCurrentPosition()>= (34*rconstants.movespindexer-800)){
+                if(spindexer.getCurrentPosition()>= (30*rconstants.movespindexer-800)){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(19);
 
@@ -630,16 +624,14 @@ public class gateintakeauto extends OpMode {
     public void loop() {
         follower.update();
         //hood.setPosition(constants_testing.hoodtop);
-
-            if (intake.getCurrent(CurrentUnit.AMPS) < 5) {
-                intake.setPower(1);
-                currentTimer.resetTimer();
-            } else if (currentTimer.getElapsedTimeSeconds() > 0.5) {
-                intake.setPower(-1);
-            } else {
-                intake.setPower(1);
-            }
-
+        if(intake.getCurrent(CurrentUnit.AMPS)<5.9) {
+            intake.setPower(1);
+            currentTimer.resetTimer();
+        } else if(currentTimer.getElapsedTimeSeconds()>1.2){
+            intake.setPower(-1);
+        } else{
+            intake.setPower(1);
+        }
         turretL.setPosition(turretPos);
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);

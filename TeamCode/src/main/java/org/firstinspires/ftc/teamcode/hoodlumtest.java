@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Configurable
 public class hoodlumtest extends LinearOpMode {
     public static Servo hood;
-    public static double pos=0.0;//0-0.4 ONLY STRICTLY
+    public static double pos=0.4;//0-0.4 ONLY STRICTLY
     //bottom pos 0.61
     //top pos 0.52
     @Override

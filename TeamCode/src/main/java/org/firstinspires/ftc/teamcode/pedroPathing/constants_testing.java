@@ -50,7 +50,7 @@ public class constants_testing {
     public static double shootfar=1550;
     public static double shooteridle = 1050;
     public static double hoodtop = 0.435;
-    public static double hoodbottom = 0.32;
+    public static double hoodbottom = 0.26;
     public static Servo turretL;
     public static CRServo turretR;
 

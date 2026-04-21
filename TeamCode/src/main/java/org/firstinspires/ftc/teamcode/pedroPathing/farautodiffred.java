@@ -23,6 +23,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -55,15 +56,7 @@ public class farautodiffred extends OpMode {
     private ControlSystem cs;
 
     public double targetx;
-    public static double turrettarget=-260;
 
-    public static double turretp = 0.002;
-    public static double turreti = 0;
-    public static double turretd = 0.00000005;
-    public static double turretv = 0.0000372;
-    public static double turreta = 0.007;
-    public static double turrets = 0.05;
-    private ControlSystem turretPID;
 
     public int turretOscillationDirection;
     public static double transfermoveridle = 0.6;
@@ -85,7 +78,7 @@ public class farautodiffred extends OpMode {
     public boolean check_follower=false;
     public boolean switchcase1=false;
 
-    public static double p1=0.0009,i1=0,d1=0;
+    public static double p1 = 0.0084, i1 = 0, d1 = 0.000005;
     public static double hoodtop = 0;
     public static double hoodbottom = 0.1;
     public static int ball1_pos=950;
@@ -313,13 +306,7 @@ public class farautodiffred extends OpMode {
     }
     @Override
     public void init_loop(){
-        turretPID = ControlSystem.builder()
-                .posPid(turretp,turreti,turretd)
-                .basicFF(turretv,turreta,turrets)
-                .build();
-        turretPID.setGoal(new KineticState(turrettarget));
-        KineticState current4 = new KineticState(turretEnc.getCurrentPosition()/10.0);
-        turretL.setPower(-turretPID.calculate(current4));
+
     }
     public void start(){
         opmodeTimer.resetTimer();
@@ -568,7 +555,6 @@ public class farautodiffred extends OpMode {
                 }
                 break;
             case -1:
-                turrettarget=0;
                 if (pathTimer.getElapsedTimeSeconds() > 1) {
                     transfermover.setPosition(rconstants.transfermoveridle);
                     stop();
@@ -782,13 +768,8 @@ public class farautodiffred extends OpMode {
         } else{
             intake.setPower(1);
         }
-        turretPID = ControlSystem.builder()
-                .posPid(turretp,turreti,turretd)
-                .basicFF(turretv,turreta,turrets)
-                .build();
-        turretPID.setGoal(new KineticState(turrettarget));
-        KineticState current3 = new KineticState(turretEnc.getCurrentPosition()/10.0);
-        turretL.setPower(-turretPID.calculate(current3));
+
+
 
         /* long lastNanos = System.nanoTime();
         // start in AUTO (not manual)
@@ -1007,7 +988,7 @@ public class farautodiffred extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(0.8*spindexerspeed*(-cs1.calculate(current2)));
+        spindexer.setPower(Range.clip(-0.6 * cs1.calculate(current2),-0.6,0.6));
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));
