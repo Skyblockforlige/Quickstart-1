@@ -10,6 +10,7 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.geometry.BezierCurve;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -35,6 +36,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
+import java.util.List;
+
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
@@ -45,7 +48,7 @@ public class gateintakeauto extends OpMode {
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
-
+    private List<LynxModule> allHubs;
     private IMU imu;
     private DcMotorEx flywheel;
     private DcMotorEx intake;
@@ -248,6 +251,11 @@ public class gateintakeauto extends OpMode {
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
+        allHubs = hardwareMap.getAll(LynxModule.class);
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }
         buildPaths();
         //colorSensor1 = hardwareMap.get(NormalizedColorSensor.class, "cs1");
         //colorSensor2 = hardwareMap.get(NormalizedColorSensor.class, "cs2");
@@ -630,7 +638,9 @@ public class gateintakeauto extends OpMode {
     public void loop() {
         follower.update();
         //hood.setPosition(constants_testing.hoodtop);
-
+        for (LynxModule hub : allHubs) {
+            hub.clearBulkCache();
+        }
             if (intake.getCurrent(CurrentUnit.AMPS) < 5) {
                 intake.setPower(1);
                 currentTimer.resetTimer();

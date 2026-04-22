@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.BezierCurve;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -28,6 +29,8 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import java.util.List;
+
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
@@ -36,6 +39,8 @@ import dev.nextftc.control.KineticState;
 public class gateintakeno3rdspike extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
+    private List<LynxModule> allHubs;
+
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
 
@@ -241,6 +246,11 @@ public class gateintakeno3rdspike extends OpMode {
 
     @Override
     public void init() {
+        allHubs = hardwareMap.getAll(LynxModule.class);
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         buildPaths();
@@ -623,7 +633,9 @@ public class gateintakeno3rdspike extends OpMode {
 
     @Override
     public void loop() {
-
+        for (LynxModule hub : allHubs) {
+            hub.clearBulkCache();
+        }
         follower.update();
         if(flywheel.getVelocity()<(targetTicksPerSecond-60)){
             flywheel.setPower(1);

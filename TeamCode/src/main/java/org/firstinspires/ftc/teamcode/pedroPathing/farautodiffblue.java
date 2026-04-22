@@ -12,6 +12,7 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -51,6 +52,7 @@ public class farautodiffblue extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
+    private List<LynxModule> allHubs;
     private CRServoImplEx transfer;
     public static double errAlpha = 1.5;
     public static double deadbandDeg = 2.0;
@@ -208,7 +210,7 @@ public class farautodiffblue extends OpMode {
                         new BezierCurve(
                                 new Pose(56.000, 19.000),
                                 new Pose(59.587, 37.292),
-                                new Pose(16.336, 35.221)
+                                new Pose(10.336, 35.221)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -218,7 +220,7 @@ public class farautodiffblue extends OpMode {
         Path3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(16.336, 35.221),
+                                new Pose(10.336, 35.221),
                                 new Pose(59.587, 37.292),
                                 new Pose(56.000, 19.000)
                         )
@@ -230,7 +232,7 @@ public class farautodiffblue extends OpMode {
                         new BezierLine(
                                 new Pose(56.000, 19.000),
 
-                                new Pose(15, 13)
+                                new Pose(15, 16)
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(200))
 
@@ -238,7 +240,7 @@ public class farautodiffblue extends OpMode {
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(15, 13),
+                                new Pose(15, 16),
 
                                 new Pose(56.000, 19.000)
                         )
@@ -259,6 +261,11 @@ public class farautodiffblue extends OpMode {
 
     @Override
     public void init() {
+        allHubs = hardwareMap.getAll(LynxModule.class);
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         buildPaths();
@@ -283,7 +290,7 @@ public class farautodiffblue extends OpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1);
         limelight.start();
-        turretL.setPosition(0.32);
+        turretL.setPosition(0.34);
         // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
@@ -335,7 +342,7 @@ public class farautodiffblue extends OpMode {
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
                 follower.followPath(Path1);
-                targetTicksPerSecond=rconstants.shootfar-50;
+                targetTicksPerSecond=rconstants.shootfar-80;
 
                 setPathState(1);
 
@@ -460,7 +467,7 @@ public class farautodiffblue extends OpMode {
             case 6:
                 if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.15) {
                     if(opmodeTimer.getElapsedTimeSeconds()>27){
-                        setPathState(10);
+                        setPathState(100);
                     }
                     follower.followPath(Path4);
                     ballCount=0;
@@ -472,7 +479,7 @@ public class farautodiffblue extends OpMode {
             case 7:
                 // READ COLOR (same hue method as teleop)
                 if(opmodeTimer.getElapsedTimeSeconds()>27){
-                    setPathState(10);
+                    setPathState(100);
                 }
                 colorSensor.getNormalizedColors();
                 Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
@@ -516,11 +523,9 @@ public class farautodiffblue extends OpMode {
                 break;
             case 8:
                 if(opmodeTimer.getElapsedTimeSeconds()>27){
-                    setPathState(10);
+                    setPathState(100);
                 }
                     follower.followPath(Path5);
-                    spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     target = 0;
                     setPathState(9);
 
@@ -529,45 +534,116 @@ public class farautodiffblue extends OpMode {
                 break;
             case 9:
                 if(opmodeTimer.getElapsedTimeSeconds()>27){
-                    setPathState(10);
+                    setPathState(100);
                 }
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =4*rconstants.movespindexer;
+                    target =19*rconstants.movespindexer;
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1420){
+                if(spindexer.getCurrentPosition()>= (19*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1420){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     if(opmodeTimer.getElapsedTimeSeconds()>=26.5) {
-                        setPathState(10);
+                        setPathState(100);
                     } else{
-                        setPathState(6);
+                        setPathState(10);
 
                     }
                 }
                 break;
             case 10:
+                if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.15) {
+                    if(opmodeTimer.getElapsedTimeSeconds()>27){
+                        setPathState(100);
+                    }
+                    follower.followPath(Path4);
+                    ballCount=0;
+                    transfermover.setPosition(rconstants.transfermoveridle);
+                    setPathState(11);
+                    //move to shoot position
+                }
+                break;
+            case 11:
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(100);
+                }
+                colorSensor.getNormalizedColors();
+                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+
+                hue = hsv[0];
+                isPurple = (hue > 200 && hue < 300);
+                isGreen  = (hue > 95  && hue < 200);
+                colorDetected = (isPurple || isGreen);
+
+                // New ball enters
+                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                    // record color into slot memory
+                    if (isPurple) ballSlots[ballCount] = 1;
+                    if (isGreen)  ballSlots[ballCount] = 2;
+
+                    ballCount++;
+                    colorPreviouslyDetected = true;
+
+                    // schedule ONE move after short delay (no sleep in OpMode)
+                    actionTimer.resetTimer();
+                    pendingMove = true;
+                }
+
+                // reset detection when sensor no longer sees a ball
+                if (!colorDetected) {
+                    colorPreviouslyDetected = false;
+                }
+
+                // Execute the scheduled move exactly once
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                    // absolute target based on count (never grows indefinitely)
+                    target +=rconstants.movespindexer;
+                    pendingMove = false;
+                }
+
+                // after 3 balls, move to next path state once follower done
+                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5)) {
+                    setPathState(12);
+                }
+                break;
+            case 12:
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(100);
+                }
+                follower.followPath(Path5);
+                target = 0;
+                setPathState(13);
+            case 13:
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(100);
+                }
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
+                    transfermover.setPosition(rconstants.transfermoverscore);
+                    target =27*rconstants.movespindexer;
+                    spindexerspeed=1;
+
+                }
+                if(spindexer.getCurrentPosition()>= (27*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1420){
+                    transfermover.setPosition(rconstants.transfermoverfull);
+                    spindexerspeed=1;
+                    if(opmodeTimer.getElapsedTimeSeconds()>=26.5) {
+                        setPathState(100);
+                    } else{
+                        setPathState(10);
+
+                    }
+                }
+                //move to shoot position
+                break;
+            case 100:
                 if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.1){
                     transfermover.setPosition(rconstants.transfermoveridle);
                     follower.followPath(Path6);
                     setPathState(-1);
                 }
-                break;
-            case 11:
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    
-                    transfer.setPower(1);
-                    transfermover.setPosition(rconstants.transfermoverscore);
-                    target =10*rconstants.movespindexer;
-                }
-                if(spindexer.getCurrentPosition()>= (10*rconstants.movespindexer-800)){
-                    transfermover.setPosition(rconstants.transfermoverfull);
-                    setPathState(-1);
-
-                }
-                break;
             case -1:
                 if (pathTimer.getElapsedTimeSeconds() > 1) {
                     transfermover.setPosition(rconstants.transfermoveridle);
@@ -997,14 +1073,18 @@ public class farautodiffblue extends OpMode {
         telemetry.update();*/
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+        for (LynxModule hub : allHubs) {
+            hub.clearBulkCache();
+        }
 
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(Range.clip(-0.7 * cs1.calculate(current2),-0.7,0.7));
-        cs.setGoal(new KineticState(0,targetTicksPerSecond));
-        KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
-        flywheel.setPower(cs.calculate(current1));
+        spindexer.setPower(Range.clip(-0.5 * cs1.calculate(current2),-0.5,0.5));
+         cs.setGoal(new KineticState(0, targetTicksPerSecond));
+         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
+         flywheel.setPower(cs.calculate(current1));
+
         telemetry.addData("sped", flywheel.getVelocity());
         telemetry.addData("power of spindexer", cs1.calculate(current2));
         telemetry.addData("Hue", hsv[0]);

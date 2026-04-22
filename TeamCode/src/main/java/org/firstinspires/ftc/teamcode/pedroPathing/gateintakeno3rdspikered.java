@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.BezierCurve;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -28,6 +29,8 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import java.util.List;
+
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
@@ -37,6 +40,8 @@ public class gateintakeno3rdspikered extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
+    private List<LynxModule> allHubs;
+
     private CRServoImplEx transfer;
 
     private IMU imu;
@@ -127,7 +132,7 @@ public class gateintakeno3rdspikered extends OpMode {
                         new BezierCurve(
                                 new Pose(43.796, 99.812).mirror(),
                                 new Pose(63, 56.8).mirror(),
-                                new Pose(20.500, 59.600).mirror()
+                                new Pose(20.500, 60.100).mirror()
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -137,9 +142,9 @@ public class gateintakeno3rdspikered extends OpMode {
         Path3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(20.500, 59.600).mirror(),
+                                new Pose(20.500, 60.100).mirror(),
                                 new Pose(53.500, 56.800).mirror(),
-                                new Pose(59.382, 85.557).mirror()
+                                new Pose(59.382, 87.557).mirror()
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -149,12 +154,12 @@ public class gateintakeno3rdspikered extends OpMode {
         Path4 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(59.382, 85.557).mirror(),
+                                new Pose(59.382, 87.557).mirror(),
                                 new Pose(52.782, 51.290).mirror(),
-                                new Pose(21.530, 62.124).mirror()
+                                new Pose(19.530, 62.124).mirror()
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(20))
+                .setConstantHeadingInterpolation(Math.toRadians(25))
                 .setTValueConstraint(0.85)
                 .build();
 
@@ -172,19 +177,19 @@ public class gateintakeno3rdspikered extends OpMode {
         Path6 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(21.530, 62.124).mirror(),
-                                new Pose(59.382, 85.557).mirror()
+                                new Pose(19.530, 62.124).mirror(),
+                                new Pose(59.382, 87.557).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(20), Math.toRadians(0))
+                .setLinearHeadingInterpolation(Math.toRadians(25), Math.toRadians(0))
                 .setTValueConstraint(0.85)
                 .build();
 
         Path7 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(59.382, 85.557).mirror(),
-                                new Pose(23.000, 85.557).mirror()
+                                new Pose(59.382, 87.557).mirror(),
+                                new Pose(23.000, 87.557).mirror()
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
@@ -194,8 +199,8 @@ public class gateintakeno3rdspikered extends OpMode {
         Path8 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(23.000, 85.557).mirror(),
-                                new Pose(59.000, 114.300).mirror()
+                                new Pose(23.000, 87.557).mirror(),
+                                new Pose(59.000, 121.300).mirror()
                         )
                 )
                 .setTangentHeadingInterpolation()
@@ -206,12 +211,12 @@ public class gateintakeno3rdspikered extends OpMode {
         Path9 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(59.382, 85.557),
-                                new Pose(72.191, 33.044),
-                                new Pose(21.000, 35.293)
+                                new Pose(59.382, 85.557).mirror(),
+                                new Pose(72.191, 33.044).mirror(),
+                                new Pose(21.000, 35.293).mirror()
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .setTValueConstraint(0.85)
                 .build();
 
@@ -229,17 +234,21 @@ public class gateintakeno3rdspikered extends OpMode {
         Path11 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(59.382, 85.557),
-                                new Pose(56.700, 122.975)
+                                new Pose(59.382, 85.557).mirror(),
+                                new Pose(56.700, 122.975).mirror()
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .setTValueConstraint(0.85)
                 .build();
     }
 
     @Override
     public void init() {
+        allHubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         buildPaths();
@@ -328,7 +337,7 @@ public class gateintakeno3rdspikered extends OpMode {
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path2);
-                    targetTicksPerSecond=1290;
+                    targetTicksPerSecond=1245;
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
 
@@ -367,7 +376,7 @@ public class gateintakeno3rdspikered extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5)) {
-                    turretPos=0.33;
+                    turretPos=0.2 ;
                     setPathState(4);
                 }
                 break;
@@ -395,6 +404,7 @@ public class gateintakeno3rdspikered extends OpMode {
             case 6:
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     ballCount=0;
+                    targetTicksPerSecond=1245;
                     follower.followPath(Path4);
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
@@ -438,6 +448,8 @@ public class gateintakeno3rdspikered extends OpMode {
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
                     setPathState(9);
+                    targetTicksPerSecond=1245;
+
                 }
                 break;
             case 9:
@@ -505,6 +517,7 @@ public class gateintakeno3rdspikered extends OpMode {
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
                     setPathState(13);
+                    targetTicksPerSecond=1245;
                 }
 
                 break;
@@ -572,9 +585,9 @@ public class gateintakeno3rdspikered extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3)) {
-                    turretPos=0;
+                    turretPos=0.08;
                     hood.setPosition(constants_testing.hoodbottom);
-                    targetTicksPerSecond=1050;
+                    targetTicksPerSecond=1120;
                     setPathState(17);
                 }
 
@@ -623,6 +636,16 @@ public class gateintakeno3rdspikered extends OpMode {
     @Override
     public void loop() {
         follower.update();
+        /*if(flywheel.getVelocity()<(targetTicksPerSecond-90)){
+            flywheel.setPower(1);
+        } else{*/
+            cs.setGoal(new KineticState(0,targetTicksPerSecond));
+            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
+            flywheel.setPower(cs.calculate(current1));
+        //}
+        for (LynxModule hub : allHubs) {
+            hub.clearBulkCache();
+        }
         //hood.setPosition(constants_testing.hoodtop);
         if(intake.getCurrent(CurrentUnit.AMPS)<5.9) {
             intake.setPower(1);
@@ -640,9 +663,9 @@ public class gateintakeno3rdspikered extends OpMode {
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
         spindexer.setPower(Range.clip(-0.6 * cs1.calculate(current2),-0.6,0.6));
-        cs.setGoal(new KineticState(0,targetTicksPerSecond));
+        /*cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
-        flywheel.setPower(cs.calculate(current1));
+        flywheel.setPower(cs.calculate(current1));*/
         telemetry.addData("sped", flywheel.getVelocity());
         telemetry.addData("power of spindexer", cs1.calculate(current2));
         telemetry.addData("Hue", hsv[0]);

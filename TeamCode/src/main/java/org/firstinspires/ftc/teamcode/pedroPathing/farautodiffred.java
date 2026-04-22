@@ -1,19 +1,27 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+
 import android.graphics.Color;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
-import com.pedropathing.follower.Follower;
+import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.geometry.BezierCurve;
-import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.PathChain;
-import com.pedropathing.util.Timer;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -21,16 +29,22 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+
+import java.util.List;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
-
 @Configurable
 @Config
 @Autonomous(name = "farautodiffred", group = "Examples")
@@ -38,10 +52,11 @@ public class farautodiffred extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
+    private List<LynxModule> allHubs;
     private CRServoImplEx transfer;
     public static double errAlpha = 1.5;
     public static double deadbandDeg = 2.0;
-
+    private Timer currentTimer;
 
     public static double forwardPodY = -5.46;
     public static double strafePodX = -1.693;
@@ -57,7 +72,6 @@ public class farautodiffred extends OpMode {
 
     public double targetx;
 
-
     public int turretOscillationDirection;
     public static double transfermoveridle = 0.6;
     public static double transfermoverscore = 0.73;
@@ -65,7 +79,6 @@ public class farautodiffred extends OpMode {
     public static double p=0.0039,i=0,d=0.0000005;
     public static double v=0.000372,a=0.7,s=0.0000005;
     private static int targetpos;
-    private CRServo turretL;
     private CRServo turretR;
 
     public boolean first = false;
@@ -99,14 +112,14 @@ public class farautodiffred extends OpMode {
     boolean intakeBaseSet = false;
 
     boolean pendingMove = false;
+    private Servo turretL;
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    private final Pose startPose = new Pose(87.0, 8, Math.toRadians(90));
+    private final Pose startPose = new Pose(56.000, 8, Math.toRadians(90)).mirror();
 
     public PathChain firstpath;
     public PathChain go_first_back;
-    private Timer currentTimer;
 
     public PathChain go_second;
     public PathChain shoot2_row;
@@ -184,57 +197,61 @@ public class farautodiffred extends OpMode {
     public void buildPaths() {
         Path1 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(87, 8.000),
+                                new Pose(56.000, 8.000).mirror(),
 
-                                new Pose(87, 19.000)
+                                new Pose(56.000, 19.000).mirror()
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(90))
 
                 .build();
 
-        Path2 = follower.pathBuilder().addPath(
+        Path2 = follower.pathBuilder()
+                .addPath(
                         new BezierCurve(
-                                new Pose(87, 19.000),
-                                new Pose(85, 35),
-                                new Pose(145, 45.27)
+                                new Pose(56.000, 19.000).mirror(),
+                                new Pose(59.587, 37.292).mirror(),
+                                new Pose(16.336, 35.221).mirror()
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(90),Math.toRadians(0))
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
 
                 .build();
 
-        Path3 = follower.pathBuilder().addPath(
-                        new BezierLine(
-                                new Pose(145, 45.27),
-
-                                new Pose(87, 19.000)
+        Path3 = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(16.336, 35.221).mirror(),
+                                new Pose(59.587, 37.292).mirror(),
+                                new Pose(56.000, 19.000).mirror()
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
-
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(0),Math.toRadians(90))
                 .build();
 
         Path4 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(87, 19.000),
-                                new Pose(145, 24)
+                                new Pose(56.000, 19.000).mirror(),
+
+                                new Pose(15, 13).mirror()
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(0))
+                ).setConstantHeadingInterpolation(Math.toRadians(20))
 
                 .build();
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(145, 24),
+                                new Pose(15, 13),
 
-                                new Pose(87, 19.000)
+                                new Pose(56.000, 19.000)
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(20), Math.toRadians(90))
 
                 .build();
         Path6 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(87, 19.000),
+                                new Pose(56.000, 19.000),
 
-                                new Pose(100, 24.421)
+                                new Pose(31.014, 14.421)
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(90))
 
@@ -244,6 +261,11 @@ public class farautodiffred extends OpMode {
 
     @Override
     public void init() {
+        allHubs = hardwareMap.getAll(LynxModule.class);
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         buildPaths();
@@ -260,7 +282,7 @@ public class farautodiffred extends OpMode {
         turretOscillationDirection = 0;
         rconstants.initHardware(hardwareMap);
         colorSensor=rconstants.colorSensor;
-        turretL = hardwareMap.crservo.get("turretL");
+        turretL = hardwareMap.servo.get("turretL");
         turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
 
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -268,7 +290,7 @@ public class farautodiffred extends OpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1);
         limelight.start();
-        turretL.setPower(0);
+        turretL.setPosition(0.68);
         // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
@@ -294,7 +316,7 @@ public class farautodiffred extends OpMode {
                 .basicFF(v,a,s)
                 .build();
         cs1 = ControlSystem.builder()
-                .posPid(p1)
+                .posPid(p1,i1,d1)
                 .build();
         hood.setPosition(rconstants.hoodtop);
         limelight = rconstants.limelight;
@@ -320,8 +342,7 @@ public class farautodiffred extends OpMode {
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
                 follower.followPath(Path1);
-                spindexerspeed=0.1;
-                targetTicksPerSecond=rconstants.shootfar-10;
+                targetTicksPerSecond=rconstants.shootfar-50;
 
                 setPathState(1);
 
@@ -330,7 +351,7 @@ public class farautodiffred extends OpMode {
                 break;
             case 1:
                 /*if(!follower.isBusy()&&flywheel.getVelocity()>targetTicksPerSecond-20&!first){
-                    
+
                     transfermover.setPosition(rconstants.transfermoverscore);
                     transfer.setPower(1);
                     target =2*rconstants.movespindexer;
@@ -347,14 +368,12 @@ public class farautodiffred extends OpMode {
                     third_1=true;
                     setPathState(2);
                 }*/
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
-                    
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1450){
+
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
-                    spindexerspeed=0.5;
                 }
-                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-400)&&flywheel.getVelocity()>=1500){
-                    spindexerspeed=1;
+                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-400)){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(2);
                 }
@@ -363,8 +382,9 @@ public class farautodiffred extends OpMode {
             case 2:
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.5) {
-                    spindexerspeed=1;
+                    follower.setMaxPower(0.6);
                     follower.followPath(Path2);
+                    transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
                     setPathState(3);
 
@@ -409,31 +429,34 @@ public class farautodiffred extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5)) {
+                    transfermover.setPosition(rconstants.transfermoverscore);
                     setPathState(4);
                 }
 
                 break;
             case 4:
-                /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
-                follower.followPath(Path3);
-                spindexerspeed=0.2;
+                if(follower.getCurrentPath().isAtParametricEnd()) {
+                    follower.setMaxPower(1);
+                    /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
+                    follower.followPath(Path3);
                     /*spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                    target=0;*/
-                setPathState(5);
+                    setPathState(5);
+                }
                 //move to shoot position
 
                 break;
             case 5:
                 // READ COLOR (same hue method as teleop)
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
-                    
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
+                    transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =9*rconstants.movespindexer;
+                    target =11*rconstants.movespindexer;
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (9*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1500){
+                if(spindexer.getCurrentPosition()>= (11*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1420){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     setPathState(6);
@@ -442,10 +465,10 @@ public class farautodiffred extends OpMode {
 
                 break;
             case 6:
-                if(opmodeTimer.getElapsedTimeSeconds()>27){
-                    setPathState(10);
-                }
                 if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.15) {
+                    if(opmodeTimer.getElapsedTimeSeconds()>27){
+                        setPathState(100);
+                    }
                     follower.followPath(Path4);
                     ballCount=0;
                     transfermover.setPosition(rconstants.transfermoveridle);
@@ -454,10 +477,10 @@ public class farautodiffred extends OpMode {
                 }
                 break;
             case 7:
-                if(opmodeTimer.getElapsedTimeSeconds()>27){
-                    setPathState(10);
-                }
                 // READ COLOR (same hue method as teleop)
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(100);
+                }
                 colorSensor.getNormalizedColors();
                 Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
 
@@ -500,12 +523,9 @@ public class farautodiffred extends OpMode {
                 break;
             case 8:
                 if(opmodeTimer.getElapsedTimeSeconds()>27){
-                    setPathState(10);
+                    setPathState(100);
                 }
                 follower.followPath(Path5);
-                spindexerspeed = 0.2;
-                spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 target = 0;
                 setPathState(9);
 
@@ -514,46 +534,116 @@ public class farautodiffred extends OpMode {
                 break;
             case 9:
                 if(opmodeTimer.getElapsedTimeSeconds()>27){
-                    setPathState(10);
+                    setPathState(100);
                 }
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1500){
-                    
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    target =4*rconstants.movespindexer;
+                    target =19*rconstants.movespindexer;
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1500){
+                if(spindexer.getCurrentPosition()>= (19*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1420){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     if(opmodeTimer.getElapsedTimeSeconds()>=26.5) {
-                        setPathState(10);
+                        setPathState(100);
                     } else{
-                        setPathState(6);
+                        setPathState(10);
 
                     }
                 }
                 break;
             case 10:
+                if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.15) {
+                    if(opmodeTimer.getElapsedTimeSeconds()>27){
+                        setPathState(100);
+                    }
+                    follower.followPath(Path4);
+                    ballCount=0;
+                    transfermover.setPosition(rconstants.transfermoveridle);
+                    setPathState(11);
+                    //move to shoot position
+                }
+                break;
+            case 11:
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(100);
+                }
+                colorSensor.getNormalizedColors();
+                Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+
+                hue = hsv[0];
+                isPurple = (hue > 200 && hue < 300);
+                isGreen  = (hue > 95  && hue < 200);
+                colorDetected = (isPurple || isGreen);
+
+                // New ball enters
+                if (colorDetected && !colorPreviouslyDetected && ballCount < 3 && !pendingMove) {
+
+                    // record color into slot memory
+                    if (isPurple) ballSlots[ballCount] = 1;
+                    if (isGreen)  ballSlots[ballCount] = 2;
+
+                    ballCount++;
+                    colorPreviouslyDetected = true;
+
+                    // schedule ONE move after short delay (no sleep in OpMode)
+                    actionTimer.resetTimer();
+                    pendingMove = true;
+                }
+
+                // reset detection when sensor no longer sees a ball
+                if (!colorDetected) {
+                    colorPreviouslyDetected = false;
+                }
+
+                // Execute the scheduled move exactly once
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
+                    // absolute target based on count (never grows indefinitely)
+                    target +=rconstants.movespindexer;
+                    pendingMove = false;
+                }
+
+                // after 3 balls, move to next path state once follower done
+                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5)) {
+                    setPathState(12);
+                }
+                break;
+            case 12:
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(100);
+                }
+                follower.followPath(Path5);
+                target = 0;
+                setPathState(13);
+            case 13:
+                if(opmodeTimer.getElapsedTimeSeconds()>27){
+                    setPathState(100);
+                }
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
+                    transfermover.setPosition(rconstants.transfermoverscore);
+                    target =27*rconstants.movespindexer;
+                    spindexerspeed=1;
+
+                }
+                if(spindexer.getCurrentPosition()>= (27*rconstants.movespindexer-500)&&flywheel.getVelocity()>=1420){
+                    transfermover.setPosition(rconstants.transfermoverfull);
+                    spindexerspeed=1;
+                    if(opmodeTimer.getElapsedTimeSeconds()>=26.5) {
+                        setPathState(100);
+                    } else{
+                        setPathState(10);
+
+                    }
+                }
+                //move to shoot position
+                break;
+            case 100:
                 if(!follower.isBusy()&&pathTimer.getElapsedTimeSeconds()>0.1){
                     transfermover.setPosition(rconstants.transfermoveridle);
                     follower.followPath(Path6);
                     setPathState(-1);
                 }
-                break;
-            case 11:
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    
-                    transfer.setPower(1);
-                    transfermover.setPosition(rconstants.transfermoverscore);
-                    target =10*rconstants.movespindexer;
-                }
-                if(spindexer.getCurrentPosition()>= (10*rconstants.movespindexer-800)){
-                    transfermover.setPosition(rconstants.transfermoverfull);
-                    setPathState(-1);
-
-                }
-                break;
             case -1:
                 if (pathTimer.getElapsedTimeSeconds() > 1) {
                     transfermover.setPosition(rconstants.transfermoveridle);
@@ -561,7 +651,7 @@ public class farautodiffred extends OpMode {
 
                 }
                 break;
-                /*case 8:
+            /*case 8:
                 ballCount=0;
                 setPathState(9);
 
@@ -572,7 +662,7 @@ public class farautodiffred extends OpMode {
                     follower.followPath(Path5);
 
                     transfermover.setPosition(rconstants.transfermoveridle);
-                    
+
 
                     setPathState(10);
                 }
@@ -648,7 +738,7 @@ public class farautodiffred extends OpMode {
                 break;
             case 14:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    
+
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =16*rconstants.movespindexer;
@@ -731,7 +821,7 @@ public class farautodiffred extends OpMode {
                 break;
             case 19:
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
-                    
+
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =22*rconstants.movespindexer;
@@ -760,18 +850,17 @@ public class farautodiffred extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        if(intake.getCurrent(CurrentUnit.AMPS)<6.5) {
+        if (intake.getCurrent(CurrentUnit.AMPS) < 6) {
             intake.setPower(1);
             currentTimer.resetTimer();
-        } else if(currentTimer.getElapsedTimeSeconds()>1.2){
+        } else if (currentTimer.getElapsedTimeSeconds() > 0.5) {
             intake.setPower(-1);
-        } else{
+        } else {
             intake.setPower(1);
         }
 
 
-
-        /* long lastNanos = System.nanoTime();
+       /* long lastNanos = System.nanoTime();
         // start in AUTO (not manual)
         turretMode = TurretMode.IDLE;
 
@@ -808,7 +897,7 @@ public class farautodiffred extends OpMode {
                 haveLastKnown = true;
             }*/
 
-            // If manual: drive turret directly, but ALSO keep lastKnownAbs tracking turret direction
+        // If manual: drive turret directly, but ALSO keep lastKnownAbs tracking turret direction
            /* if (manualNow) {
                 turretMode = TurretMode.MANUAL;
 
@@ -830,7 +919,7 @@ public class farautodiffred extends OpMode {
 
             }*/
 
-            // Not manual => AUTO
+        // Not manual => AUTO
             /*relUnclampedNeeded = 0.0;
             turretRelNeededDeg = 0.0;
             holdErrDeg = 0.0;
@@ -864,7 +953,7 @@ public class farautodiffred extends OpMode {
             }
             turretMode = next;
 */
-            // Command power
+        // Command power
             /*double cmdPower;
 
             if (turretMode == TurretMode.TRACK) {
@@ -911,7 +1000,7 @@ public class farautodiffred extends OpMode {
 
 
 
-            // Soft limits
+        // Soft limits
            /* if (turretRelDeg <= minTurretDeg && cmdPower < 0) cmdPower = 0.0;
             if (turretRelDeg >= maxTurretDeg && cmdPower > 0) cmdPower = 0.0;
 
@@ -984,14 +1073,21 @@ public class farautodiffred extends OpMode {
         telemetry.update();*/
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+        for (LynxModule hub : allHubs) {
+            hub.clearBulkCache();
+        }
 
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(Range.clip(-0.6 * cs1.calculate(current2),-0.6,0.6));
-        cs.setGoal(new KineticState(0,targetTicksPerSecond));
-        KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
-        flywheel.setPower(cs.calculate(current1));
+        spindexer.setPower(Range.clip(-0.7 * cs1.calculate(current2),-0.7,0.7));
+        if(flywheel.getVelocity() < (targetTicksPerSecond-120)){
+            flywheel.setPower(1);
+        }else {
+            cs.setGoal(new KineticState(0, targetTicksPerSecond));
+            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
+            flywheel.setPower(cs.calculate(current1));
+        }
         telemetry.addData("sped", flywheel.getVelocity());
         telemetry.addData("power of spindexer", cs1.calculate(current2));
         telemetry.addData("Hue", hsv[0]);
@@ -1109,9 +1205,7 @@ public class farautodiffred extends OpMode {
 
 
     // ===================== Turret power helper =====================
-    private void setTurretPower(double pwr) {
-        turretL.setPower(pwr);
-    }
+
 
     // Wrap degrees to [-180, +180]
     private static double angleWrapDeg(double deg) {
