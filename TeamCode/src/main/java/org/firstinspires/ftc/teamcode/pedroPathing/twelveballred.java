@@ -29,6 +29,7 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -66,13 +67,12 @@ public class twelveballred extends OpMode {
     public static double p=0.0039,i=0,d=0.0000005;
     public static double v=0.000372,a=0.7,s=0.0000005;
     private static int targetpos;
-    private CRServo turretL;
-    private CRServo turretR;
+
     private Servo hood;
     private Timer currentTimer;
     public static double targetTicksPerSecond=0;
 
-    public static double p1=0.0009,i1=0,d1=0;
+    public static double p1 = 0.0084, i1 = 0, d1 = 0.000005;
     public static double hoodtop = 0;
     public static double hoodbottom = 0.1;
     public static int ball1_pos=950;
@@ -113,7 +113,7 @@ public class twelveballred extends OpMode {
             131.821,
             blueToRedHeadingRad(Math.toRadians(145))
     );
-
+    public Servo turretL;
     public PathChain firstpath;
     public PathChain Path1;
     public PathChain Path2;
@@ -262,8 +262,7 @@ public class twelveballred extends OpMode {
         turretOscillationDirection = 0;
         rconstants.initHardware(hardwareMap);
         colorSensor=rconstants.colorSensor;
-        turretL = hardwareMap.crservo.get("turretL");
-        turretR = hardwareMap.crservo.get("turretR");
+        turretL = hardwareMap.servo.get("turretL");
         hood= hardwareMap.servo.get("hood");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
@@ -276,7 +275,7 @@ public class twelveballred extends OpMode {
 
         colorSensor.setGain(rconstants.csgain);
         distance = (DistanceSensor) colorSensor;
-
+        turretL.setPosition(0.5);
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP
@@ -638,11 +637,10 @@ public class twelveballred extends OpMode {
             intake.setPower(1);
         }
         autonomousPathUpdate();
-        turretL.setPower(0);
 
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(1*(-cs1.calculate(current2)));
+        spindexer.setPower(Range.clip(-0.6 * cs1.calculate(current2),-0.6,0.6));
 
         cs.setGoal(new KineticState(0,targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());

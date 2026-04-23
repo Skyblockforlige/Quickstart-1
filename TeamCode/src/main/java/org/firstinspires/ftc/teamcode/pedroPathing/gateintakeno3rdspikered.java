@@ -633,11 +633,11 @@ public class gateintakeno3rdspikered extends OpMode {
 
     @Override
     public void loop() {
-        for (LynxModule hub : allHubs) {
+            for (LynxModule hub : allHubs) {
             hub.clearBulkCache();
         }
         follower.update();
-        if(flywheel.getVelocity()<(targetTicksPerSecond-60)){
+        if(flywheel.getVelocity()<(targetTicksPerSecond-90)){
             flywheel.setPower(1);
         } else{
             cs.setGoal(new KineticState(0,targetTicksPerSecond));
