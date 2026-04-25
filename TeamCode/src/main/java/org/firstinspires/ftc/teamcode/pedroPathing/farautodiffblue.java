@@ -368,7 +368,7 @@ public class farautodiffblue extends OpMode {
                     third_1=true;
                     setPathState(2);
                 }*/
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1450){
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
                     
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
@@ -381,7 +381,7 @@ public class farautodiffblue extends OpMode {
                 break;
             case 2:
                 //move to begening of 1,2,3
-                if(pathTimer.getElapsedTimeSeconds()>0.5) {
+                if(pathTimer.getElapsedTimeSeconds()>0.3) {
                     follower.setMaxPower(0.6);
                     follower.followPath(Path2);
                     transfer.setPower(-1);

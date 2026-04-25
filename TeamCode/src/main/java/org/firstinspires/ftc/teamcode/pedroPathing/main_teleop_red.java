@@ -37,8 +37,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp(name="testing")
-public class position_servo_code extends LinearOpMode {
+@TeleOp(name="teleop_red_main")
+public class main_teleop_red extends LinearOpMode {
 
     private DcMotor lf, lb, rf, rb;
     private List<LynxModule> allHubs;
@@ -83,8 +83,8 @@ public class position_servo_code extends LinearOpMode {
     public static double START_X = 35.285;
     public static double START_Y = 77.683;
     public static double START_HEADING_DEG = 133.5;
-    public static double TARGET_X = 12;
-    public static double TARGET_Y = 136;
+    public static double TARGET_X = 144;
+    public static double TARGET_Y = 144;
 
     private Servo turretL;
     private CRServo turretR;
