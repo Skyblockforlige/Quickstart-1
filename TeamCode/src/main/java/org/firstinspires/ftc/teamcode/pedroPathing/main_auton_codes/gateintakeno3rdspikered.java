@@ -177,10 +177,12 @@ public class gateintakeno3rdspikered extends OpMode {
                 .setConstantHeadingInterpolation(Math.toRadians(150))
                 .build();*/
 
+
         Path6 = follower.pathBuilder()
                 .addPath(
-                        new BezierLine(
+                        new BezierCurve(
                                 new Pose(19.530, 62.124).mirror(),
+                                new Pose(52.41237583892618,65.00157382550336).mirror(),
                                 new Pose(59.382, 87.557).mirror()
                         )
                 )
@@ -340,7 +342,7 @@ public class gateintakeno3rdspikered extends OpMode {
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path2);
-                    targetTicksPerSecond=1275;
+                    targetTicksPerSecond=1260;
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
 
@@ -518,7 +520,7 @@ public class gateintakeno3rdspikered extends OpMode {
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
                     setPathState(13);
-                    targetTicksPerSecond=1245;
+                    targetTicksPerSecond=1260;
                 }
 
                 break;

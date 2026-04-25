@@ -200,7 +200,7 @@ public class farautodiffred extends OpMode {
                         new BezierCurve(
                                 new Pose(56.000, 19.000).mirror(),
                                 new Pose(59.587, 37.292).mirror(),
-                                new Pose(16.336, 35.221).mirror()
+                                new Pose(10.336, 35.221).mirror()
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -210,7 +210,7 @@ public class farautodiffred extends OpMode {
         Path3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(16.336, 35.221).mirror(),
+                                new Pose(10.336, 35.221).mirror(),
                                 new Pose(59.587, 37.292).mirror(),
                                 new Pose(56.000, 19.000).mirror()
                         )
@@ -222,26 +222,26 @@ public class farautodiffred extends OpMode {
                         new BezierLine(
                                 new Pose(56.000, 19.000).mirror(),
 
-                                new Pose(15, 13).mirror()
+                                new Pose(15, 16).mirror()
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(20))
+                ).setConstantHeadingInterpolation(Math.toRadians(340))
 
                 .build();
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(15, 13),
+                                new Pose(15, 16).mirror(),
 
-                                new Pose(56.000, 19.000)
+                                new Pose(56.000, 19.000).mirror()
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(20), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(340), Math.toRadians(90))
 
                 .build();
         Path6 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(56.000, 19.000),
+                                new Pose(56.000, 19.000).mirror(),
 
-                                new Pose(31.014, 14.421)
+                                new Pose(31.014, 14.421).mirror()
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(90))
 
@@ -280,7 +280,7 @@ public class farautodiffred extends OpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1);
         limelight.start();
-        turretL.setPosition(0.68);
+        turretL.setPosition(0.66);
         // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
@@ -332,7 +332,7 @@ public class farautodiffred extends OpMode {
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
                 follower.followPath(Path1);
-                targetTicksPerSecond=rconstants.shootfar-50;
+                targetTicksPerSecond=rconstants.shootfar-80;
 
                 setPathState(1);
 
@@ -358,7 +358,7 @@ public class farautodiffred extends OpMode {
                     third_1=true;
                     setPathState(2);
                 }*/
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1450){
+                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1440){
 
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
@@ -371,7 +371,7 @@ public class farautodiffred extends OpMode {
                 break;
             case 2:
                 //move to begening of 1,2,3
-                if(pathTimer.getElapsedTimeSeconds()>0.5) {
+                if(pathTimer.getElapsedTimeSeconds()>0.3) {
                     follower.setMaxPower(0.6);
                     follower.followPath(Path2);
                     transfer.setPower(-1);
@@ -840,7 +840,7 @@ public class farautodiffred extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        if (intake.getCurrent(CurrentUnit.AMPS) < 6) {
+        if (intake.getCurrent(CurrentUnit.AMPS) < 6.5F) {
             intake.setPower(1);
             currentTimer.resetTimer();
         } else if (currentTimer.getElapsedTimeSeconds() > 0.5) {
@@ -1070,14 +1070,11 @@ public class farautodiffred extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(Range.clip(-0.7 * cs1.calculate(current2),-0.7,0.7));
-        if(flywheel.getVelocity() < (targetTicksPerSecond-120)){
-            flywheel.setPower(1);
-        }else {
-            cs.setGoal(new KineticState(0, targetTicksPerSecond));
-            KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
-            flywheel.setPower(cs.calculate(current1));
-        }
+        spindexer.setPower(Range.clip(-0.5 * cs1.calculate(current2),-0.5,0.5));
+        cs.setGoal(new KineticState(0, targetTicksPerSecond));
+        KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
+        flywheel.setPower(cs.calculate(current1));
+
         telemetry.addData("sped", flywheel.getVelocity());
         telemetry.addData("power of spindexer", cs1.calculate(current2));
         telemetry.addData("Hue", hsv[0]);
