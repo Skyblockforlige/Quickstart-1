@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing;
+package org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes;
 
 import android.graphics.Color;
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -12,7 +12,6 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -39,9 +38,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@Disabled
-@TeleOp(name="teleop_red_main")
-public class main_teleop_red extends LinearOpMode {
+@TeleOp(name="RED Turret Test")
+public class turret_test_red extends LinearOpMode {
 
     private DcMotor lf, lb, rf, rb;
     private List<LynxModule> allHubs;
@@ -78,17 +76,16 @@ public class main_teleop_red extends LinearOpMode {
     boolean sorting = false;
     int[] sortTarget = new int[]{0, 0, 0};
 
-    public static double targetTicksPerSecond = 200;
+    public static double targetTicksPerSecond =0;
     public static double shootclose = 1000;
     public static double shootfar = 1600;
     public static double shooteridle = 200;
     public static double ticksPerDegree = 126.42;
     public static double START_X = 35.285;
     public static double START_Y = 77.683;
-    public static double START_HEADING_DEG = 133.5;
+    public static double START_HEADING_DEG = 37;
     public static double TARGET_X = 144;
-    public static double TARGET_Y = 144;
-
+    public static double TARGET_Y = 130;
     private Servo turretL;
     private CRServo turretR;
     private DcMotorEx turretEnc;
@@ -101,7 +98,7 @@ public class main_teleop_red extends LinearOpMode {
     public static double spindexer_speed_far = 0.05;
 
     public static String pp = "pp";
-    public static int pipelineIndex = 5;
+    public static int pipelineIndex = 6;
 
     private boolean farmode = false;
     private boolean movedoffsetspindexer;
@@ -112,8 +109,9 @@ public class main_teleop_red extends LinearOpMode {
 
     private static final double METERS_TO_INCHES = 39.3701;
     private static final double FIELD_SIZE_INCHES = 141.6;
-    public static double Y_OFFSET_INCHES = -5;
+    public static double Y_OFFSET_INCHES = -3;
     public static double x_OFFSET_INCHES = 120;
+    public static double RED_X_CORRECTION = 0.0;
     public static double HEADING_OFFSET_DEG = 0.0;
 
 
@@ -125,7 +123,7 @@ public class main_teleop_red extends LinearOpMode {
     private Pose limelightMT2ToPedroPose(Pose3D llPose, double imuDeg) {
         double xIn = llPose.getPosition().x * METERS_TO_INCHES;
         double yIn = llPose.getPosition().y * METERS_TO_INCHES;
-        double pedroX = xIn + (FIELD_HALF_INCHES * 2.0 / 2.0) + x_OFFSET_INCHES;
+        double pedroX = xIn + FIELD_HALF_INCHES + x_OFFSET_INCHES + RED_X_CORRECTION;
         double pedroY = yIn + FIELD_HALF_INCHES + Y_OFFSET_INCHES;
         double heading = normalizeAngleDeg(imuDeg + HEADING_OFFSET_DEG);
         return new Pose(pedroX, pedroY, Math.toRadians(heading));
@@ -211,15 +209,16 @@ public class main_teleop_red extends LinearOpMode {
                 LLResult latest = limelight.getLatestResult();
 
 
-// inside the drive thread, replace the llValid block with this:
                 if (latest != null && latest.isValid()) {
                     Pose3D mt2Pose = latest.getBotpose_MT2();
+                    //mt2Pose = latest.getBotpose();
                     if (mt2Pose != null) {
                         llPedro = limelightMT2ToPedroPose(mt2Pose, currentHeadingDeg);
                         llValid = true;
 
                         double driftX = Math.abs(llPedro.getX() - pinpoint.getPosX(DistanceUnit.INCH));
                         double driftY = Math.abs(llPedro.getY() - pinpoint.getPosY(DistanceUnit.INCH));
+
 
                         if (driftX > LL_CORRECTION_THRESHOLD_INCHES) {
                             pinpoint.setPosX(llPedro.getX(), DistanceUnit.INCH);
@@ -281,12 +280,12 @@ public class main_teleop_red extends LinearOpMode {
                 double dist = getDistance();
                 if (dist >= 50) {
                     hood.setPosition(constants_testing.hoodtop);
-                    targetTicksPerSecond = velocityfromdistance(dist);
+                    targetTicksPerSecond =0;
                 } else {
                     if      (gamepad2.y) { targetTicksPerSecond = constants_testing.shootfar;   hood.setPosition(constants_testing.hoodtop);    }
                     else if (gamepad2.b) { targetTicksPerSecond = constants_testing.shootclose;  hood.setPosition(constants_testing.hoodtop);    }
                     else if (gamepad2.a) { targetTicksPerSecond = constants_testing.shooteridle; hood.setPosition(constants_testing.hoodbottom); }
-                    else                 { hood.setPosition(constants_testing.hoodbottom); targetTicksPerSecond = constants_testing.shooteridle; }
+                    else                 { hood.setPosition(constants_testing.hoodbottom); targetTicksPerSecond = 0; }
                 }
 
                 cs = ControlSystem.builder().velPid(p, i, d).basicFF(v, a, s).build();
@@ -378,9 +377,9 @@ public class main_teleop_red extends LinearOpMode {
             }
 
             if (gamepad2.right_stick_button) {
-                pinpoint.setPosX(26.37, DistanceUnit.INCH);
+                pinpoint.setPosX(117.63, DistanceUnit.INCH);
                 pinpoint.setPosY(131.69, DistanceUnit.INCH);
-                pinpoint.setHeading(143, AngleUnit.DEGREES);
+                pinpoint.setHeading(37, AngleUnit.DEGREES);
             }
 
             telemetry.addData("Ball Count", ballCount);
@@ -396,6 +395,7 @@ public class main_teleop_red extends LinearOpMode {
                 telemetry.addData("LL X (in)",        String.format("%.3f in", llPedro.getX()));
                 telemetry.addData("LL Y (in)",        String.format("%.3f in", llPedro.getY()));
                 telemetry.addData("LL Heading (deg)", String.format("%.2f°", Math.toDegrees(llPedro.getHeading())));
+
             }
             telemetry.addData("Intake Current Amps: ", intake.getCurrent(CurrentUnit.AMPS));
             telemetry.update();

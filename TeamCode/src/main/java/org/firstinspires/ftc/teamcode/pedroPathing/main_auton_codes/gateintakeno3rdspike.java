@@ -159,10 +159,10 @@ public class gateintakeno3rdspike extends OpMode {
                         new BezierCurve(
                                 new Pose(59.382, 85.557),
                                 new Pose(52.782, 51.290),
-                                new Pose(21.530, 62.124)
+                                new Pose(17.702151898734183, 60.66577215189874)
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(160))
+                .setConstantHeadingInterpolation(Math.toRadians(152))
                 .setTValueConstraint(0.85)
                 .build();
 
@@ -342,10 +342,10 @@ public class gateintakeno3rdspike extends OpMode {
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path2);
-                    targetTicksPerSecond=1275;
+                    targetTicksPerSecond=1218;
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
-
+                    intake.setPower(1);
                     hood.setPosition(constants_testing.hoodtop);
                     setPathState(3);
                 }
@@ -382,6 +382,7 @@ public class gateintakeno3rdspike extends OpMode {
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5)) {
                     turretPos=0.8;
+                    intake.setPower(0);
                     setPathState(4);
                 }
                 break;
@@ -419,6 +420,7 @@ public class gateintakeno3rdspike extends OpMode {
                 }
                 break;
             case 7:
+                intake.setPower(1);
                 setPathState(8);
                 break;
             case 8:
@@ -451,6 +453,7 @@ public class gateintakeno3rdspike extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
+                    intake.setPower(0);
                     setPathState(9);
                 }
                 break;
@@ -481,7 +484,7 @@ public class gateintakeno3rdspike extends OpMode {
                     follower.followPath(Path4);
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
-
+                    intake.setPower(1);
 
 
                     setPathState(12);
@@ -518,6 +521,7 @@ public class gateintakeno3rdspike extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
+                    intake.setPower(0);
                     setPathState(13);
                 }
 
@@ -552,6 +556,7 @@ public class gateintakeno3rdspike extends OpMode {
                     ballCount=0;
                     transfermover.setPosition(rconstants.transfermoveridle);
                     transfer.setPower(-1);
+                    intake.setPower(1);
                     //shoot ball 6
                     setPathState(16);
                 }
@@ -586,9 +591,10 @@ public class gateintakeno3rdspike extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>2)) {
-                    turretPos=1;
+                    turretPos=0.87;
                     hood.setPosition(constants_testing.hoodbottom);
-                    targetTicksPerSecond=1050;
+                    intake.setPower(0);
+                    targetTicksPerSecond=1070;
                     setPathState(17);
                 }
 
@@ -648,14 +654,14 @@ public class gateintakeno3rdspike extends OpMode {
             flywheel.setPower(cs.calculate(current1));
         }
         //hood.setPosition(constants_testing.hoodtop);
-        if (intake.getCurrent(CurrentUnit.AMPS) < 5) {
+        /*if (intake.getCurrent(CurrentUnit.AMPS) < 5) {
             intake.setPower(1);
             currentTimer.resetTimer();
         } else if (currentTimer.getElapsedTimeSeconds() > 0.5) {
             intake.setPower(-1);
         } else {
             intake.setPower(1);
-        }
+        }*/
         turretL.setPosition(turretPos);
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);

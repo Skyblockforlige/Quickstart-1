@@ -38,7 +38,6 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Disabled
 @Autonomous(name = "auton test")
 public class set_auton_test extends OpMode {
     private Follower follower;

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing;
+package org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes;
 
 import android.graphics.Color;
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -6,13 +6,13 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -31,6 +31,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.random_codes_not_needed.constants_testing;
 
 import java.util.List;
@@ -39,13 +40,14 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@Disabled
-@TeleOp(name="teleop_red_main")
-public class main_teleop_red extends LinearOpMode {
+@TeleOp(name="Blue Turret test")
+public class turret_test_blue extends LinearOpMode {
 
     private DcMotor lf, lb, rf, rb;
     private List<LynxModule> allHubs;
     private ElapsedTime elapsedtime;
+
+    private Follower follower;
 
     private DcMotorEx flywheel, intake, spindexer;
     private double shooter_reverse = 1;
@@ -78,16 +80,18 @@ public class main_teleop_red extends LinearOpMode {
     boolean sorting = false;
     int[] sortTarget = new int[]{0, 0, 0};
 
-    public static double targetTicksPerSecond = 200;
+    public static double targetTicksPerSecond = 0;
     public static double shootclose = 1000;
     public static double shootfar = 1600;
     public static double shooteridle = 200;
     public static double ticksPerDegree = 126.42;
+
     public static double START_X = 35.285;
     public static double START_Y = 77.683;
-    public static double START_HEADING_DEG = 133.5;
-    public static double TARGET_X = 144;
-    public static double TARGET_Y = 144;
+    public static double START_HEADING_DEG = 143;
+
+    public static double TARGET_X = 12;
+    public static double TARGET_Y = 136;
 
     private Servo turretL;
     private CRServo turretR;
@@ -103,35 +107,29 @@ public class main_teleop_red extends LinearOpMode {
     public static String pp = "pp";
     public static int pipelineIndex = 5;
 
-    private boolean farmode = false;
     private boolean movedoffsetspindexer;
     private Timer currentTimer;
 
     public static Timer shottimer;
     public static boolean shots = true;
 
+    private double smoothedTurretTicks = 0;
+    public static double TURRET_SMOOTHING_ALPHA = 0.15;
+
     private static final double METERS_TO_INCHES = 39.3701;
-    private static final double FIELD_SIZE_INCHES = 141.6;
-    public static double Y_OFFSET_INCHES = -5;
-    public static double x_OFFSET_INCHES = 120;
+    private static final double FIELD_HALF_INCHES = 72.0;
+    public static double Y_OFFSET_INCHES = 117.0;
+    public static double x_OFFSET_INCHES = 3.5;
     public static double HEADING_OFFSET_DEG = 0.0;
 
+    public static double LL_CORRECTION_THRESHOLD_INCHES = 1.0;
+    public static double LL_BLEND_ALPHA = 0.3;
 
-    private static final double FIELD_HALF_INCHES = 72.0;
-    public static double X_OFFSET_INCHES = 3.5;
-    public static  double LL_CORRECTION_THRESHOLD_INCHES = 2.0;
-
-
-    private Pose limelightMT2ToPedroPose(Pose3D llPose, double imuDeg) {
-        double xIn = llPose.getPosition().x * METERS_TO_INCHES;
-        double yIn = llPose.getPosition().y * METERS_TO_INCHES;
-        double pedroX = xIn + (FIELD_HALF_INCHES * 2.0 / 2.0) + x_OFFSET_INCHES;
-        double pedroY = yIn + FIELD_HALF_INCHES + Y_OFFSET_INCHES;
-        double heading = normalizeAngleDeg(imuDeg + HEADING_OFFSET_DEG);
-        return new Pose(pedroX, pedroY, Math.toRadians(heading));
-    }
-
-
+    // ---------------------------------------------------------------
+    // Normalizes any angle in degrees to (-180, 180]
+    // This is the key fix — applied to fieldAngleDeg after subtraction
+    // so the turret never sees a sudden ±360 jump at the wrap boundary
+    // ---------------------------------------------------------------
     private double normalizeAngleDeg(double deg) {
         deg = deg % 360.0;
         if (deg > 180.0)   deg -= 360.0;
@@ -139,24 +137,32 @@ public class main_teleop_red extends LinearOpMode {
         return deg;
     }
 
-    public double distancefromll(double ta) {
-        return (71.7321 * (Math.pow(ta, -0.4550)));
+    private Pose limelightMT2ToPedroPose(Pose3D llPose, double imuDeg) {
+        double xIn    = llPose.getPosition().x * METERS_TO_INCHES;
+        double yIn    = llPose.getPosition().y * METERS_TO_INCHES;
+        double pedroX = xIn + FIELD_HALF_INCHES + x_OFFSET_INCHES;
+        double pedroY = yIn + FIELD_HALF_INCHES + Y_OFFSET_INCHES;
+        // normalizeAngleDeg used here too so LL heading never wraps
+        double heading = normalizeAngleDeg(imuDeg + HEADING_OFFSET_DEG);
+        return new Pose(pedroX, pedroY, Math.toRadians(heading));
     }
 
-    public double velocityfromdistance(double distance) {
-        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766;
-        //return 515.47005* Math.pow(distance,0.202468);
+    public double velocityfromdistance(double dist) {
+        return 0;
     }
 
     @Override
     public void runOpMode() {
-        shottimer = new Timer();
+        shottimer    = new Timer();
         currentTimer = new Timer();
-        telemetry = new MultipleTelemetry(
+        telemetry    = new MultipleTelemetry(
                 telemetry,
                 FtcDashboard.getInstance().getTelemetry(),
                 PanelsTelemetry.INSTANCE.getFtcTelemetry()
         );
+
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(new Pose(START_X, START_Y, Math.toRadians(START_HEADING_DEG)));
 
         constants_testing.initHardware(hardwareMap);
         lf = constants_testing.lf;
@@ -199,68 +205,95 @@ public class main_teleop_red extends LinearOpMode {
         limelight.pipelineSwitch(pipelineIndex);
         limelight.start();
 
+        follower.startTeleopDrive();
+
         int target = 0;
 
         Thread driveThread = new Thread(() -> {
             while (opModeIsActive()) {
-                pinpoint.update();
 
-                double currentHeadingDeg = pinpoint.getHeading(AngleUnit.DEGREES);
+                // 1. Update Pedro localizer
+                follower.update();
+
+                // 2. Heading for LL orientation — normalized so it stays in (-180, 180]
+                double currentHeadingDeg = normalizeAngleDeg(
+                        Math.toDegrees(follower.getPose().getHeading()));
                 limelight.updateRobotOrientation(currentHeadingDeg);
 
+                // 3. Limelight soft correction
                 LLResult latest = limelight.getLatestResult();
-
-
-// inside the drive thread, replace the llValid block with this:
                 if (latest != null && latest.isValid()) {
                     Pose3D mt2Pose = latest.getBotpose_MT2();
                     if (mt2Pose != null) {
                         llPedro = limelightMT2ToPedroPose(mt2Pose, currentHeadingDeg);
-                        llValid = true;
+                        llValid  = true;
 
-                        double driftX = Math.abs(llPedro.getX() - pinpoint.getPosX(DistanceUnit.INCH));
-                        double driftY = Math.abs(llPedro.getY() - pinpoint.getPosY(DistanceUnit.INCH));
+                        Pose currentPose = follower.getPose();
+                        double driftX = llPedro.getX() - currentPose.getX();
+                        double driftY = llPedro.getY() - currentPose.getY();
 
-                        if (driftX > LL_CORRECTION_THRESHOLD_INCHES) {
-                            pinpoint.setPosX(llPedro.getX(), DistanceUnit.INCH);
-                        }
-                        if (driftY > LL_CORRECTION_THRESHOLD_INCHES) {
-                            pinpoint.setPosY(llPedro.getY(), DistanceUnit.INCH);
+                        if (Math.abs(driftX) > LL_CORRECTION_THRESHOLD_INCHES
+                                || Math.abs(driftY) > LL_CORRECTION_THRESHOLD_INCHES) {
+                            double correctedX = currentPose.getX() + LL_BLEND_ALPHA * driftX;
+                            double correctedY = currentPose.getY() + LL_BLEND_ALPHA * driftY;
+                            follower.setPose(new Pose(
+                                    correctedX,
+                                    correctedY,
+                                    llPedro.getHeading()
+                            ));
                         }
                     }
                 } else {
                     llValid = false;
                 }
 
-                double fieldAngleDeg = Math.toDegrees(Math.atan2(
-                        TARGET_Y - pinpoint.getPosY(DistanceUnit.INCH),
-                        TARGET_X - pinpoint.getPosX(DistanceUnit.INCH)
-                )) - pinpoint.getHeading(AngleUnit.DEGREES);
+                // 4. Turret tracking
+                Pose robotPose = follower.getPose();
 
-                ticks = fieldAngleDeg * (ticksPerDegree / 10.0);
+                // Raw field-relative angle to target
+                double fieldAngleToTarget = Math.toDegrees(Math.atan2(
+                        TARGET_Y - robotPose.getY(),
+                        TARGET_X - robotPose.getX()
+                ));
+
+                // Robot heading normalized to (-180, 180] for consistent subtraction
+                double robotHeadingDeg = normalizeAngleDeg(
+                        Math.toDegrees(robotPose.getHeading()));
+
+                // *** THE KEY FIX ***
+                // Normalize the RESULT of the subtraction so it always stays in (-180, 180].
+                // Without this, crossing the ±180° boundary causes a ~360° jump
+                // which sends the turret spinning the wrong way.
+                double fieldAngleDeg = normalizeAngleDeg(fieldAngleToTarget - robotHeadingDeg);
+
+                double rawTicks = fieldAngleDeg * (ticksPerDegree / 10.0);
 
                 if (Math.abs(gamepad2.right_stick_x) >= 0.05) {
                     targetTicks += gamepad2.right_stick_x * 2.0;
+                    smoothedTurretTicks = targetTicks;
                 } else {
-                    targetTicks = ticks;
+                    // Low-pass filter — smooth coast when LL is lost
+                    smoothedTurretTicks += TURRET_SMOOTHING_ALPHA * (rawTicks - smoothedTurretTicks);
+                    targetTicks = smoothedTurretTicks;
                 }
 
                 double maxTicks = 90.0 * ticksPerDegree / 10.0;
-                targetTicks = Math.max(-maxTicks, Math.min(maxTicks, targetTicks));
+                targetTicks         = Math.max(-maxTicks, Math.min(maxTicks, targetTicks));
+                smoothedTurretTicks = targetTicks;
 
                 double turretDeg = (targetTicks * 10.0) / ticksPerDegree;
                 double servoPos  = 0.5 - (turretDeg / 90.0) * 0.5;
                 turretL.setPosition(Math.max(0.0, Math.min(1.0, servoPos)));
 
-                double y    = -gamepad1.left_stick_y;
-                double x    =  gamepad1.left_stick_x * 1.1;
-                double rx   =  gamepad1.right_stick_x;
-                double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-                lf.setPower((y + x + rx) / denom);
-                lb.setPower((y - x + rx) / denom);
-                rf.setPower((y - x - rx) / denom);
-                rb.setPower((y + x - rx) / denom);
+                // 5. Drive
+                follower.setTeleOpDrive(
+                        -gamepad1.left_stick_y,
+                        -gamepad1.left_stick_x,
+                        -gamepad1.right_stick_x,
+                        true
+                );
 
+                // 6. Transfer
                 if (gamepad2.right_trigger > 0) {
                     transfermover.setPosition(gamepad2.right_bumper
                             ? constants_testing.transfermoverfull
@@ -271,6 +304,7 @@ public class main_teleop_red extends LinearOpMode {
                     transfer.setPower(0);
                 }
 
+                // 7. Intake with stall protection
                 if (intake.getCurrent(CurrentUnit.AMPS) < 6.5) {
                     intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
                     currentTimer.resetTimer();
@@ -278,15 +312,16 @@ public class main_teleop_red extends LinearOpMode {
                     intake.setPower(-1);
                 }
 
+                // 8. Flywheel + hood
                 double dist = getDistance();
                 if (dist >= 50) {
                     hood.setPosition(constants_testing.hoodtop);
-                    targetTicksPerSecond = velocityfromdistance(dist);
+                    targetTicksPerSecond = 0;
                 } else {
                     if      (gamepad2.y) { targetTicksPerSecond = constants_testing.shootfar;   hood.setPosition(constants_testing.hoodtop);    }
                     else if (gamepad2.b) { targetTicksPerSecond = constants_testing.shootclose;  hood.setPosition(constants_testing.hoodtop);    }
                     else if (gamepad2.a) { targetTicksPerSecond = constants_testing.shooteridle; hood.setPosition(constants_testing.hoodbottom); }
-                    else                 { hood.setPosition(constants_testing.hoodbottom); targetTicksPerSecond = constants_testing.shooteridle; }
+                    else                 { hood.setPosition(constants_testing.hoodbottom); targetTicksPerSecond = 0; }
                 }
 
                 cs = ControlSystem.builder().velPid(p, i, d).basicFF(v, a, s).build();
@@ -350,12 +385,8 @@ public class main_teleop_red extends LinearOpMode {
                     sorting = false;
                 }
             }
-            if (getDistance()>=110)
-                spindexer_speed_shooting=0.4;
-            else
-                spindexer_speed_shooting=0.6;
 
-
+            spindexer_speed_shooting = getDistance() >= 110 ? 0.4 : 0.6;
 
             cs1 = ControlSystem.builder().posPid(p1, i1, d1).build();
             cs1.setGoal(new KineticState(target));
@@ -363,10 +394,7 @@ public class main_teleop_red extends LinearOpMode {
                 spindexer.setPower(-spindexerPIDspeed
                         * cs1.calculate(new KineticState(spindexer.getCurrentPosition())));
             } else {
-                if(gamepad2.left_stick_y<0)
-                    shooter_reverse = -1;
-                else
-                    shooter_reverse = 1;
+                shooter_reverse = gamepad2.left_stick_y < 0 ? -1 : 1;
                 spindexer.setPower(spindexer_speed_shooting * shooter_reverse);
                 target = spindexer.getCurrentPosition();
             }
@@ -378,37 +406,36 @@ public class main_teleop_red extends LinearOpMode {
             }
 
             if (gamepad2.right_stick_button) {
-                pinpoint.setPosX(26.37, DistanceUnit.INCH);
-                pinpoint.setPosY(131.69, DistanceUnit.INCH);
-                pinpoint.setHeading(143, AngleUnit.DEGREES);
+                follower.setPose(new Pose(26.37, 131.69, Math.toRadians(143)));
             }
 
-            telemetry.addData("Ball Count", ballCount);
-            telemetry.addData("Loop times", elapsedtime.toString());
-            telemetry.addData("Target",     target);
+            Pose debugPose = follower.getPose();
+            telemetry.addData("Ball Count",    ballCount);
+            telemetry.addData("Loop time",     elapsedtime.toString());
+            telemetry.addData("Target",        target);
             telemetry.addData("Distance (in)", String.format("%.2f in", getDistance()));
-            telemetry.addData("shooter vel", targetTicksPerSecond);
-            telemetry.addData("Pinpoint X (in)",        String.format("%.3f in", pinpoint.getPosX(DistanceUnit.INCH)));
-            telemetry.addData("Pinpoint Y (in)",        String.format("%.3f in", pinpoint.getPosY(DistanceUnit.INCH)));
-            telemetry.addData("Pinpoint Heading (deg)", String.format("%.2f°",   pinpoint.getHeading(AngleUnit.DEGREES)));
-            telemetry.addData("LL Valid", llValid);
+            telemetry.addData("Shooter vel",   targetTicksPerSecond);
+            telemetry.addData("Pedro X (in)",  String.format("%.3f in", debugPose.getX()));
+            telemetry.addData("Pedro Y (in)",  String.format("%.3f in", debugPose.getY()));
+            telemetry.addData("Pedro Heading", String.format("%.2f°",
+                    normalizeAngleDeg(Math.toDegrees(debugPose.getHeading()))));
+            telemetry.addData("LL Valid",      llValid);
             if (llValid) {
-                telemetry.addData("LL X (in)",        String.format("%.3f in", llPedro.getX()));
-                telemetry.addData("LL Y (in)",        String.format("%.3f in", llPedro.getY()));
-                telemetry.addData("LL Heading (deg)", String.format("%.2f°", Math.toDegrees(llPedro.getHeading())));
+                telemetry.addData("LL X (in)",  String.format("%.3f in", llPedro.getX()));
+                telemetry.addData("LL Y (in)",  String.format("%.3f in", llPedro.getY()));
+                telemetry.addData("LL Heading", String.format("%.2f°",
+                        normalizeAngleDeg(Math.toDegrees(llPedro.getHeading()))));
             }
-            telemetry.addData("Intake Current Amps: ", intake.getCurrent(CurrentUnit.AMPS));
+            telemetry.addData("Intake Amps",   intake.getCurrent(CurrentUnit.AMPS));
             telemetry.update();
         }
     }
 
     private double getDistance() {
+        Pose p = follower.getPose();
         return Math.sqrt(
-                Math.pow(TARGET_Y - pinpoint.getPosY(DistanceUnit.INCH), 2)
-                        + Math.pow(TARGET_X - pinpoint.getPosX(DistanceUnit.INCH), 2));
-    }
-    public double getSpindexerSpeed(double dist) {
-        return 0.05;
+                Math.pow(TARGET_Y - p.getY(), 2) +
+                        Math.pow(TARGET_X - p.getX(), 2));
     }
 
     private void configurePinpoint(GoBildaPinpointDriver pp) {

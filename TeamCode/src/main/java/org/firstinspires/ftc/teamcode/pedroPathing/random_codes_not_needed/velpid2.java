@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes;
+package org.firstinspires.ftc.teamcode.pedroPathing.random_codes_not_needed;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
@@ -12,6 +12,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes.rconstants;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;

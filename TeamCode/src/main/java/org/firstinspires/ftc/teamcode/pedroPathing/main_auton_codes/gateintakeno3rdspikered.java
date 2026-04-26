@@ -88,7 +88,7 @@ public class gateintakeno3rdspikered extends OpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    public static double turretPos = 0.28;
+    public static double turretPos = 0.23;
     private final Pose startPose = new Pose(27.463, 131.821, Math.toRadians(143)).mirror();
 
     public PathChain firstpath;
@@ -159,10 +159,10 @@ public class gateintakeno3rdspikered extends OpMode {
                         new BezierCurve(
                                 new Pose(59.382, 87.557).mirror(),
                                 new Pose(52.782, 51.290).mirror(),
-                                new Pose(19.530, 62.124).mirror()
+                                new Pose(17.702151898734183, 60.66577215189874).mirror()
                         )
                 )
-                .setConstantHeadingInterpolation(Math.toRadians(25))
+                .setConstantHeadingInterpolation(Math.toRadians(28))
                 .setTValueConstraint(0.85)
                 .build();
 
@@ -313,9 +313,10 @@ public class gateintakeno3rdspikered extends OpMode {
             case 0:
                 //offset go back on spindexer
                 transfer.setPower(1);
+                intake.setPower(0);
                 follower.followPath(Path1);
                 targetTicksPerSecond=1100;
-                turretPos=0.28;
+                turretPos=0.23;
                 hood.setPosition(constants_testing.hoodbottom);
                 setPathState(1);
 
@@ -342,8 +343,9 @@ public class gateintakeno3rdspikered extends OpMode {
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path2);
-                    targetTicksPerSecond=1260;
+                    targetTicksPerSecond=1220;
                     transfer.setPower(-1);
+                    intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoveridle);
 
                     hood.setPosition(constants_testing.hoodtop);
@@ -381,7 +383,8 @@ public class gateintakeno3rdspikered extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5)) {
-                    turretPos=0.2 ;
+                    turretPos=0.17;
+                    intake.setPower(0);
                     setPathState(4);
                 }
                 break;
@@ -411,6 +414,7 @@ public class gateintakeno3rdspikered extends OpMode {
                     ballCount=0;
                     follower.followPath(Path4);
                     transfer.setPower(-1);
+                    intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoveridle);
 
 
@@ -451,6 +455,7 @@ public class gateintakeno3rdspikered extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
+                    intake.setPower(0);
                     setPathState(9);
 
                 }
@@ -481,6 +486,7 @@ public class gateintakeno3rdspikered extends OpMode {
                     ballCount=0;
                     follower.followPath(Path4);
                     transfer.setPower(-1);
+                    intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoveridle);
 
 
@@ -519,8 +525,9 @@ public class gateintakeno3rdspikered extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
+                    intake.setPower(0);
                     setPathState(13);
-                    targetTicksPerSecond=1260;
+                    targetTicksPerSecond=1220;
                 }
 
                 break;
@@ -554,6 +561,7 @@ public class gateintakeno3rdspikered extends OpMode {
                     ballCount=0;
                     transfermover.setPosition(rconstants.transfermoveridle);
                     transfer.setPower(-1);
+                    intake.setPower(1);
                     //shoot ball 6
                     setPathState(16);
                 }
@@ -589,6 +597,7 @@ public class gateintakeno3rdspikered extends OpMode {
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>2)) {
                     turretPos=0.08;
+                    intake.setPower(0);
                     hood.setPosition(constants_testing.hoodbottom);
                     targetTicksPerSecond=1120;
                     setPathState(17);
@@ -650,14 +659,14 @@ public class gateintakeno3rdspikered extends OpMode {
             flywheel.setPower(cs.calculate(current1));
         }
         //hood.setPosition(constants_testing.hoodtop);
-        if(intake.getCurrent(CurrentUnit.AMPS)<5) {
+        /*if(intake.getCurrent(CurrentUnit.AMPS)<5) {
             intake.setPower(1);
             currentTimer.resetTimer();
         } else if(currentTimer.getElapsedTimeSeconds()>1.2){
             intake.setPower(-1);
         } else{
             intake.setPower(1);
-        }
+        } */
         turretL.setPosition(turretPos);
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);

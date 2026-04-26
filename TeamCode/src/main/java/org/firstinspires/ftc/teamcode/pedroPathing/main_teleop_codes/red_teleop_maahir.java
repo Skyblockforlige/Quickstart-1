@@ -70,6 +70,10 @@ public class red_teleop_maahir extends LinearOpMode {
     float[] hsv = new float[3];
     int ballCount = 0;
     public static int ballshot = 0;
+
+
+    public static double farOffset=0;
+    public static double closeOffset=20;
     boolean colorPreviouslyDetected = false;
 
     int[] ballSlots = new int[]{0, 0, 0};
@@ -86,7 +90,6 @@ public class red_teleop_maahir extends LinearOpMode {
     public static double START_HEADING_DEG = 37;
     public static double TARGET_X = 144;
     public static double TARGET_Y = 130;
-    public static Pose3D mt2Pose = null;
     private Servo turretL;
     private CRServo turretR;
     private DcMotorEx turretEnc;
@@ -110,8 +113,8 @@ public class red_teleop_maahir extends LinearOpMode {
 
     private static final double METERS_TO_INCHES = 39.3701;
     private static final double FIELD_SIZE_INCHES = 141.6;
-    public static double Y_OFFSET_INCHES = 0;
-    public static double x_OFFSET_INCHES = 0;
+    public static double Y_OFFSET_INCHES = -5;
+    public static double x_OFFSET_INCHES = 120;
     public static double RED_X_CORRECTION = 0.0;
     public static double HEADING_OFFSET_DEG = 0.0;
 
@@ -119,6 +122,7 @@ public class red_teleop_maahir extends LinearOpMode {
     private static final double FIELD_HALF_INCHES = 72.0;
     public static double X_OFFSET_INCHES = 3.5;
     public static  double LL_CORRECTION_THRESHOLD_INCHES = 2.0;
+    public static double veloffset = 20;
 
 
     private Pose limelightMT2ToPedroPose(Pose3D llPose, double imuDeg) {
@@ -143,7 +147,7 @@ public class red_teleop_maahir extends LinearOpMode {
     }
 
     public double velocityfromdistance(double distance) {
-        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766;
+        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766-veloffset;
         //return 515.47005* Math.pow(distance,0.202468);
     }
 
@@ -211,7 +215,7 @@ public class red_teleop_maahir extends LinearOpMode {
 
 
                 if (latest != null && latest.isValid()) {
-                    mt2Pose = latest.getBotpose_MT2();
+                    Pose3D mt2Pose = latest.getBotpose_MT2();
                     //mt2Pose = latest.getBotpose();
                     if (mt2Pose != null) {
                         llPedro = limelightMT2ToPedroPose(mt2Pose, currentHeadingDeg);
@@ -219,6 +223,7 @@ public class red_teleop_maahir extends LinearOpMode {
 
                         double driftX = Math.abs(llPedro.getX() - pinpoint.getPosX(DistanceUnit.INCH));
                         double driftY = Math.abs(llPedro.getY() - pinpoint.getPosY(DistanceUnit.INCH));
+
 
                         if (driftX > LL_CORRECTION_THRESHOLD_INCHES) {
                             pinpoint.setPosX(llPedro.getX(), DistanceUnit.INCH);
@@ -287,6 +292,7 @@ public class red_teleop_maahir extends LinearOpMode {
                     else if (gamepad2.a) { targetTicksPerSecond = constants_testing.shooteridle; hood.setPosition(constants_testing.hoodbottom); }
                     else                 { hood.setPosition(constants_testing.hoodbottom); targetTicksPerSecond = constants_testing.shooteridle; }
                 }
+                
 
                 cs = ControlSystem.builder().velPid(p, i, d).basicFF(v, a, s).build();
                 cs.setGoal(new KineticState(0, targetTicksPerSecond));
@@ -395,8 +401,6 @@ public class red_teleop_maahir extends LinearOpMode {
                 telemetry.addData("LL X (in)",        String.format("%.3f in", llPedro.getX()));
                 telemetry.addData("LL Y (in)",        String.format("%.3f in", llPedro.getY()));
                 telemetry.addData("LL Heading (deg)", String.format("%.2f°", Math.toDegrees(llPedro.getHeading())));
-                telemetry.addData("roadrunnerPos_x",mt2Pose.getPosition().x*METERS_TO_INCHES);
-                telemetry.addData("roadrunnerPos_y",mt2Pose.getPosition().y*METERS_TO_INCHES);
 
             }
             telemetry.addData("Intake Current Amps: ", intake.getCurrent(CurrentUnit.AMPS));
