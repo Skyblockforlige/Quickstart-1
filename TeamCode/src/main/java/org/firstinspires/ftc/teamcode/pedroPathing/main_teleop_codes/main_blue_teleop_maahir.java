@@ -12,6 +12,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -21,6 +22,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
@@ -48,6 +50,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
     private ElapsedTime elapsedtime;
 
     private Follower follower;
+    private IMU imu;
 
     private DcMotorEx flywheel, intake, spindexer;
     private double shooter_reverse = 1;
@@ -58,11 +61,8 @@ public class main_blue_teleop_maahir extends LinearOpMode {
     public volatile Pose llPedro = new Pose(0, 0, 0);
     public volatile boolean llValid = false;
 
-    public static double farOffset=0;
-    public static double closeOffset=20;
-
-
-    public static volatile double spindexer_speed_shooting = 0.6;
+    public static volatile double spindexer_speed_shooting = constants_testing.spindexer_speed_shooting_close;
+    public static double veloffset = constants_testing.veloffset_close;
 
     private Limelight3A limelight;
 
@@ -85,9 +85,6 @@ public class main_blue_teleop_maahir extends LinearOpMode {
     int[] sortTarget = new int[]{0, 0, 0};
 
     public static double targetTicksPerSecond = 200;
-    public static double shootclose = 1000;
-    public static double shootfar = 1600;
-    public static double shooteridle = 200;
     public static double ticksPerDegree = 126.42;
 
     public static double START_X = 35.285;
@@ -95,7 +92,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
     public static double START_HEADING_DEG = 143;
 
     public static double TARGET_X = 12;
-    public static double TARGET_Y = 136;
+    public static double TARGET_Y = 140;
 
     private Servo turretL;
     private CRServo turretR;
@@ -103,10 +100,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
 
     private GoBildaPinpointDriver pinpoint;
     public static double targetTicks = 0;
-    public static double ticks;
     public static double spindexerPIDspeed = 0.1;
-    public static double spindexer_speed_close = 0.1;
-    public static double spindexer_speed_far = 0.05;
 
     public static String pp = "pp";
     public static int pipelineIndex = 5;
@@ -115,10 +109,6 @@ public class main_blue_teleop_maahir extends LinearOpMode {
     private Timer currentTimer;
 
     public static Timer shottimer;
-    public static boolean shots = true;
-
-    private double smoothedTurretTicks = 0;
-    public static double TURRET_SMOOTHING_ALPHA = 0.15;
 
     private static final double METERS_TO_INCHES = 39.3701;
     private static final double FIELD_HALF_INCHES = 72.0;
@@ -128,13 +118,8 @@ public class main_blue_teleop_maahir extends LinearOpMode {
 
     public static double LL_CORRECTION_THRESHOLD_INCHES = 1.0;
     public static double LL_BLEND_ALPHA = 0.3;
-    public static double veloffset = -20;
+    public static double IMU_HEADING_THRESHOLD_DEG = 2.0;
 
-    // ---------------------------------------------------------------
-    // Normalizes any angle in degrees to (-180, 180]
-    // This is the key fix — applied to fieldAngleDeg after subtraction
-    // so the turret never sees a sudden ±360 jump at the wrap boundary
-    // ---------------------------------------------------------------
     private double normalizeAngleDeg(double deg) {
         deg = deg % 360.0;
         if (deg > 180.0)   deg -= 360.0;
@@ -147,13 +132,12 @@ public class main_blue_teleop_maahir extends LinearOpMode {
         double yIn    = llPose.getPosition().y * METERS_TO_INCHES;
         double pedroX = xIn + FIELD_HALF_INCHES + x_OFFSET_INCHES;
         double pedroY = yIn + FIELD_HALF_INCHES + Y_OFFSET_INCHES;
-        // normalizeAngleDeg used here too so LL heading never wraps
         double heading = normalizeAngleDeg(imuDeg + HEADING_OFFSET_DEG);
         return new Pose(pedroX, pedroY, Math.toRadians(heading));
     }
 
     public double velocityfromdistance(double distance) {
-        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766-veloffset;
+        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766 - veloffset;
     }
 
     @Override
@@ -195,6 +179,13 @@ public class main_blue_teleop_maahir extends LinearOpMode {
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, pp);
         configurePinpoint(pinpoint);
 
+        imu = hardwareMap.get(IMU.class, "imu");
+        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
+        )));
+        imu.resetYaw();
+
         flywheel      = constants_testing.flywheel;
         hood          = constants_testing.hood;
         intake        = constants_testing.intake;
@@ -220,12 +211,23 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                 // 1. Update Pedro localizer
                 follower.update();
 
-                // 2. Heading for LL orientation — normalized so it stays in (-180, 180]
+                // 2. IMU heading correction
+                double imuDeg  = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+                double odomDeg = Math.toDegrees(follower.getPose().getHeading());
+                if (Math.abs(normalizeAngleDeg(imuDeg - odomDeg)) > IMU_HEADING_THRESHOLD_DEG) {
+                    follower.setPose(new Pose(
+                            follower.getPose().getX(),
+                            follower.getPose().getY(),
+                            Math.toRadians(imuDeg)
+                    ));
+                }
+
+                // 3. Heading for LL orientation
                 double currentHeadingDeg = normalizeAngleDeg(
                         Math.toDegrees(follower.getPose().getHeading()));
                 limelight.updateRobotOrientation(currentHeadingDeg);
 
-                // 3. Limelight soft correction
+                // 4. Limelight soft correction
                 LLResult latest = limelight.getLatestResult();
                 if (latest != null && latest.isValid()) {
                     Pose3D mt2Pose = latest.getBotpose_MT2();
@@ -252,45 +254,34 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                     llValid = false;
                 }
 
-                // 4. Turret tracking
+                // 5. Turret tracking
                 Pose robotPose = follower.getPose();
 
-                // Raw field-relative angle to target
                 double fieldAngleToTarget = Math.toDegrees(Math.atan2(
                         TARGET_Y - robotPose.getY(),
                         TARGET_X - robotPose.getX()
                 ));
 
-                // Robot heading normalized to (-180, 180] for consistent subtraction
                 double robotHeadingDeg = normalizeAngleDeg(
                         Math.toDegrees(robotPose.getHeading()));
 
-                // *** THE KEY FIX ***
-                // Normalize the RESULT of the subtraction so it always stays in (-180, 180].
-                // Without this, crossing the ±180° boundary causes a ~360° jump
-                // which sends the turret spinning the wrong way.
                 double fieldAngleDeg = normalizeAngleDeg(fieldAngleToTarget - robotHeadingDeg);
-
                 double rawTicks = fieldAngleDeg * (ticksPerDegree / 10.0);
 
                 if (Math.abs(gamepad2.right_stick_x) >= 0.05) {
                     targetTicks += gamepad2.right_stick_x * 2.0;
-                    smoothedTurretTicks = targetTicks;
                 } else {
-                    // Low-pass filter — smooth coast when LL is lost
-                    smoothedTurretTicks += TURRET_SMOOTHING_ALPHA * (rawTicks - smoothedTurretTicks);
-                    targetTicks = smoothedTurretTicks;
+                    targetTicks = rawTicks;
                 }
 
                 double maxTicks = 90.0 * ticksPerDegree / 10.0;
-                targetTicks         = Math.max(-maxTicks, Math.min(maxTicks, targetTicks));
-                smoothedTurretTicks = targetTicks;
+                targetTicks = Math.max(-maxTicks, Math.min(maxTicks, targetTicks));
 
                 double turretDeg = (targetTicks * 10.0) / ticksPerDegree;
                 double servoPos  = 0.5 - (turretDeg / 90.0) * 0.5;
                 turretL.setPosition(Math.max(0.0, Math.min(1.0, servoPos)));
 
-                // 5. Drive
+                // 6. Drive
                 follower.setTeleOpDrive(
                         -gamepad1.left_stick_y,
                         -gamepad1.left_stick_x,
@@ -298,7 +289,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                         true
                 );
 
-                // 6. Transfer
+                // 7. Transfer
                 if (gamepad2.right_trigger > 0) {
                     transfermover.setPosition(gamepad2.right_bumper
                             ? constants_testing.transfermoverfull
@@ -309,7 +300,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                     transfer.setPower(0);
                 }
 
-                // 7. Intake with stall protection
+                // 8. Intake with stall protection
                 if (intake.getCurrent(CurrentUnit.AMPS) < 6.5) {
                     intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
                     currentTimer.resetTimer();
@@ -317,18 +308,15 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                     intake.setPower(-1);
                 }
 
-                // 8. Flywheel + hood
+                // 9. Flywheel + hood — auto distance only
                 double dist = getDistance();
                 if (dist >= 50) {
                     hood.setPosition(constants_testing.hoodtop);
                     targetTicksPerSecond = velocityfromdistance(dist);
                 } else {
-                    if      (gamepad2.y) { targetTicksPerSecond = constants_testing.shootfar;   hood.setPosition(constants_testing.hoodtop);    }
-                    else if (gamepad2.b) { targetTicksPerSecond = constants_testing.shootclose;  hood.setPosition(constants_testing.hoodtop);    }
-                    else if (gamepad2.a) { targetTicksPerSecond = constants_testing.shooteridle; hood.setPosition(constants_testing.hoodbottom); }
-                    else                 { hood.setPosition(constants_testing.hoodbottom); targetTicksPerSecond = constants_testing.shooteridle; }
+                    hood.setPosition(constants_testing.hoodbottom);
+                    targetTicksPerSecond = constants_testing.shooteridle;
                 }
-
 
                 cs = ControlSystem.builder().velPid(p, i, d).basicFF(v, a, s).build();
                 cs.setGoal(new KineticState(0, targetTicksPerSecond));
@@ -392,7 +380,13 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                 }
             }
 
-            spindexer_speed_shooting = getDistance() >= 110 ? 0.4 : 0.6;
+            if (getDistance() >= 110) {
+                spindexer_speed_shooting = constants_testing.spindexer_speed_shooting_far;
+                veloffset = constants_testing.veloffset_far;
+            } else {
+                spindexer_speed_shooting = constants_testing.spindexer_speed_shooting_close;
+                veloffset = constants_testing.veloffset_close;
+            }
 
             cs1 = ControlSystem.builder().posPid(p1, i1, d1).build();
             cs1.setGoal(new KineticState(target));
@@ -411,10 +405,9 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                 sleep(300);
             }
 
-
-
             if (gamepad2.right_stick_button) {
                 follower.setPose(new Pose(26.37, 131.69, Math.toRadians(143)));
+                imu.resetYaw();
             }
 
             Pose debugPose = follower.getPose();
@@ -427,6 +420,8 @@ public class main_blue_teleop_maahir extends LinearOpMode {
             telemetry.addData("Pedro Y (in)",  String.format("%.3f in", debugPose.getY()));
             telemetry.addData("Pedro Heading", String.format("%.2f°",
                     normalizeAngleDeg(Math.toDegrees(debugPose.getHeading()))));
+            telemetry.addData("IMU Heading",   String.format("%.2f°",
+                    imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)));
             telemetry.addData("LL Valid",      llValid);
             if (llValid) {
                 telemetry.addData("LL X (in)",  String.format("%.3f in", llPedro.getX()));

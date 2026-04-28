@@ -17,7 +17,6 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 @Configurable
 @Config
-@Disabled
 public class constants_testing {
 
     public static double transfermoveridle = 0.59;
@@ -43,9 +42,13 @@ public class constants_testing {
     public static double targetTicksPerSecond=200;
     public static double shootclose = 1370;
     public static double shootfar=1550;
-    public static double shooteridle = 1050;
+    public static double shooteridle = 1120;
     public static double hoodtop = 0.435;
     public static double hoodbottom = 0.26;
+    public static double veloffset_far = 0;
+    public static double veloffset_close = 20;
+    public static double spindexer_speed_shooting_close = 0.6;
+    public static double spindexer_speed_shooting_far = 0.4;
     public static Servo turretL;
     public static CRServo turretR;
 
