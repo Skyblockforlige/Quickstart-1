@@ -51,6 +51,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
 
     private Follower follower;
     private IMU imu;
+    private double imuHeadingOffset = 0.0;
 
     private DcMotorEx flywheel, intake, spindexer;
     private double shooter_reverse = 1;
@@ -87,9 +88,13 @@ public class main_blue_teleop_maahir extends LinearOpMode {
     public static double targetTicksPerSecond = 200;
     public static double ticksPerDegree = 126.42;
 
-    public static double START_X = 35.285;
-    public static double START_Y = 77.683;
+    public static double START_X           = 35.285;
+    public static double START_Y           = 77.683;
     public static double START_HEADING_DEG = 143;
+
+    public static double RESET_X           = 26.37;
+    public static double RESET_Y           = 131.69;
+    public static double RESET_HEADING_DEG = 143;
 
     public static double TARGET_X = 12;
     public static double TARGET_Y = 140;
@@ -99,7 +104,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
     private DcMotorEx turretEnc;
 
     private GoBildaPinpointDriver pinpoint;
-    public static double targetTicks = 0;
+    public static double targetTicks    = 0;
     public static double spindexerPIDspeed = 0.1;
 
     public static String pp = "pp";
@@ -107,24 +112,37 @@ public class main_blue_teleop_maahir extends LinearOpMode {
 
     private boolean movedoffsetspindexer;
     private Timer currentTimer;
-
     public static Timer shottimer;
 
     private static final double METERS_TO_INCHES = 39.3701;
     private static final double FIELD_HALF_INCHES = 72.0;
-    public static double Y_OFFSET_INCHES = 117.0;
-    public static double x_OFFSET_INCHES = 3.5;
+    public static double Y_OFFSET_INCHES   = 117.0;
+    public static double x_OFFSET_INCHES   = 3.5;
     public static double HEADING_OFFSET_DEG = 0.0;
 
     public static double LL_CORRECTION_THRESHOLD_INCHES = 1.0;
-    public static double LL_BLEND_ALPHA = 0.3;
+    public static double LL_BLEND_ALPHA          = 0.3;
     public static double IMU_HEADING_THRESHOLD_DEG = 2.0;
+
+    // ─── helpers ────────────────────────────────────────────────────────────
 
     private double normalizeAngleDeg(double deg) {
         deg = deg % 360.0;
-        if (deg > 180.0)   deg -= 360.0;
+        if (deg >  180.0) deg -= 360.0;
         if (deg <= -180.0) deg += 360.0;
         return deg;
+    }
+
+    /** Store an offset so getImuHeading() reads desiredDeg right now. */
+    private void setImuHeading(double desiredDeg) {
+        imuHeadingOffset = desiredDeg
+                - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+    }
+
+    /** Raw IMU yaw + offset = field heading in degrees. */
+    private double getImuHeading() {
+        return normalizeAngleDeg(
+                imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) + imuHeadingOffset);
     }
 
     private Pose limelightMT2ToPedroPose(Pose3D llPose, double imuDeg) {
@@ -137,8 +155,11 @@ public class main_blue_teleop_maahir extends LinearOpMode {
     }
 
     public double velocityfromdistance(double distance) {
-        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766 - veloffset;
+        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance
+                - 45.56069) * distance + 2023.94766 - veloffset;
     }
+
+    // ─── runOpMode ──────────────────────────────────────────────────────────
 
     @Override
     public void runOpMode() {
@@ -161,17 +182,14 @@ public class main_blue_teleop_maahir extends LinearOpMode {
 
         elapsedtime = new ElapsedTime();
         allHubs = hardwareMap.getAll(LynxModule.class);
-        for (LynxModule hub : allHubs) {
-            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
-        }
+        for (LynxModule hub : allHubs) hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
 
         lf.setDirection(DcMotorSimple.Direction.REVERSE);
         lb.setDirection(DcMotorSimple.Direction.REVERSE);
 
         turretL = hardwareMap.get(Servo.class, "turretL");
         turretL.setPosition(0.5);
-        turretR = constants_testing.turretR;
-
+        turretR  = constants_testing.turretR;
         turretEnc = hardwareMap.get(DcMotorEx.class, "turret_enc");
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -184,7 +202,8 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
         )));
-        imu.resetYaw();
+        // Align IMU offset to START_HEADING_DEG so getImuHeading() matches Pedro from loop 1
+        setImuHeading(START_HEADING_DEG);
 
         flywheel      = constants_testing.flywheel;
         hood          = constants_testing.hood;
@@ -212,7 +231,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                 follower.update();
 
                 // 2. IMU heading correction
-                double imuDeg  = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+                double imuDeg  = getImuHeading();
                 double odomDeg = Math.toDegrees(follower.getPose().getHeading());
                 if (Math.abs(normalizeAngleDeg(imuDeg - odomDeg)) > IMU_HEADING_THRESHOLD_DEG) {
                     follower.setPose(new Pose(
@@ -241,11 +260,9 @@ public class main_blue_teleop_maahir extends LinearOpMode {
 
                         if (Math.abs(driftX) > LL_CORRECTION_THRESHOLD_INCHES
                                 || Math.abs(driftY) > LL_CORRECTION_THRESHOLD_INCHES) {
-                            double correctedX = currentPose.getX() + LL_BLEND_ALPHA * driftX;
-                            double correctedY = currentPose.getY() + LL_BLEND_ALPHA * driftY;
                             follower.setPose(new Pose(
-                                    correctedX,
-                                    correctedY,
+                                    currentPose.getX() + LL_BLEND_ALPHA * driftX,
+                                    currentPose.getY() + LL_BLEND_ALPHA * driftY,
                                     llPedro.getHeading()
                             ));
                         }
@@ -256,15 +273,12 @@ public class main_blue_teleop_maahir extends LinearOpMode {
 
                 // 5. Turret tracking
                 Pose robotPose = follower.getPose();
-
                 double fieldAngleToTarget = Math.toDegrees(Math.atan2(
                         TARGET_Y - robotPose.getY(),
                         TARGET_X - robotPose.getX()
                 ));
-
                 double robotHeadingDeg = normalizeAngleDeg(
                         Math.toDegrees(robotPose.getHeading()));
-
                 double fieldAngleDeg = normalizeAngleDeg(fieldAngleToTarget - robotHeadingDeg);
                 double rawTicks = fieldAngleDeg * (ticksPerDegree / 10.0);
 
@@ -273,7 +287,6 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                 } else {
                     targetTicks = rawTicks;
                 }
-
                 double maxTicks = 90.0 * ticksPerDegree / 10.0;
                 targetTicks = Math.max(-maxTicks, Math.min(maxTicks, targetTicks));
 
@@ -405,9 +418,10 @@ public class main_blue_teleop_maahir extends LinearOpMode {
                 sleep(300);
             }
 
+            // Reset pose + sync IMU offset to RESET_HEADING_DEG
             if (gamepad2.right_stick_button) {
-                follower.setPose(new Pose(26.37, 131.69, Math.toRadians(143)));
-                imu.resetYaw();
+                follower.setPose(new Pose(RESET_X, RESET_Y, Math.toRadians(RESET_HEADING_DEG)));
+                setImuHeading(RESET_HEADING_DEG);
             }
 
             Pose debugPose = follower.getPose();
@@ -420,8 +434,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
             telemetry.addData("Pedro Y (in)",  String.format("%.3f in", debugPose.getY()));
             telemetry.addData("Pedro Heading", String.format("%.2f°",
                     normalizeAngleDeg(Math.toDegrees(debugPose.getHeading()))));
-            telemetry.addData("IMU Heading",   String.format("%.2f°",
-                    imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)));
+            telemetry.addData("IMU Heading",   String.format("%.2f°", getImuHeading()));
             telemetry.addData("LL Valid",      llValid);
             if (llValid) {
                 telemetry.addData("LL X (in)",  String.format("%.3f in", llPedro.getX()));
