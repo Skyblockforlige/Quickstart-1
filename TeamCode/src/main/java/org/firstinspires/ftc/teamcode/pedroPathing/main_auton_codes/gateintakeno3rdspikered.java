@@ -26,10 +26,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes.Constants;
-import org.firstinspires.ftc.teamcode.pedroPathing.random_codes_not_needed.constants_testing;
+import org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes.constants_testing;
 import org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes.rconstants;
 
 import java.util.List;
@@ -69,6 +68,12 @@ public class gateintakeno3rdspikered extends OpMode {
     private CRServo turretR;
     private Servo hood;
     public static double targetTicksPerSecond=0;
+
+
+    public static double auton_x =0;
+    public static double auton_y =0;
+
+    public static double auton_heading =0;
 
     public static double p1 = 0.0084, i1 = 0, d1 = 0.000005;
     public static double hoodtop = 0;
@@ -343,7 +348,7 @@ public class gateintakeno3rdspikered extends OpMode {
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path2);
-                    targetTicksPerSecond=1220;
+                    targetTicksPerSecond=1270;
                     transfer.setPower(-1);
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoveridle);
@@ -527,7 +532,7 @@ public class gateintakeno3rdspikered extends OpMode {
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
                     intake.setPower(0);
                     setPathState(13);
-                    targetTicksPerSecond=1220;
+                    targetTicksPerSecond=1270;
                 }
 
                 break;
@@ -670,6 +675,10 @@ public class gateintakeno3rdspikered extends OpMode {
         turretL.setPosition(turretPos);
         colorSensor.getNormalizedColors();
         Color.colorToHSV(colorSensor.getNormalizedColors().toColor(), hsv);
+
+        constants_testing.heading_pos_end_auton_red=follower.getHeading();
+        constants_testing.x_pos_end_auton_red=follower.getPose().getX();
+        constants_testing.y_pos_end_auton_red=follower.getPose().getY();
 
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());

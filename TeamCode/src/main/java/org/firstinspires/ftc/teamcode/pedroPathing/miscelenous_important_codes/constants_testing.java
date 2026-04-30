@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.random_codes_not_needed;
+package org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -43,9 +42,14 @@ public class constants_testing {
     public static double shootclose = 1370;
     public static double shootfar=1550;
     public static double shooteridle = 1120;
-    public static double hoodtop = 0.435;
+    public static double hoodtop = 0.445;
     public static double hoodbottom = 0.26;
     public static double veloffset_far = 0;
+
+public static double x_pos_end_auton_red;
+    public static double y_pos_end_auton_red;
+    public static double heading_pos_end_auton_red;
+
     public static double veloffset_close = 20;
     public static double spindexer_speed_shooting_close = 0.6;
     public static double spindexer_speed_shooting_far = 0.4;

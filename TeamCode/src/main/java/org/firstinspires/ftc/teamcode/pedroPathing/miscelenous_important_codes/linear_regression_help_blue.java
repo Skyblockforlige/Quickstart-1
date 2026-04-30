@@ -31,6 +31,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes.Constants;
+import org.firstinspires.ftc.teamcode.pedroPathing.miscelenous_important_codes.constants_testing;
 
 import java.util.List;
 import dev.nextftc.control.ControlSystem;
@@ -38,8 +40,8 @@ import dev.nextftc.control.KineticState;
 
 @Configurable
 @Config
-@TeleOp(name="Blue -Turret_test")
-public class turret_test_blue extends LinearOpMode {
+@TeleOp(name="linear regression_help_blue")
+public class linear_regression_help_blue extends LinearOpMode {
 
 
     private DcMotor lf, lb, rf, rb;
@@ -100,7 +102,6 @@ public class turret_test_blue extends LinearOpMode {
     private CRServo turretR;
     private DcMotorEx turretEnc;
 
-    private GoBildaPinpointDriver pinpoint;
     public static double targetTicks = 0;
     public static double ticks;
     public static double spindexerPIDspeed = 0.1;
@@ -144,7 +145,7 @@ public class turret_test_blue extends LinearOpMode {
     }
 
     public double velocityfromdistance(double distance) {
-        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766-veloffset;
+        return (((0.0000121506 * distance - 0.00507176) * distance + 0.775497) * distance - 45.56069) * distance + 2023.94766;
     }
 
     @Override
@@ -183,8 +184,6 @@ public class turret_test_blue extends LinearOpMode {
         turretEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-//        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, pp);
-//        configurePinpoint(pinpoint);
 
         flywheel      = constants_testing.flywheel;
         hood          = constants_testing.hood;
@@ -307,9 +306,8 @@ public class turret_test_blue extends LinearOpMode {
                 double dist = getDistance();
                 if (dist >= 50) {
                     hood.setPosition(constants_testing.hoodtop);
-                    targetTicksPerSecond = 0;
                 }
-                else                 { hood.setPosition(constants_testing.hoodbottom); targetTicksPerSecond = 0; }
+                    else { hood.setPosition(constants_testing.hoodbottom);}
 
 
 
@@ -441,7 +439,6 @@ public class turret_test_blue extends LinearOpMode {
         pp.setEncoderDirections(
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,
                 GoBildaPinpointDriver.EncoderDirection.REVERSED);
-        pp.resetPosAndIMU();
         pp.setPosition(new Pose2D(
                 DistanceUnit.INCH, START_X, START_Y, AngleUnit.DEGREES, START_HEADING_DEG));
     }

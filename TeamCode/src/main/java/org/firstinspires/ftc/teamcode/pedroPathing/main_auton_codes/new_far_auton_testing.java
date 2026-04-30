@@ -1,4 +1,4 @@
-    package org.firstinspires.ftc.teamcode.pedroPathing.main_auton_codes;
+package org.firstinspires.ftc.teamcode.pedroPathing.main_auton_codes;
 
 import android.graphics.Color;
 
@@ -37,8 +37,8 @@ import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 @Configurable
 @Config
-@Autonomous(name = "farautodiffred", group = "Examples")
-public class farautodiffred extends OpMode {
+@Autonomous(name = "new_far_auton_testing_red", group = "Examples")
+public class new_far_auton_testing extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private DcMotorEx spindexer;
@@ -52,6 +52,8 @@ public class farautodiffred extends OpMode {
     public static double strafePodX = -1.693;
     private IMU imu;
     private DcMotorEx flywheel;
+
+    public static double turret_pos = 0;
     private DcMotorEx intake;
     public static double spindexerspeed = 0.1;
     int ballCount = 0;
@@ -106,7 +108,7 @@ public class farautodiffred extends OpMode {
 
     private Timer pathTimer, actionTimer, opmodeTimer,goonTimer;
     private int pathState=0;
-    private final Pose startPose = new Pose(56.000, 8, Math.toRadians(90)).mirror();
+    private final Pose startPose = new Pose(56.000, 8, Math.toRadians(180)).mirror();
 
     public PathChain firstpath;
     public PathChain go_first_back;
@@ -189,16 +191,16 @@ public class farautodiffred extends OpMode {
                         new BezierLine(
                                 new Pose(56.000, 8.000).mirror(),
 
-                                new Pose(56.000, 16.000).mirror()
+                                new Pose(56.000, 19.000).mirror()
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(90))
+                ).setConstantHeadingInterpolation(Math.toRadians(0))
 
                 .build();
 
         Path2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(56.000, 16.000).mirror(),
+                                new Pose(56.000, 19.000).mirror(),
                                 new Pose(59.587, 37.292).mirror(),
                                 new Pose(12.336, 35.221).mirror()
                         )
@@ -210,19 +212,19 @@ public class farautodiffred extends OpMode {
         Path3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(12.336, 35.221).mirror(),
+                                new Pose(10.336, 35.221).mirror(),
                                 new Pose(59.587, 37.292).mirror(),
-                                new Pose(56.000, 16.000).mirror()
+                                new Pose(56.000, 19.000).mirror()
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0),Math.toRadians(90))
+                .setLinearHeadingInterpolation(Math.toRadians(0),Math.toRadians(0))
                 .build();
 
         Path4 = follower.pathBuilder().addPath(
                         new BezierLine(
                                 new Pose(56.000, 19.000).mirror(),
 
-                                new Pose(16, 13).mirror()
+                                new Pose(16, 14).mirror()
                         )
                 ).setConstantHeadingInterpolation(Math.toRadians(0))
 
@@ -230,20 +232,20 @@ public class farautodiffred extends OpMode {
 
         Path5 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(13, 16).mirror(),
+                                new Pose(15, 16).mirror(),
 
-                                new Pose(56.000, 16.000).mirror()
+                                new Pose(56.000, 19.000).mirror()
                         )
-                ).setLinearHeadingInterpolation(Math.toRadians(340), Math.toRadians(90))
+                ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
 
                 .build();
         Path6 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(56.000, 16.000).mirror(),
+                                new Pose(56.000, 19.000).mirror(),
 
                                 new Pose(31.014, 14.421).mirror()
                         )
-                ).setConstantHeadingInterpolation(Math.toRadians(90))
+                ).setConstantHeadingInterpolation(Math.toRadians(0))
 
                 .build();
     }
@@ -280,7 +282,7 @@ public class farautodiffred extends OpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1);
         limelight.start();
-        turretL.setPosition(0.68);
+
         // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
@@ -313,6 +315,7 @@ public class farautodiffred extends OpMode {
         limelight.pipelineSwitch(pipelineIndex);
         limelight.setPollRateHz(100);
         limelight.start();
+        turretL.setPosition(turret_pos);
 
 
     }
@@ -413,7 +416,7 @@ public class farautodiffred extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -504,7 +507,7 @@ public class farautodiffred extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -594,7 +597,7 @@ public class farautodiffred extends OpMode {
                 }
 
                 // Execute the scheduled move exactly once
-                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>3 && distance.getDistance(DistanceUnit.CM)<6) {
+                if (pendingMove && actionTimer.getElapsedTimeSeconds() > .05 && distance.getDistance(DistanceUnit.CM)>4.5 && distance.getDistance(DistanceUnit.CM)<6) {
                     // absolute target based on count (never grows indefinitely)
                     target +=rconstants.movespindexer;
                     pendingMove = false;
@@ -847,8 +850,9 @@ public class farautodiffred extends OpMode {
     @Override
     public void loop() {
         follower.update();
-
-
+        turretL.setPosition(turret_pos);
+        
+        
 
        /* long lastNanos = System.nanoTime();
         // start in AUTO (not manual)

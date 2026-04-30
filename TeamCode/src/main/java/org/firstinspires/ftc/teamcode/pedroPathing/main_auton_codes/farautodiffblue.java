@@ -331,6 +331,7 @@ public class farautodiffblue extends OpMode {
                 //offset go back on spindexer
                 transfermover.setPosition(rconstants.transfermoverscore);
                 transfer.setPower(1);
+                intake.setPower(0);
                 follower.followPath(Path1);
                 targetTicksPerSecond=rconstants.shootfar-80;
 
@@ -372,7 +373,8 @@ public class farautodiffblue extends OpMode {
             case 2:
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.3) {
-                    follower.setMaxPower(0.6);
+                    intake.setPower(1);
+                    spindexerspeed=1;
                     follower.followPath(Path2);
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
@@ -419,6 +421,8 @@ public class farautodiffblue extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5)) {
+                    spindexerspeed=0.1;
+                    intake.setPower(0);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     setPathState(4);
                 }
@@ -427,6 +431,7 @@ public class farautodiffblue extends OpMode {
             case 4:
                 if(follower.getCurrentPath().isAtParametricEnd()) {
                     follower.setMaxPower(1);
+                    intake.setPower(0);
                     /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
                     follower.followPath(Path3);
                     /*spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -468,6 +473,7 @@ public class farautodiffblue extends OpMode {
                 break;
             case 7:
                 // READ COLOR (same hue method as teleop)
+                intake.setPower(1);
                 if(opmodeTimer.getElapsedTimeSeconds()>27){
                     setPathState(100);
                 }
@@ -841,7 +847,6 @@ public class farautodiffblue extends OpMode {
     public void loop() {
         follower.update();
         if (intake.getCurrent(CurrentUnit.AMPS) < 6) {
-            intake.setPower(1);
             currentTimer.resetTimer();
         } else if (currentTimer.getElapsedTimeSeconds() > 0.5) {
             intake.setPower(-1);
