@@ -414,7 +414,7 @@ public class main_blue_teleop_maahir extends LinearOpMode {
 
             }
             else {
-                TARGET_X=144;
+                TARGET_X=0;
             }
 
             Pose debugPose = follower.getPose();
