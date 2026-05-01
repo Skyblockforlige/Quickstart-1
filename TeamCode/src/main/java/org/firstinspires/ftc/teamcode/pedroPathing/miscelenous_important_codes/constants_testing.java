@@ -39,9 +39,9 @@ public class constants_testing {
     public static DcMotorEx intake;
     public static DcMotorEx rb;
     public static double targetTicksPerSecond=200;
-    public static double shootclose = 1370;
-    public static double shootfar=1550;
-    public static double shooteridle = 1120;
+    public static double shootclose = 1300;
+    public static double shootfar=1500;
+    public static double shooteridle = 1200;
     public static double hoodtop = 0.445;
     public static double hoodbottom = 0.26;
     public static double veloffset_far = 0;

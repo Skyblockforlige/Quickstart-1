@@ -280,7 +280,7 @@ public class farautodiffred extends OpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1);
         limelight.start();
-        turretL.setPosition(0.68);
+        turretL.setPosition(0.66);
         // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
@@ -422,13 +422,13 @@ public class farautodiffred extends OpMode {
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5)) {
                     transfermover.setPosition(rconstants.transfermoverscore);
-                    intake.setPower(0);
                     setPathState(4);
                 }
 
                 break;
             case 4:
                 if(follower.getCurrentPath().isAtParametricEnd()) {
+                    intake.setPower(0);
                     follower.setMaxPower(1);
                     /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
                     follower.followPath(Path3);

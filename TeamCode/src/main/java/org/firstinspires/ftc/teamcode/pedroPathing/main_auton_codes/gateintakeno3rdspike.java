@@ -352,7 +352,7 @@ public class gateintakeno3rdspike extends OpMode {
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path2);
-                    targetTicksPerSecond=1270;
+                    targetTicksPerSecond=1260;
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
                     intake.setPower(1);
@@ -391,7 +391,7 @@ public class gateintakeno3rdspike extends OpMode {
 
                 // after 3 balls, move to next path state once follower done
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>3.5)) {
-                    turretPos=0.8;
+                    turretPos=0.82;
                     intake.setPower(0);
                     setPathState(4);
                 }

@@ -348,7 +348,7 @@ public class gateintakeno3rdspikered extends OpMode {
                 //move to begening of 1,2,3
                 if(pathTimer.getElapsedTimeSeconds()>0.15) {
                     follower.followPath(Path2);
-                    targetTicksPerSecond=1270;
+                    targetTicksPerSecond=1260;
                     transfer.setPower(-1);
                     intake.setPower(1);
                     transfermover.setPosition(rconstants.transfermoveridle);
@@ -532,7 +532,7 @@ public class gateintakeno3rdspikered extends OpMode {
                 if ((ballCount >= 3||pathTimer.getElapsedTimeSeconds()>4.5)) {
                     intake.setPower(0);
                     setPathState(13);
-                    targetTicksPerSecond=1270;
+                    targetTicksPerSecond=1260;
                 }
 
                 break;
