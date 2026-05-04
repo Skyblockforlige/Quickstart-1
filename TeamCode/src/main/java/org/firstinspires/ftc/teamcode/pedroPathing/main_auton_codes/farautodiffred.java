@@ -280,10 +280,14 @@ public class farautodiffred extends OpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1);
         limelight.start();
-        turretL.setPosition(0.66);
+
+
+        turretL.setPosition(0.68);
         // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
+
+
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
         intake = hardwareMap.get(DcMotorEx.class,"intake");
@@ -428,7 +432,6 @@ public class farautodiffred extends OpMode {
                 break;
             case 4:
                 if(follower.getCurrentPath().isAtParametricEnd()) {
-                    intake.setPower(0);
                     follower.setMaxPower(1);
                     /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
                     follower.followPath(Path3);
@@ -444,6 +447,7 @@ public class farautodiffred extends OpMode {
                 // READ COLOR (same hue method as teleop)
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
                     transfer.setPower(1);
+                    intake.setPower(0);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =11*rconstants.movespindexer;
                     spindexerspeed=1;
@@ -846,6 +850,8 @@ public class farautodiffred extends OpMode {
 
     @Override
     public void loop() {
+        turretL.setPosition(0.68);
+
         follower.update();
 
 
@@ -1070,7 +1076,7 @@ public class farautodiffred extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(Range.clip(-0.5 * cs1.calculate(current2),-0.5,0.5));
+        spindexer.setPower(Range.clip(-0.6 * cs1.calculate(current2),-0.6,0.6));
         cs.setGoal(new KineticState(0, targetTicksPerSecond));
         KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
         flywheel.setPower(cs.calculate(current1));

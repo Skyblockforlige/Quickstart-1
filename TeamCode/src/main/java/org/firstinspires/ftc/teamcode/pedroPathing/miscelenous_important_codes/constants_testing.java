@@ -41,7 +41,7 @@ public class constants_testing {
     public static double targetTicksPerSecond=200;
     public static double shootclose = 1300;
     public static double shootfar=1500;
-    public static double shooteridle = 1200;
+    public static double shooteridle = 1145;
     public static double hoodtop = 0.445;
     public static double hoodbottom = 0.26;
     public static double veloffset_far = 0;
@@ -75,6 +75,7 @@ public static double x_pos_end_auton_red;
         flywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         spindexer = hardwareMap.get(DcMotorEx.class, "spindexer");
         transfer=hardwareMap.get(CRServoImplEx.class, "transfer");
+
         intake = hardwareMap.get(DcMotorEx.class,"intake");
         transfermover=hardwareMap.get(ServoImplEx.class,"transfermover");
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

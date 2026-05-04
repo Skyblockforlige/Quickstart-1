@@ -61,6 +61,7 @@ public class no_turret_no_auto_veloblue extends LinearOpMode {
 
     public static double farOffset=0;
     public static double closeOffset=20;
+    public static double turretoffset=0;
 
 
     public static volatile double spindexer_speed_shooting = constants_testing.spindexer_speed_shooting_close;
@@ -273,8 +274,14 @@ public class no_turret_no_auto_veloblue extends LinearOpMode {
 
                 double turretDeg = (targetTicks * 10.0) / ticksPerDegree;
                 double servoPos  = 0.5 - (turretDeg / 90.0) * 0.5;
-                turretL.setPosition(Math.max(0.0, Math.min(1.0, servoPos)));
-
+                turretL.setPosition(Math.max(0.0, Math.min(1.0, servoPos))+turretoffset);
+                if(gamepad2.dpad_left){
+                    turretoffset-=0.01;
+                    sleep(50);
+                } else if(gamepad2.dpad_right){
+                    turretoffset+=0.01;
+                    sleep(50);
+                }
                 // 5. Drive
                 follower.setTeleOpDrive(
                         -gamepad1.left_stick_y,

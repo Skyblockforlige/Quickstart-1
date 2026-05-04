@@ -47,6 +47,7 @@ public class no_turret_no_auto_velored extends LinearOpMode {
     private DcMotor lf, lb, rf, rb;
     private List<LynxModule> allHubs;
     private ElapsedTime elapsedtime;
+    public static double turretoffset=0;
 
     private Follower follower;
 
@@ -97,6 +98,8 @@ public class no_turret_no_auto_velored extends LinearOpMode {
 
     public static double TARGET_X = 144;
     public static double TARGET_Y = 144;
+
+    public static double target_x_close=144;
 
     private Servo turretL;
     private CRServo turretR;
@@ -273,9 +276,15 @@ public class no_turret_no_auto_velored extends LinearOpMode {
 
                 double turretDeg = (targetTicks * 10.0) / ticksPerDegree;
                 double servoPos  = 0.5 - (turretDeg / 90.0) * 0.5;
-                turretL.setPosition(Math.max(0.0, Math.min(1.0, servoPos)));
-
+                turretL.setPosition(Math.max(0.0, Math.min(1.0, servoPos))+turretoffset);
                 // 5. Drive
+                if(gamepad2.dpad_left){
+                    turretoffset-=0.01;
+                    sleep(50);
+                } else if(gamepad2.dpad_right){
+                    turretoffset+=0.01;
+                    sleep(50);
+                }
                 follower.setTeleOpDrive(
                         -gamepad1.left_stick_y,
                         -gamepad1.left_stick_x,
@@ -365,10 +374,7 @@ public class no_turret_no_auto_velored extends LinearOpMode {
 
             if (gamepad2.x) { ballCount = 0; movedoffsetspindexer = false; }
 
-            if (gamepad2.dpad_right && ballCount == 3 && !sorting) {
-                sortTarget = new int[]{1, 2, 1};
-                sorting = true;
-            }
+
             if (sorting) {
                 if (!(ballSlots[0] == sortTarget[0]
                         && ballSlots[1] == sortTarget[1]
@@ -421,7 +427,7 @@ public class no_turret_no_auto_velored extends LinearOpMode {
 
             }
             else {
-                TARGET_X=144;
+                TARGET_X=target_x_close;
             }
 
             Pose debugPose = follower.getPose();

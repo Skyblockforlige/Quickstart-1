@@ -280,7 +280,7 @@ public class farautodiffblue extends OpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(1);
         limelight.start();
-        turretL.setPosition(0.33);
+        turretL.setPosition(0.32);
         // limelight = hardwareMap.get(Limelight3A.class, "limelight");
         transfer = hardwareMap.get(CRServoImplEx.class, "transfer");
         flywheel = hardwareMap.get(DcMotorEx.class,"shooter");
@@ -364,7 +364,7 @@ public class farautodiffblue extends OpMode {
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =4*rconstants.movespindexer;
                 }
-                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-400)){
+                if(spindexer.getCurrentPosition()>= (4*rconstants.movespindexer-600)){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     setPathState(2);
                 }
@@ -420,7 +420,7 @@ public class farautodiffblue extends OpMode {
                 }
 
                 // after 3 balls, move to next path state once follower done
-                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>3.5)) {
+                if ((ballCount >=3||pathTimer.getElapsedTimeSeconds()>4)) {
                     spindexerspeed=0.1;
                     transfermover.setPosition(rconstants.transfermoverscore);
                     setPathState(4);
@@ -430,7 +430,6 @@ public class farautodiffblue extends OpMode {
             case 4:
                 if(follower.getCurrentPath().isAtParametricEnd()) {
                     follower.setMaxPower(1);
-                    intake.setPower(0);
                     /*&&spindexer.getCurrentPosition()%rconstants.movespindexer>=-500 &&spindexer.getCurrentPosition()%rconstants.movespindexer<=500*/
                     follower.followPath(Path3);
                     /*spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -444,13 +443,14 @@ public class farautodiffblue extends OpMode {
             case 5:
                 // READ COLOR (same hue method as teleop)
                 if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)&&flywheel.getVelocity()>=1420){
+                    intake.setPower(0);
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
                     target =11*rconstants.movespindexer;
                     spindexerspeed=1;
 
                 }
-                if(spindexer.getCurrentPosition()>= (11*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1420){
+                if(spindexer.getCurrentPosition()>= (11*rconstants.movespindexer-800)&&flywheel.getVelocity()>=1300){
                     transfermover.setPosition(rconstants.transfermoverfull);
                     spindexerspeed=1;
                     setPathState(6);
@@ -1074,7 +1074,7 @@ public class farautodiffblue extends OpMode {
         autonomousPathUpdate();
         KineticState current2 = new KineticState(spindexer.getCurrentPosition(),spindexer.getVelocity());
         cs1.setGoal(new KineticState(target));
-        spindexer.setPower(Range.clip(-0.5 * cs1.calculate(current2),-0.5,0.5));
+        spindexer.setPower(Range.clip(-0.6 * cs1.calculate(current2),-0.6,0.6));
          cs.setGoal(new KineticState(0, targetTicksPerSecond));
          KineticState current1 = new KineticState(flywheel.getCurrentPosition(), flywheel.getVelocity());
          flywheel.setPower(cs.calculate(current1));

@@ -42,6 +42,7 @@ public class gateintakeno3rdspike extends OpMode {
     private Follower follower;
     public ServoImplEx transfermover;
     private List<LynxModule> allHubs;
+    public static double HoodPos_most_cycles = 0.41;
 
     private DcMotorEx spindexer;
     private CRServoImplEx transfer;
@@ -356,7 +357,7 @@ public class gateintakeno3rdspike extends OpMode {
                     transfer.setPower(-1);
                     transfermover.setPosition(rconstants.transfermoveridle);
                     intake.setPower(1);
-                    hood.setPosition(constants_testing.hoodtop);
+                    hood.setPosition(HoodPos_most_cycles);
                     setPathState(3);
                 }
                 break;
@@ -616,7 +617,7 @@ public class gateintakeno3rdspike extends OpMode {
                 break;
             case 18:
                 //spindexer.setPower(0.5);
-                if(!follower.isBusy()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
+                if(follower.getCurrentPath().isAtParametricEnd()&&(transfermover.getPosition()!=rconstants.transfermoverfull||transfermover.getPosition()==rconstants.transfermoverscore)){
 
                     transfer.setPower(1);
                     transfermover.setPosition(rconstants.transfermoverscore);
